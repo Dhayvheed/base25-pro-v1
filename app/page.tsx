@@ -21,6 +21,7 @@ export default function Home(){
  const filtered=players.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
+ const visiblePlayers=filtered.slice(0,10);
  return <main className="shell redesign-shell">
   <header className="topbar redesign-topbar">
    <Link className="brand redesign-brand" href="/"><span className="brand-mark">▰</span> BASE<span>25</span> PRO</Link>
@@ -44,13 +45,15 @@ export default function Home(){
    <label className="redesign-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="muted">Loading rankings...</p>:filtered.length===0?<div className="empty-state">No players found. Registered players will appear here.</div>:
-    <div className="leaderboard-card"><div className="leaderboard-columns"><span>#</span><span>PLAYER</span><span>RATING</span><span>MATCHES</span><span>W / L</span><span></span></div>
-     {filtered.map(p=>{const rank=players.findIndex(x=>x.id===p.id)+1;return <Link className={`leader-row ${rank===1?"leader-first":""}`} href={`/players/${p.id}`} key={p.id}>
+    <div className="leaderboard-card"><div className="leaderboard-columns"><span>#</span><span>PLAYER</span><span>WIN RATE</span><span>RATING</span></div>
+     {visiblePlayers.map(p=>{const rank=players.findIndex(x=>x.id===p.id)+1;return <Link className={`leader-row ${rank===1?"leader-first":""}`} href={`/players/${p.id}`} key={p.id}>
       <span className={`leader-rank rank-${rank}`}>{rank<=3?<b className="crown">♛</b>:null}{rank}</span>
       <span className="leader-player"><span className="avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username[0]}</span><span><b>{p.username}</b><small>{p.player_code}</small></span></span>
-      <strong className="leader-rating">{p.elo_rating.toLocaleString()}</strong><span>{p.matches_played}</span><span>{p.wins} / {p.losses}</span><span className="row-arrow">›</span>
+      <strong className="leader-win-rate">{p.win_percentage??0}%</strong><strong className="leader-rating">{p.elo_rating.toLocaleString()}</strong>
      </Link>})}
-    </div>}
+    </div>
+    {filtered.length>10&&<Link className="view-full-leaderboard" href="/leaderboard">View Full Leaderboard <span>→</span></Link>}
+   }
   </section>
   <section id="matches" className="section redesign-section matches-section">
    <div className="redesign-section-head"><div><div className="eyebrow">02 / MATCH HISTORY</div><h2>Latest matches<span>.</span></h2></div><Link className="view-matches" href="/matches">View all matches <span>→</span></Link></div>
