@@ -13,6 +13,7 @@ export default function Admin() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [photo, setPhoto] = useState("");
@@ -200,7 +201,7 @@ export default function Admin() {
       <div className="admin-card"><div className="eyebrow">RESTRICTED ACCESS</div><h1>Admin login<span>.</span></h1>
         <form className="form" onSubmit={login}>
           <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Password<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <label>Password<div style={{ position: "relative" }}><input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingRight: 58, width: "100%" }} /><button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "transparent", border: 0, color: "inherit", padding: 8, cursor: "pointer", lineHeight: 0 }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{showPassword ? <><path d="M3 3l18 18" /><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.3 4.5 9 7-.3 1.1-1.2 2.5-2.5 3.7" /><path d="M6.2 6.2C4 7.6 2.5 9.7 2 12c.7 2.5 4 7 10 7 1.1 0 2.1-.2 3-.5" /></> : <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>}</svg></button></div></label>
           <button disabled={busy}>{busy ? "Please wait..." : "Sign in"}</button>
         </form>{message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       </div>
