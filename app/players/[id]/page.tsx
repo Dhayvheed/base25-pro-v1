@@ -25,9 +25,9 @@ export default function PlayerProfile() {
     async function load() {
       if (!supabase) { setLoading(false); return; }
       const [{ data: profile }, { data: games, error: gamesError }] = await Promise.all([
-        supabase.from("player_leaderboard").select("*").eq("id", id).single(),
+        supabase.from("player_public_leaderboard").select("*").eq("id", id).single(),
         supabase.from("matches")
-          .select("*,one:players!matches_player_one_id_fkey(full_name,player_code),two:players!matches_player_two_id_fkey(full_name,player_code)")
+          .select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)")
           .or(`player_one_id.eq.${id},player_two_id.eq.${id}`)
           .order("played_at", { ascending: false }),
       ]);
@@ -71,8 +71,8 @@ export default function PlayerProfile() {
         <div className="avatar large">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.full_name[0]}</div>
         <div>
           <div className="eyebrow">{player.player_code} / PLAYER PROFILE</div>
-          <h1>{player.full_name}</h1>
-          <p>@{player.username}</p>
+          <h1>@{player.username}</h1>
+          <p>{player.player_code}</p>
         </div>
         <div className="profile-rating"><small>CURRENT ELO</small><strong>{player.elo_rating}</strong></div>
       </section>
@@ -108,7 +108,7 @@ export default function PlayerProfile() {
                   <div className="match-summary">
                     <div>
                       <b className={didWin ? "win-text" : "loss-text"}>{didWin ? "WIN" : "LOSS"}</b>
-                      <small>vs {opponent?.full_name} · {opponent?.player_code}</small>
+                      <small>vs {`@${opponent?.username}`} · {opponent?.player_code}</small>
                     </div>
                     <strong>{match.player_one_score} — {match.player_two_score}</strong>
                     <div className="right">
