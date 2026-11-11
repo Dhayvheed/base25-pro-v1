@@ -9,7 +9,6 @@ type Rack = { winnerId: string; loserBalls: string };
 
 export default function Admin() {
   const [session, setSession] = useState<any>(null);
-  const [admin, setAdmin] = useState(false);
   const [staffRole, setStaffRole] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [email, setEmail] = useState("");
@@ -76,9 +75,9 @@ export default function Admin() {
     async function checkAdmin() {
       if (!supabase || !session) return;
       const { data, error } = await supabase.rpc("get_my_staff_access");
-      const role = data?.[0]?.role || null;
-      setStaffRole(role);
-      setAdmin(!!role);
+      const access = Array.isArray(data) ? data[0] : null;
+      const role = access?.is_active ? access.role : null;
+      setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
       if (role) { refresh(); refreshMatches(); }
     }
@@ -334,6 +333,7 @@ export default function Admin() {
         </section>
       </div>
 
+      {staffRole === "owner" && <>
       <section className="admin-card"><h2>Manage player profiles</h2>
         {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
@@ -341,7 +341,7 @@ export default function Admin() {
             <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div>{staffRole === "owner" && <button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button>}</div>}
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
         </div>)}
       </section>
       <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
@@ -355,10 +355,10 @@ export default function Admin() {
         </form>}
         {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
           <div style={{flex:"1 1 180px"}}><b>{playerName(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerName(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
-          {staffRole === "owner" && <><button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button></>}
+          <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
         </div>)}
       </section>
-
+      </>}
       <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
     </main>
   );
