@@ -136,14 +136,14 @@ export default function Admin() {
     </main>
   );
 
-  if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account is not on the admin list.</p><button onClick={() => supabase.auth.signOut()}>Sign out</button></main>;
+  if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account is not on the admin list.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
   const winnerOptions = players.filter((player) => player.id === one || player.id === two);
 
   return (
     <main className="shell admin-shell">
-      <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase.auth.signOut()}>Sign out</button></header>
+      <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
       <div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1>
       {message && <p className="notice">{message}</p>}
       <div className="admin-grid">
