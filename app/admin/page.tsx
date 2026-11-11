@@ -212,7 +212,7 @@ export default function Admin() {
     </main>
   );
 
-  if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
+  if (!staffRole) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
@@ -251,7 +251,7 @@ export default function Admin() {
           </section>
         </div>
       )}
-      <div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1>
+      <div className="eyebrow">CONTROL ROOM · {staffRole.toUpperCase()}</div><h1>Admin desk<span>.</span></h1>
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
         <section className="admin-card">
