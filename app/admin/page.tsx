@@ -3,7 +3,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-type Player = { id: string; full_name: string; player_code: string };
+type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null };
+type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
 
 export default function Admin() {
@@ -27,6 +28,12 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [matchConfirmation, setMatchConfirmation] = useState<{ playerOne: string; playerTwo: string; scoreOne: number; scoreTwo: number } | null>(null);
   const [playerConfirmation, setPlayerConfirmation] = useState<string | null>(null);
+  const [matches, setMatches] = useState<MatchRecord[]>([]);
+  const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editPhoto, setEditPhoto] = useState("");
+  const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -54,7 +61,7 @@ export default function Admin() {
       const { data, error } = await supabase.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
       setAdmin(!!data);
       if (error) setMessage(error.message);
-      if (data) refresh();
+      if (data) { refresh(); refreshMatches(); }
     }
     checkAdmin();
   }, [session]);
@@ -98,7 +105,35 @@ export default function Admin() {
     setBusy(false);
   }
 
-  async function addMatch(event: FormEvent) {
+
+  function startEditPlayer(player: Player) { setEditingPlayer(player.id); setEditFullName(player.full_name); setEditUsername(player.username); setEditPhoto(player.photo_url || ""); }
+  async function savePlayerEdit(event: FormEvent) {
+    event.preventDefault(); if (!supabase || !editingPlayer) return; setBusy(true);
+    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: editUsername.trim().replace(/^@/, ""), p_photo_url: editPhoto.trim() || null });
+    if (error) setMessage(`Player update failed: ${error.message}`); else { setMessage("Player profile updated."); setEditingPlayer(null); await refresh(); }
+    setBusy(false);
+  }
+  async function startEditMatch(match: MatchRecord) {
+    if (!supabase) return; const { data, error } = await supabase.from("match_racks").select("winner_id,loser_balls_remaining").eq("match_id",match.id).order("rack_number");
+    if (error) { setMessage(`Could not load rack details: ${error.message}`); return; }
+    setEditingMatch({id:match.id,one:match.player_one_id,two:match.player_two_id,venue:match.venue,racks:(data||[]).map((r:any)=>({winnerId:r.winner_id,loserBalls:String(r.loser_balls_remaining)}))});
+  }
+  function updateEditingRack(index:number,field:keyof Rack,value:string) { setEditingMatch(cur=>cur?({...cur,racks:cur.racks.map((r,i)=>i===index?{...r,[field]:value}:r)}):cur); }
+  async function saveMatchEdit(event:FormEvent) {
+    event.preventDefault(); if(!supabase||!editingMatch)return;
+    const payload=editingMatch.racks.map(r=>({winner_id:r.winnerId,loser_balls_remaining:Number(r.loserBalls),black_ball_finish:false}));
+    if(payload.some(r=>![editingMatch.one,editingMatch.two].includes(r.winner_id)||!Number.isInteger(r.loser_balls_remaining)||r.loser_balls_remaining<0||r.loser_balls_remaining>7)){setMessage("Check every rack winner and balls remaining (0–7).");return;}
+    setBusy(true); const {error}=await supabase.rpc("admin_update_match",{p_match_id:editingMatch.id,p_racks:payload,p_venue:editingMatch.venue.trim()||"BASE25"});
+    if(error)setMessage(`Match update failed: ${error.message}`);else{setMessage("Match result corrected. ELO ratings recalculated.");setEditingMatch(null);await refreshMatches();await refresh();}
+    setBusy(false);
+  }
+  async function deleteMatch(match:MatchRecord) {
+    if(!supabase||!window.confirm(`Delete this ${playerName(match.player_one_id)} vs ${playerName(match.player_two_id)} match? This cannot be undone. ELO will be recalculated.`))return;
+    setBusy(true);const {error}=await supabase.rpc("admin_delete_match",{p_match_id:match.id});
+    if(error)setMessage(`Match deletion failed: ${error.message}`);else{setMessage("Match deleted. ELO ratings recalculated.");setEditingMatch(null);await refreshMatches();await refresh();}
+    setBusy(false);
+  }
+\n  async function addMatch(event: FormEvent) {
     event.preventDefault();
     if (!supabase || !one || !two || one === two) return;
     if (!racks[0].winnerId || !racks[1].winnerId) {
@@ -137,7 +172,7 @@ export default function Admin() {
       });
       setMessage("");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
-      setOne(""); setTwo("");
+      setOne(""); setTwo("");\n      await refreshMatches();
     }
     setBusy(false);
   }
@@ -266,7 +301,32 @@ export default function Admin() {
           </form>
         </section>
       </div>
-      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
+
+      <section className="admin-card"><h2>Manage player profiles</h2>
+        {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
+          {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
+            <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
+            <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
+            <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
+            <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+        </div>)}
+      </section>
+      <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
+        {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerName(editingMatch.one)} vs {playerName(editingMatch.two)}</h3>
+          <label>Venue<input value={editingMatch.venue} onChange={e=>setEditingMatch({...editingMatch,venue:e.target.value})}/></label>
+          {editingMatch.racks.map((rack,index)=><div className="admin-card" key={index}><h3>Rack {index+1}</h3>
+            <label>Winner<select required value={rack.winnerId} onChange={e=>updateEditingRack(index,"winnerId",e.target.value)}><option value="">Select winner</option><option value={editingMatch.one}>{playerName(editingMatch.one)}</option><option value={editingMatch.two}>{playerName(editingMatch.two)}</option></select></label>
+            <label>Balls left on table<input type="number" min="0" max="7" required value={rack.loserBalls} onChange={e=>updateEditingRack(index,"loserBalls",e.target.value)}/></label>
+          </div>)}
+          <div className="two-fields"><button disabled={busy}>Save corrected result</button><button type="button" className="secondary" onClick={()=>setEditingMatch(null)}>Cancel</button></div>
+        </form>}
+        {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <div style={{flex:"1 1 180px"}}><b>{playerName(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerName(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
+          <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
+        </div>)}
+      </section>
+\n      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
     </main>
   );
 }
