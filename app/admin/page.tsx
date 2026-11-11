@@ -19,9 +19,9 @@ export default function Admin() {
   const [two, setTwo] = useState("");
   const [venue, setVenue] = useState("BASE25");
   const [racks, setRacks] = useState<Rack[]>([
-    { winnerId: "", loserBalls: "0" },
-    { winnerId: "", loserBalls: "0" },
-    { winnerId: "", loserBalls: "0" },
+    { winnerId: "", loserBalls: "0", blackBallFinish: false },
+    { winnerId: "", loserBalls: "0", blackBallFinish: false },
+    { winnerId: "", loserBalls: "0", blackBallFinish: false },
   ]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);\n\n  useEffect(() => {\n    if (!message) return;\n    const timeout = window.setTimeout(() => setMessage(""), 4500);\n    return () => window.clearTimeout(timeout);\n  }, [message]);
@@ -162,12 +162,12 @@ export default function Admin() {
           <p className="eyebrow">OFFICIAL RANKED FORMAT · BEST OF 3 RACKS</p>
           <form className="form" onSubmit={addMatch}>
             <label>Player one
-              <select required value={one} onChange={(e) => { setOne(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
+              <select required value={one} onChange={(e) => { setOne(e.target.value); setRacks([{ winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }]); }}>
                 <option value="">Select player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.full_name} ({player.player_code})</option>)}
               </select>
             </label>
             <label>Player two
-              <select required value={two} onChange={(e) => { setTwo(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
+              <select required value={two} onChange={(e) => { setTwo(e.target.value); setRacks([{ winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }]); }}>
                 <option value="">Select player</option>{players.filter((player) => player.id !== one).map((player) => <option key={player.id} value={player.id}>{player.full_name} ({player.player_code})</option>)}
               </select>
             </label>
