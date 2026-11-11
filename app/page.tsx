@@ -45,14 +45,14 @@ export default function Home(){
    <label className="redesign-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="muted">Loading rankings...</p>:filtered.length===0?<div className="empty-state">No players found. Registered players will appear here.</div>:
-    <div className="leaderboard-card"><div className="leaderboard-columns"><span>#</span><span>PLAYER</span><span>WIN RATE</span><span>RATING</span></div>
+    <><div className="leaderboard-card"><div className="leaderboard-columns"><span>#</span><span>PLAYER</span><span>WIN RATE</span><span>RATING</span></div>
      {visiblePlayers.map(p=>{const rank=players.findIndex(x=>x.id===p.id)+1;return <Link className={`leader-row ${rank===1?"leader-first":""}`} href={`/players/${p.id}`} key={p.id}>
       <span className={`leader-rank rank-${rank}`}>{rank<=3?<b className="crown">♛</b>:null}{rank}</span>
       <span className="leader-player"><span className="avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username[0]}</span><span><b>{p.username}</b><small>{p.player_code}</small></span></span>
       <strong className="leader-win-rate">{p.win_percentage??0}%</strong><strong className="leader-rating">{p.elo_rating.toLocaleString()}</strong>
      </Link>})}
     </div>
-    {filtered.length>10&&<Link className="view-full-leaderboard" href="/leaderboard">View Full Leaderboard <span>→</span></Link>}
+    {filtered.length>10&&<Link className="view-full-leaderboard" href="/leaderboard">View Full Leaderboard <span>→</span></Link>}</>
    }
   </section>
   <section id="matches" className="section redesign-section matches-section">
