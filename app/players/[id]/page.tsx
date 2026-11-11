@@ -68,7 +68,7 @@ export default function PlayerProfile() {
       </header>
 
       <section className="profile-hero">
-        <div className="avatar large">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.full_name[0]}</div>
+        <div className="avatar large">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.username[0]}</div>
         <div>
           <div className="eyebrow">{player.player_code} / PLAYER PROFILE</div>
           <h1>@{player.username}</h1>
