@@ -173,7 +173,8 @@ export default function Admin() {
       });
       setMessage("");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
-      setOne(""); setTwo("");\n      await refreshMatches();
+      setOne(""); setTwo("");
+      await refreshMatches();
     }
     setBusy(false);
   }
@@ -327,7 +328,8 @@ export default function Admin() {
           <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
         </div>)}
       </section>
-\n      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
+
+      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
     </main>
   );
 }
