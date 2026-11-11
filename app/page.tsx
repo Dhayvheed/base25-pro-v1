@@ -10,7 +10,7 @@ export default function Home(){
  if(pe||me)setError(pe?.message||me?.message||"Unable to load records.");setPlayers((p||[]) as Player[]);setMatches(m||[]);setLoading(false);}load();},[]);
  const filtered=players.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const total=players.reduce((n,p)=>n+p.matches_played,0)/2;
- return <main className="shell"><header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><nav><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><Link href="/admin">Admin</Link></nav></header>
+ return <main className="shell"><header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><nav><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><Link href="/how-it-works">How it works</Link><Link href="/admin">Admin</Link></nav></header>
  <section className="hero"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1><p>Track the players. Follow the results. See who really owns the table.</p><a className="primary" href="#leaderboard">View leaderboard ↘</a><div className="hero-stamp">B25<br/>RANKED</div></section>
  <section className="stats"><div><small>REGISTERED PLAYERS</small><strong>{players.length}</strong></div><div><small>RECORDED MATCHES</small><strong>{total}</strong></div><div><small>STARTING RATING</small><strong>1,000</strong></div></section>
  <section id="leaderboard" className="section"><div className="section-head"><div><div className="eyebrow">01 / THE RANKINGS</div><h2>Leaderboard<span>.</span></h2></div><input className="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></div>
