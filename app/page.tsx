@@ -16,7 +16,7 @@ export default function Home(){
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(8)
   ]);
   if(pe||me)setError(pe?.message||me?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setMatches((m||[]) as Match[]);setLoading(false);
+  setPlayers((p||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setLoading(false);
  }load();},[]);
  const filtered=players.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
