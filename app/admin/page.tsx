@@ -10,6 +10,7 @@ type Rack = { winnerId: string; loserBalls: string };
 export default function Admin() {
   const [session, setSession] = useState<any>(null);
   const [admin, setAdmin] = useState(false);
+  const [staffRole, setStaffRole] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,10 +75,12 @@ export default function Admin() {
   useEffect(() => {
     async function checkAdmin() {
       if (!supabase || !session) return;
-      const { data, error } = await supabase.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
-      setAdmin(!!data);
+      const { data, error } = await supabase.rpc("get_my_staff_access");
+      const role = data?.[0]?.role || null;
+      setStaffRole(role);
+      setAdmin(!!role);
       if (error) setMessage(error.message);
-      if (data) { refresh(); refreshMatches(); }
+      if (role) { refresh(); refreshMatches(); }
     }
     checkAdmin();
   }, [session]);
@@ -210,7 +213,7 @@ export default function Admin() {
     </main>
   );
 
-  if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account is not on the admin list.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
+  if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
@@ -338,7 +341,7 @@ export default function Admin() {
             <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" {staffRole === "owner" && <button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button>}</div></div>}
         </div>)}
       </section>
       <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
@@ -352,7 +355,7 @@ export default function Admin() {
         </form>}
         {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
           <div style={{flex:"1 1 180px"}}><b>{playerName(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerName(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
-          <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
+          {staffRole === "owner" && <><button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button></>}
         </div>)}
       </section>
 
