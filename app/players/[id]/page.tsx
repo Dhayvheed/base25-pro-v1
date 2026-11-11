@@ -11,6 +11,7 @@ type Rack = {
   winner_id: string;
   loser_id: string;
   loser_balls_remaining: number;
+  black_ball_finish: boolean;
 };
 
 export default function PlayerProfile() {
@@ -39,7 +40,7 @@ export default function PlayerProfile() {
       if (matchRows.length) {
         const { data: rackRows, error: rackError } = await supabase
           .from("match_racks")
-          .select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining")
+          .select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish")
           .in("match_id", matchRows.map((match: any) => match.id))
           .order("rack_number", { ascending: true });
 
@@ -93,6 +94,15 @@ export default function PlayerProfile() {
               const opponent = isPlayerOne ? match.two : match.one;
               const didWin = match.winner_id === id;
               const racks = racksByMatch[match.id] || [];
+              const eloAfter = isPlayerOne ? match.player_one_elo_after : match.player_two_elo_after;
+              const eloBefore = isPlayerOne ? match.player_one_elo_before : match.player_two_elo_before;
+              const netChange = eloAfter - eloBefore;
+              const rackBonus = racks.reduce((total, rack) => {
+                if (rack.winner_id !== id || rack.black_ball_finish) return total;
+                return total + Math.min(rack.loser_balls_remaining, 7);
+              }, 0);
+              const matchAdjustment = netChange - rackBonus;
+              const formatPoints = (points: number) => `${points > 0 ? "+" : ""}${points}`;
               return (
                 <article className="match match-detail" key={match.id}>
                   <div className="match-summary">
@@ -102,8 +112,10 @@ export default function PlayerProfile() {
                     </div>
                     <strong>{match.player_one_score} — {match.player_two_score}</strong>
                     <div className="right">
-                      <b>{isPlayerOne ? match.player_one_elo_after : match.player_two_elo_after} ELO</b>
-                      <small>{isPlayerOne ? match.player_one_elo_after - match.player_one_elo_before : match.player_two_elo_after - match.player_two_elo_before} rating change</small>
+                      <b>{eloAfter} ELO</b>
+                      <small className={matchAdjustment >= 0 ? "elo-positive" : "elo-negative"}>Match: {formatPoints(matchAdjustment)}</small>
+                      <small className={rackBonus >= 0 ? "elo-positive" : "elo-negative"}>Rack bonus: {formatPoints(rackBonus)}</small>
+                      <small className={netChange >= 0 ? "elo-positive" : "elo-negative"}>Net change: {formatPoints(netChange)}</small>
                     </div>
                     <time>{new Date(match.played_at).toLocaleDateString()}</time>
                   </div>
