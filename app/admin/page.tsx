@@ -48,6 +48,17 @@ export default function Admin() {
     setPlayers(data || []);
   }
 
+  async function refreshMatches() {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("matches")
+      .select("id,played_at,venue,player_one_id,player_two_id,player_one_score,player_two_score,winner_id")
+      .order("played_at", { ascending: false })
+      .limit(50);
+    if (error) setMessage(`Could not load match history: ${error.message}`);
+    setMatches(data || []);
+  }
+
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
