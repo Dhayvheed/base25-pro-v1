@@ -6,10 +6,15 @@ import { supabase } from "@/lib/supabase";
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
+type StaffMember = { user_id: string; email: string; role: "owner" | "manager" | "attendant"; is_active: boolean; created_at: string };
 
 export default function Admin() {
   const [session, setSession] = useState<any>(null);
   const [staffRole, setStaffRole] = useState<string | null>(null);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
+  const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +44,15 @@ export default function Admin() {
   const [editUsername, setEditUsername] = useState("");
   const [editPhoto, setEditPhoto] = useState("");
   const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
+
+  async function refreshStaff() {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_list_staff");
+    if (error) { setMessage(`Could not load staff: ${error.message}`); return; }
+    const rows = (data || []) as StaffMember[];
+    setStaffMembers(rows);
+    setStaffRoleDrafts(Object.fromEntries(rows.filter((row) => row.role !== "owner").map((row) => [row.user_id, row.role as "manager" | "attendant"])));
+  }
 
   useEffect(() => {
     if (!message) return;
@@ -80,6 +94,7 @@ export default function Admin() {
       setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
       if (role) { refresh(); refreshMatches(); }
+      if (role === "owner") refreshStaff();
     }
     checkAdmin();
   }, [session]);
@@ -103,6 +118,42 @@ export default function Admin() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setMessage(error?.message || "Signed in.");
+    setBusy(false);
+  }
+
+  async function addStaff(event: FormEvent) {
+    event.preventDefault();
+    if (!supabase || staffRole !== "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_add_staff_by_email", { p_email: newStaffEmail.trim(), p_role: newStaffRole });
+    if (error) setMessage(`Staff member was not added: ${error.message}`);
+    else { setMessage("Staff access granted. The member can now sign in."); setNewStaffEmail(""); await refreshStaff(); }
+    setBusy(false);
+  }
+
+  async function saveStaffMember(member: StaffMember) {
+    if (!supabase || staffRole !== "owner" || member.role === "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_update_staff", {
+      p_user_id: member.user_id,
+      p_role: staffRoleDrafts[member.user_id] || member.role,
+      p_is_active: member.is_active,
+    });
+    if (error) setMessage(`Staff update failed: ${error.message}`);
+    else { setMessage("Staff permissions updated."); await refreshStaff(); }
+    setBusy(false);
+  }
+
+  async function toggleStaffAccess(member: StaffMember) {
+    if (!supabase || staffRole !== "owner" || member.role === "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_update_staff", {
+      p_user_id: member.user_id,
+      p_role: staffRoleDrafts[member.user_id] || member.role,
+      p_is_active: !member.is_active,
+    });
+    if (error) setMessage(`Staff access update failed: ${error.message}`);
+    else { setMessage(member.is_active ? "Staff access deactivated." : "Staff access reactivated."); await refreshStaff(); }
     setBusy(false);
   }
 
@@ -334,6 +385,23 @@ export default function Admin() {
       </div>
 
       {staffRole === "owner" && <>
+      <section className="admin-card"><h2>Staff management</h2>
+        <p className="muted">Only the Owner can grant, change or deactivate staff access. Staff must already have a Supabase login using the email below.</p>
+        <form className="form" onSubmit={addStaff}>
+          <label>Staff email<input type="email" required value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder="staff@example.com" /></label>
+          <label>Access level<select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value as "manager" | "attendant")}><option value="manager">Manager</option><option value="attendant">Attendant</option></select></label>
+          <button disabled={busy || !newStaffEmail.trim()}>Grant staff access</button>
+        </form>
+        <h3>Current staff ({staffMembers.length})</h3>
+        {staffMembers.length === 0 ? <p className="muted">No staff accounts found.</p> : staffMembers.map((member) => <div className="player-row" key={member.user_id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div style={{flex:"1 1 180px"}}><b>{member.email}</b><div className="eyebrow">{member.role.toUpperCase()} · {member.role === "owner" ? "FULL CONTROL" : member.is_active ? "ACTIVE" : "DEACTIVATED"}</div></div>
+          {member.role === "owner" ? <span className="muted">Protected owner account</span> : <>
+            <label style={{minWidth:130}}>Role<select value={staffRoleDrafts[member.user_id] || member.role} onChange={(e) => setStaffRoleDrafts((current) => ({...current,[member.user_id]:e.target.value as "manager" | "attendant"}))}><option value="manager">Manager</option><option value="attendant">Attendant</option></select></label>
+            <button type="button" className="secondary" disabled={busy} onClick={() => saveStaffMember(member)}>Save role</button>
+            <button type="button" className="secondary" disabled={busy} onClick={() => toggleStaffAccess(member)}>{member.is_active ? "Deactivate" : "Reactivate"}</button>
+          </>}
+        </div>)}
+      </section>
       <section className="admin-card"><h2>Manage player profiles</h2>
         {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
