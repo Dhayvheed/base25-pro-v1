@@ -21,6 +21,8 @@ export default function Admin() {
   const [two, setTwo] = useState("");
   const [playerOneSearch, setPlayerOneSearch] = useState("");
   const [playerTwoSearch, setPlayerTwoSearch] = useState("");
+  const [playerOnePickerOpen, setPlayerOnePickerOpen] = useState(false);
+  const [playerTwoPickerOpen, setPlayerTwoPickerOpen] = useState(false);
   const [venue, setVenue] = useState("BASE25");
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
@@ -264,21 +266,23 @@ export default function Admin() {
           <h2>Record match</h2>
           <p className="eyebrow">OFFICIAL RANKED FORMAT · BEST OF 3 RACKS</p>
           <form className="form" onSubmit={addMatch}>
-            <label>Search player one
-              <input type="search" placeholder="Search username, name or player code..." value={playerOneSearch} onChange={(e) => setPlayerOneSearch(e.target.value)} />
-            </label>
             <label>Player one
-              <select required value={one} onChange={(e) => { setOne(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
-                <option value="">Select player</option>{playerOneOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
-              </select>
-            </label>
-            <label>Search player two
-              <input type="search" placeholder="Search username, name or player code..." value={playerTwoSearch} onChange={(e) => setPlayerTwoSearch(e.target.value)} />
+              <div className="player-picker">
+                <input type="text" autoComplete="off" placeholder="Search or select player one..." value={playerOneSearch} onFocus={() => setPlayerOnePickerOpen(true)} onChange={(e) => { setPlayerOneSearch(e.target.value); setOne(""); setPlayerOnePickerOpen(true); }} />
+                {playerOnePickerOpen && <div className="player-picker-options">
+                  {playerOneOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setOne(player.id); setPlayerOneSearch(playerLabel(player)); setPlayerOnePickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
+                  {playerOneOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
+                </div>}
+              </div>
             </label>
             <label>Player two
-              <select required value={two} onChange={(e) => { setTwo(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
-                <option value="">Select player</option>{playerTwoOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
-              </select>
+              <div className="player-picker">
+                <input type="text" autoComplete="off" placeholder="Search or select player two..." value={playerTwoSearch} onFocus={() => setPlayerTwoPickerOpen(true)} onChange={(e) => { setPlayerTwoSearch(e.target.value); setTwo(""); setPlayerTwoPickerOpen(true); }} />
+                {playerTwoPickerOpen && <div className="player-picker-options">
+                  {playerTwoOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setTwo(player.id); setPlayerTwoSearch(playerLabel(player)); setPlayerTwoPickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
+                  {playerTwoOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
+                </div>}
+              </div>
             </label>
             <label>Venue / table<input value={venue} onChange={(e) => setVenue(e.target.value)} /></label>
 
