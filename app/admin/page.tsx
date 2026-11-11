@@ -83,7 +83,7 @@ export default function Admin() {
     event.preventDefault();
     if (!supabase) return;
     setBusy(true);
-    const { error } = await supabase.from("players").insert({ full_name: fullName.trim(), username: username.trim(), photo_url: photo.trim() || null });
+    const { error } = await supabase.rpc("admin_create_player", { p_full_name: fullName.trim(), p_username: username.trim(), p_photo_url: photo.trim() || null });
     setMessage(error?.message || "Player registered.");
     if (!error) {
       setFullName(""); setUsername(""); setPhoto("");
