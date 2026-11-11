@@ -232,3 +232,27 @@
  .leader-win-rate{font-size:13px}
  .leader-rating{font-size:15px}
 }
+
+
+/* Compact four-column leaderboard with a dedicated win-rate column */
+.leaderboard-columns,.leader-row{grid-template-columns:64px minmax(220px,1.7fr) minmax(90px,.7fr) minmax(95px,.8fr)}
+.leaderboard-columns span:nth-child(3),.leaderboard-columns span:nth-child(4){text-align:right}
+.leader-win-rate{font-size:18px;font-weight:750;color:#d7e5cb;text-align:right;font-variant-numeric:tabular-nums}
+.leader-rating{text-align:right}
+.view-full-leaderboard{display:flex;justify-content:center;align-items:center;gap:12px;margin:16px 8px 0;padding:16px;border:1px solid #56614f;border-radius:12px;color:#d7f58a;font-weight:750}
+.view-full-leaderboard span{font-size:20px}
+.full-leaderboard-columns,.full-leaderboard-row{grid-template-columns:64px minmax(220px,1.7fr) minmax(100px,.7fr) minmax(100px,.8fr)}
+@media(max-width:760px){
+ .leaderboard-columns,.leader-row{min-width:0;grid-template-columns:38px minmax(0,1.5fr) minmax(58px,.65fr) minmax(75px,.75fr);gap:7px}
+ .leaderboard-columns{padding:9px 10px 14px;font-size:9px}
+ .leader-row{padding:9px 10px;min-height:72px}
+ .leader-player{gap:8px}
+ .leader-player .avatar{width:38px;height:38px;font-size:16px;flex-shrink:0}
+ .leader-player b{font-size:12px}
+ .leader-player small{font-size:10px}
+ .leader-rank{font-size:16px;gap:3px}
+ .crown{font-size:17px}
+ .leader-rating{font-size:16px}
+ .leader-win-rate{font-size:13px}
+ .full-leaderboard-columns,.full-leaderboard-row{min-width:0;grid-template-columns:38px minmax(0,1.5fr) minmax(58px,.65fr) minmax(75px,.75fr)}
+}
