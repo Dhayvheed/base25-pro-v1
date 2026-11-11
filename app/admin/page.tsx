@@ -24,7 +24,7 @@ export default function Admin() {
     { winnerId: "", loserBalls: "0" },
   ]);
   const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n\n  useEffect(() => {\n    if (!message) return;\n    const timeout = window.setTimeout(() => setMessage(""), 4500);\n    return () => window.clearTimeout(timeout);\n  }, [message]);
 
   async function refresh() {
     if (!supabase) return;
@@ -131,7 +131,7 @@ export default function Admin() {
           <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
           <label>Password<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
           <button disabled={busy}>{busy ? "Please wait..." : "Sign in"}</button>
-        </form>{message && <p className="notice">{message}</p>}
+        </form>{message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       </div>
     </main>
   );
@@ -145,7 +145,7 @@ export default function Admin() {
     <main className="shell admin-shell">
       <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
       <div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1>
-      {message && <p className="notice">{message}</p>}
+      {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
         <section className="admin-card">
           <h2>Register player</h2>
