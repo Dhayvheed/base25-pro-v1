@@ -28,3 +28,16 @@
 .how-end{padding:70px 0;border-bottom:1px solid var(--line)}
 .how-end h2{font-size:clamp(38px,7vw,66px);line-height:1.05;letter-spacing:-.06em}
 @media(max-width:700px){.how-hero{padding:62px 0 48px}.how-section{padding:42px 0}.how-example{padding:16px}.how-example>div{font-size:12px}.how-hero p,.how-section p{font-size:14px}}
+
+/* Centered admin success confirmations */
+.confirmation-backdrop{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px)}
+.confirmation-modal{width:min(100%,460px);margin:0;padding:30px 26px;background:#131715;border:1px solid #536341;border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.65);text-align:center}
+.confirmation-icon{width:48px;height:48px;display:grid;place-items:center;margin:0 auto 16px;border-radius:50%;background:rgba(197,243,106,.14);color:var(--lime);font-size:28px;font-weight:800}
+.confirmation-modal h2{margin:12px 0 20px;font-size:25px;line-height:1.2;letter-spacing:-.04em}
+.confirmation-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:18px 12px;background:#0d100e;border:1px solid var(--line)}
+.confirmation-score>div{min-width:0;display:grid;gap:8px}
+.confirmation-score b{font-size:12px;overflow-wrap:anywhere}
+.confirmation-score strong{font:700 32px 'DM Mono';color:var(--lime)}
+.confirmation-modal p{margin:18px 0 4px;color:var(--muted);font-size:13px}
+.confirmation-modal button{width:100%;margin-top:18px}
+@media(max-width:420px){.confirmation-modal{padding:26px 18px}.confirmation-modal h2{font-size:22px}.confirmation-score{gap:7px;padding:14px 8px}.confirmation-score b{font-size:10px}.confirmation-score strong{font-size:28px}}
