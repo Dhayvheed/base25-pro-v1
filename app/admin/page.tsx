@@ -4,7 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Player = { id: string; full_name: string; player_code: string };
-type Rack = { winnerId: string; loserBalls: string };
+type Rack = { winnerId: string; loserBalls: string; blackBallFinish: boolean };
 
 export default function Admin() {
   const [session, setSession] = useState<any>(null);
@@ -100,7 +100,7 @@ export default function Admin() {
     const rackCount = thirdRackNeeded ? 3 : 2;
     const payload = racks.slice(0, rackCount).map((rack) => ({
       winner_id: rack.winnerId,
-      loser_balls_remaining: Number(rack.loserBalls),
+      loser_balls_remaining: Number(rack.loserBalls),\n      black_ball_finish: rack.blackBallFinish,
     }));
     if (payload.some((rack) => ![one, two].includes(rack.winner_id) || !Number.isInteger(rack.loser_balls_remaining) || rack.loser_balls_remaining < 0)) {
       setMessage("Check each rack winner and the losing player's balls remaining.");
@@ -115,7 +115,7 @@ export default function Admin() {
     });
     setMessage(error?.message || `Match saved successfully. Match ID: ${data}`);
     if (!error) {
-      setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
+      setRacks([{ winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }, { winnerId: "", loserBalls: "0", blackBallFinish: false }]);
       setOne(""); setTwo("");
     }
     setBusy(false);
@@ -185,7 +185,7 @@ export default function Admin() {
                 <label>Balls left on table by losing player
                   <input type="number" min="0" step="1" required value={racks[index].loserBalls} onChange={(e) => updateRack(index, "loserBalls", e.target.value)} />
                 </label>
-                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
+                <label className="checkbox-label"><input type="checkbox" checked={racks[index].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === index ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>\n                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
               </div>
             ))}
 
@@ -202,7 +202,7 @@ export default function Admin() {
                 <label>Balls left on table by losing player
                   <input type="number" min="0" step="1" required value={racks[2].loserBalls} onChange={(e) => updateRack(2, "loserBalls", e.target.value)} />
                 </label>
-                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
+                <label className="checkbox-label"><input type="checkbox" checked={racks[2].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === 2 ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>\n                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
               </div>
             )}
 
