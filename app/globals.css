@@ -209,3 +209,26 @@
 /* Keep the decorative cue ball clear of the player identity and PLAYER label */
 .profile-cue-ball{left:58%;bottom:3%;width:76px;height:76px}
 @media(max-width:760px){.profile-cue-ball{left:62%;bottom:2%;width:64px;height:64px}}
+
+
+/* Homepage leaderboard: four clear columns */
+.leaderboard-columns,.leader-row{grid-template-columns:56px minmax(180px,1.7fr) minmax(100px,.7fr) minmax(100px,.8fr)}
+.leaderboard-columns span:nth-child(n+3){text-align:center}
+.leader-win-rate{font-size:18px;color:#d8e2d3;text-align:center;font-weight:700}
+.leader-rating{text-align:right}
+.view-full-leaderboard{display:flex;justify-content:center;align-items:center;gap:12px;margin:18px auto 2px;width:max-content;max-width:100%;padding:13px 22px;border:1px solid #788276;border-radius:10px;color:#f2f4ef;font-weight:700}
+.view-full-leaderboard span{color:var(--lime)}
+@media(max-width:760px){
+ .leaderboard-card{overflow:visible}
+ .leaderboard-columns,.leader-row{min-width:0;grid-template-columns:34px minmax(0,1fr) 66px 74px;gap:7px}
+ .leaderboard-columns{padding:9px 10px 14px;font-size:9px}
+ .leader-row{padding:9px 10px;min-height:68px}
+ .leader-player{gap:8px}
+ .leader-player .avatar{width:38px;height:38px;flex:0 0 38px}
+ .leader-player b{font-size:12px}
+ .leader-player small{font-size:10px}
+ .leader-rank{font-size:15px;gap:3px}
+ .crown{font-size:15px}
+ .leader-win-rate{font-size:13px}
+ .leader-rating{font-size:15px}
+}
