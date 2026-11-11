@@ -266,6 +266,7 @@ export default function Admin() {
   if (!staffRole) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
+  const playerMatchLabel = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username} · ${player.player_code}` : "Unknown player"; };
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
   const playerOneOptions = players.filter((player) => player.id !== two && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerOneSearch.trim().toLowerCase()));
   const playerTwoOptions = players.filter((player) => player.id !== one && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerTwoSearch.trim().toLowerCase()));
@@ -413,16 +414,16 @@ export default function Admin() {
         </div>)}
       </section>
       <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
-        {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerName(editingMatch.one)} vs {playerName(editingMatch.two)}</h3>
+        {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerMatchLabel(editingMatch.one)} vs {playerMatchLabel(editingMatch.two)}</h3>
           <label>Venue<input value={editingMatch.venue} onChange={e=>setEditingMatch({...editingMatch,venue:e.target.value})}/></label>
           {editingMatch.racks.map((rack,index)=><div className="admin-card" key={index}><h3>Rack {index+1}</h3>
-            <label>Winner<select required value={rack.winnerId} onChange={e=>updateEditingRack(index,"winnerId",e.target.value)}><option value="">Select winner</option><option value={editingMatch.one}>{playerName(editingMatch.one)}</option><option value={editingMatch.two}>{playerName(editingMatch.two)}</option></select></label>
+            <label>Winner<select required value={rack.winnerId} onChange={e=>updateEditingRack(index,"winnerId",e.target.value)}><option value="">Select winner</option><option value={editingMatch.one}>{playerMatchLabel(editingMatch.one)}</option><option value={editingMatch.two}>{playerMatchLabel(editingMatch.two)}</option></select></label>
             <label>Balls left on table<input type="number" min="0" max="7" required value={rack.loserBalls} onChange={e=>updateEditingRack(index,"loserBalls",e.target.value)}/></label>
           </div>)}
           <div className="two-fields"><button disabled={busy}>Save corrected result</button><button type="button" className="secondary" onClick={()=>setEditingMatch(null)}>Cancel</button></div>
         </form>}
         {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <div style={{flex:"1 1 180px"}}><b>{playerName(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerName(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
+          <div style={{flex:"1 1 180px"}}><b>{playerMatchLabel(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerMatchLabel(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
           <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
         </div>)}
       </section>
