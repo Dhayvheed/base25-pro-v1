@@ -29,7 +29,7 @@ export default function Home(){
   <section className="redesign-hero">
    <div className="hero-copy"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1>
     <p>Track the players. Follow the results.<br/>See who really owns the table.</p>
-    <div className="hero-actions"><a className="primary hero-primary" href="#leaderboard">View Leaderboard <span>→</span></a><Link className="hero-secondary" href="/how-it-works">▷ &nbsp;How it works</Link></div>
+    <div className="hero-actions"><a className="primary hero-primary" href="#leaderboard">View Leaderboard <span>→</span></a></div>
    </div>
    <div className="hero-art" aria-hidden="true"><div className="art-light"></div><div className="art-sign">BASE<span>25</span><small>PRO</small></div><div className="pool-table"><div className="table-rail"></div><i className="cue-ball"></i><i className="ball ball-one"></i><i className="ball ball-two"></i><i className="ball ball-three"></i><i className="ball ball-four"></i><i className="ball ball-five"></i><i className="cue-stick"></i></div></div>
   </section>
