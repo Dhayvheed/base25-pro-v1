@@ -26,6 +26,7 @@ export default function Admin() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [matchConfirmation, setMatchConfirmation] = useState<{ playerOne: string; playerTwo: string; scoreOne: number; scoreTwo: number } | null>(null);
+  const [playerConfirmation, setPlayerConfirmation] = useState<string | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -85,8 +86,12 @@ export default function Admin() {
     if (!supabase) return;
     setBusy(true);
     const { error } = await supabase.rpc("admin_create_player", { p_full_name: fullName.trim(), p_username: username.trim(), p_photo_url: photo.trim() || null });
-    setMessage(error?.message || "Player registered.");
-    if (!error) {
+    if (error) {
+      setMessage(`Player was not registered: ${error.message}`);
+    } else {
+      const registeredUsername = username.trim().replace(/^@/, "");
+      setMessage("");
+      setPlayerConfirmation(registeredUsername);
       setFullName(""); setUsername(""); setPhoto("");
       await refresh();
     }
@@ -160,6 +165,18 @@ export default function Admin() {
   return (
     <main className="shell admin-shell">
       <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
+      {playerConfirmation && (
+        <div className="confirmation-backdrop" role="presentation">
+          <section className="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="player-confirmation-title">
+            <div className="confirmation-icon">✓</div>
+            <div className="eyebrow">PLAYER REGISTERED</div>
+            <h2 id="player-confirmation-title">Player added successfully.</h2>
+            <div className="confirmation-score"><div><b>New player</b><strong>@{playerConfirmation}</strong></div></div>
+            <p>The player is now available for match recording and appears on the public leaderboard.</p>
+            <button type="button" onClick={() => setPlayerConfirmation(null)}>Done</button>
+          </section>
+        </div>
+      )}
       {matchConfirmation && (
         <div className="confirmation-backdrop" role="presentation">
           <section className="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="match-confirmation-title">
