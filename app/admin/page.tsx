@@ -133,7 +133,8 @@ export default function Admin() {
     if(error)setMessage(`Match deletion failed: ${error.message}`);else{setMessage("Match deleted. ELO ratings recalculated.");setEditingMatch(null);await refreshMatches();await refresh();}
     setBusy(false);
   }
-\n  async function addMatch(event: FormEvent) {
+
+  async function addMatch(event: FormEvent) {
     event.preventDefault();
     if (!supabase || !one || !two || one === two) return;
     if (!racks[0].winnerId || !racks[1].winnerId) {
