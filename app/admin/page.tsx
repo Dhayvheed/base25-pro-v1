@@ -341,7 +341,7 @@ export default function Admin() {
             <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" {staffRole === "owner" && <button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button>}</div></div>}
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div>{staffRole === "owner" && <button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button>}</div>}
         </div>)}
       </section>
       <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
