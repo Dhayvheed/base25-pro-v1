@@ -18,6 +18,8 @@ export default function Admin() {
   const [photo, setPhoto] = useState("");
   const [one, setOne] = useState("");
   const [two, setTwo] = useState("");
+  const [playerOneSearch, setPlayerOneSearch] = useState("");
+  const [playerTwoSearch, setPlayerTwoSearch] = useState("");
   const [venue, setVenue] = useState("BASE25");
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
@@ -208,6 +210,9 @@ export default function Admin() {
   if (!admin) return <main className="shell"><h1>Access not authorised</h1><p>This account is not on the admin list.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
+  const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
+  const playerOneOptions = players.filter((player) => player.id !== two && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerOneSearch.trim().toLowerCase()));
+  const playerTwoOptions = players.filter((player) => player.id !== one && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerTwoSearch.trim().toLowerCase()));
   const winnerOptions = players.filter((player) => player.id === one || player.id === two);
 
   return (
@@ -258,14 +263,20 @@ export default function Admin() {
           <h2>Record match</h2>
           <p className="eyebrow">OFFICIAL RANKED FORMAT · BEST OF 3 RACKS</p>
           <form className="form" onSubmit={addMatch}>
+            <label>Search player one
+              <input type="search" placeholder="Search username, name or player code..." value={playerOneSearch} onChange={(e) => setPlayerOneSearch(e.target.value)} />
+            </label>
             <label>Player one
               <select required value={one} onChange={(e) => { setOne(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
-                <option value="">Select player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.full_name} ({player.player_code})</option>)}
+                <option value="">Select player</option>{playerOneOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
               </select>
+            </label>
+            <label>Search player two
+              <input type="search" placeholder="Search username, name or player code..." value={playerTwoSearch} onChange={(e) => setPlayerTwoSearch(e.target.value)} />
             </label>
             <label>Player two
               <select required value={two} onChange={(e) => { setTwo(e.target.value); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>
-                <option value="">Select player</option>{players.filter((player) => player.id !== one).map((player) => <option key={player.id} value={player.id}>{player.full_name} ({player.player_code})</option>)}
+                <option value="">Select player</option>{playerTwoOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
               </select>
             </label>
             <label>Venue / table<input value={venue} onChange={(e) => setVenue(e.target.value)} /></label>
@@ -276,7 +287,7 @@ export default function Admin() {
                 <label>Rack winner
                   <select required value={racks[index].winnerId} onChange={(e) => updateRack(index, "winnerId", e.target.value)}>
                     <option value="">Select rack winner</option>
-                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{player.full_name}</option>)}
+                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
                   </select>
                 </label>
                 <label>Balls left on table by losing player
