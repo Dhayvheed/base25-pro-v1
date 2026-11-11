@@ -34,7 +34,7 @@ export default function Admin() {
 
   async function refresh() {
     if (!supabase) return;
-    const { data, error } = await supabase.from("players").select("id,full_name,player_code").order("full_name");
+    const { data, error } = await supabase.rpc("admin_list_players");
     if (error) setMessage(error.message);
     setPlayers(data || []);
   }
