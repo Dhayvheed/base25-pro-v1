@@ -41,3 +41,13 @@
 .confirmation-modal p{margin:18px 0 4px;color:var(--muted);font-size:13px}
 .confirmation-modal button{width:100%;margin-top:18px}
 @media(max-width:420px){.confirmation-modal{padding:26px 18px}.confirmation-modal h2{font-size:22px}.confirmation-score{gap:7px;padding:14px 8px}.confirmation-score b{font-size:10px}.confirmation-score strong{font-size:28px}}
+
+
+/* Combined searchable player selectors */
+.player-picker{position:relative}
+.player-picker>input{width:100%}
+.player-picker-options{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:50;max-height:260px;overflow-y:auto;background:#171c19;border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.player-picker-options button{display:block;width:100%;margin:0;padding:14px 16px;background:transparent;color:var(--text);border:0;border-bottom:1px solid var(--line);border-radius:0;text-align:left;font-size:13px;line-height:1.5;font-weight:500;white-space:normal;overflow-wrap:anywhere}
+.player-picker-options button:last-child{border-bottom:0}
+.player-picker-options button:hover,.player-picker-options button:focus{background:#252e28;color:var(--lime);outline:none}
+.player-picker-empty{padding:14px 16px;color:var(--muted);font-size:12px}
