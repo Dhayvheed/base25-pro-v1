@@ -3,3 +3,9 @@
 /* ELO change colors */
 .elo-positive{color:#39d98a!important;font-weight:700}
 .elo-negative{color:#ff6262!important;font-weight:700}
+
+/* Leaderboard podium crowns */
+.rank-crown{display:inline-block;margin-right:6px;font-size:15px;line-height:1;color:var(--gold);vertical-align:1px}
+.rank-1 .rank-crown{font-size:18px;color:#f2cf63}
+.rank-2 .rank-crown{color:#c6d0d2}
+.rank-3 .rank-crown{color:#c58a5a}
