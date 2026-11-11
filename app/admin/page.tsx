@@ -25,6 +25,7 @@ export default function Admin() {
   ]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [matchConfirmation, setMatchConfirmation] = useState<{ playerOne: string; playerTwo: string; scoreOne: number; scoreTwo: number } | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -120,8 +121,16 @@ export default function Admin() {
       p_racks: payload,
       p_venue: venue.trim() || "BASE25",
     });
-    setMessage(error?.message || `Match saved successfully. Match ID: ${data}`);
-    if (!error) {
+    if (error) {
+      setMessage(`Match was not published: ${error.message}`);
+    } else {
+      setMatchConfirmation({
+        playerOne: playerName(one),
+        playerTwo: playerName(two),
+        scoreOne: rackWins.one,
+        scoreTwo: rackWins.two,
+      });
+      setMessage("");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
       setOne(""); setTwo("");
     }
@@ -151,6 +160,22 @@ export default function Admin() {
   return (
     <main className="shell admin-shell">
       <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
+      {matchConfirmation && (
+        <div className="confirmation-backdrop" role="presentation">
+          <section className="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="match-confirmation-title">
+            <div className="confirmation-icon">✓</div>
+            <div className="eyebrow">RESULT RECORDED</div>
+            <h2 id="match-confirmation-title">Match published successfully.</h2>
+            <div className="confirmation-score">
+              <div><b>{matchConfirmation.playerOne}</b><strong>{matchConfirmation.scoreOne}</strong></div>
+              <span>—</span>
+              <div><b>{matchConfirmation.playerTwo}</b><strong>{matchConfirmation.scoreTwo}</strong></div>
+            </div>
+            <p>ELO ratings have been updated.</p>
+            <button type="button" onClick={() => setMatchConfirmation(null)}>Done</button>
+          </section>
+        </div>
+      )}
       <div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1>
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
