@@ -24,7 +24,13 @@ export default function Admin() {
     { winnerId: "", loserBalls: "0", blackBallFinish: false },
   ]);
   const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);\n\n  useEffect(() => {\n    if (!message) return;\n    const timeout = window.setTimeout(() => setMessage(""), 4500);\n    return () => window.clearTimeout(timeout);\n  }, [message]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!message) return;
+    const timeout = window.setTimeout(() => setMessage(""), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
 
   async function refresh() {
     if (!supabase) return;
@@ -100,7 +106,8 @@ export default function Admin() {
     const rackCount = thirdRackNeeded ? 3 : 2;
     const payload = racks.slice(0, rackCount).map((rack) => ({
       winner_id: rack.winnerId,
-      loser_balls_remaining: Number(rack.loserBalls),\n      black_ball_finish: rack.blackBallFinish,
+      loser_balls_remaining: Number(rack.loserBalls),
+      black_ball_finish: rack.blackBallFinish,
     }));
     if (payload.some((rack) => ![one, two].includes(rack.winner_id) || !Number.isInteger(rack.loser_balls_remaining) || rack.loser_balls_remaining < 0)) {
       setMessage("Check each rack winner and the losing player's balls remaining.");
@@ -185,7 +192,8 @@ export default function Admin() {
                 <label>Balls left on table by losing player
                   <input type="number" min="0" step="1" required value={racks[index].loserBalls} onChange={(e) => updateRack(index, "loserBalls", e.target.value)} />
                 </label>
-                <label className="checkbox-label"><input type="checkbox" checked={racks[index].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === index ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>\n                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
+                <label className="checkbox-label"><input type="checkbox" checked={racks[index].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === index ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>
+                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
               </div>
             ))}
 
@@ -202,7 +210,8 @@ export default function Admin() {
                 <label>Balls left on table by losing player
                   <input type="number" min="0" step="1" required value={racks[2].loserBalls} onChange={(e) => updateRack(2, "loserBalls", e.target.value)} />
                 </label>
-                <label className="checkbox-label"><input type="checkbox" checked={racks[2].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === 2 ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>\n                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
+                <label className="checkbox-label"><input type="checkbox" checked={racks[2].blackBallFinish} onChange={(e) => setRacks((current) => current.map((rack, i) => i === 2 ? { ...rack, blackBallFinish: e.target.checked } : rack))} /> Winner cleared the black ball (no margin bonus)</label>
+                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
               </div>
             )}
 
