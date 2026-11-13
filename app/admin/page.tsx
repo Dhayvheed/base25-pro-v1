@@ -45,6 +45,8 @@ export default function Admin() {
   const [editUsername, setEditUsername] = useState("");
   const [editPhoto, setEditPhoto] = useState("");
   const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
+  const [championWeek, setChampionWeek] = useState("");
+  const [championPlayer, setChampionPlayer] = useState("");
 
   async function refreshStaff() {
     if (!supabase) return;
@@ -202,6 +204,12 @@ export default function Admin() {
     setBusy(true);const {error}=await supabase.rpc("admin_delete_match",{p_match_id:match.id});
     if(error)setMessage(`Match deletion failed: ${error.message}`);else{setMessage("Match deleted. ELO ratings recalculated.");setEditingMatch(null);await refreshMatches();await refresh();}
     setBusy(false);
+  }
+
+  async function saveWeeklyChampion(event: FormEvent) {
+    event.preventDefault(); if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer) return;
+    setBusy(true); const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer });
+    setMessage(error ? `Champion was not saved: ${error.message}` : "Weekly champion added to the Hall of Fame."); setBusy(false);
   }
 
   async function addMatch(event: FormEvent) {
@@ -405,6 +413,7 @@ export default function Admin() {
           </>}
         </div>)}
       </section>
+      <section className="admin-card"><h2>Record weekly champion</h2><p className="muted">Add the winner of the Saturday final. This does not change leaderboard points or player records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Week starting (Monday)<input type="date" required value={championWeek} onChange={e=>setChampionWeek(e.target.value)}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>setChampionPlayer(e.target.value)}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>Save Hall of Fame entry</button></form></section>
       <section className="admin-card"><h2>Manage player profiles</h2>
         {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
