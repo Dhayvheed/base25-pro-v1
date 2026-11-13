@@ -47,6 +47,7 @@ export default function Admin() {
   const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
   const [championWeek, setChampionWeek] = useState("");
   const [championPlayer, setChampionPlayer] = useState("");
+  const [championNotice, setChampionNotice] = useState("");
 
   async function refreshStaff() {
     if (!supabase) return;
@@ -209,7 +210,7 @@ export default function Admin() {
   async function saveWeeklyChampion(event: FormEvent) {
     event.preventDefault(); if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer) return;
     setBusy(true); const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer });
-    setMessage(error ? `Champion was not saved: ${error.message}` : "Weekly champion added to the Hall of Fame."); setBusy(false);
+    setChampionNotice(error ? `Champion was not saved: ${error.message}` : "Saturday Final Champion successfully updated in the Hall of Fame."); setBusy(false);
   }
 
   async function addMatch(event: FormEvent) {
@@ -413,7 +414,7 @@ export default function Admin() {
           </>}
         </div>)}
       </section>
-      <section className="admin-card"><h2>Record weekly champion</h2><p className="muted">Add the winner of the Saturday final. This does not change leaderboard points or player records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Week starting (Monday)<input type="date" required value={championWeek} onChange={e=>setChampionWeek(e.target.value)}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>setChampionPlayer(e.target.value)}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>Save Hall of Fame entry</button></form></section>
+      <section className="admin-card"><h2>Record Saturday Champion</h2><p className="muted">Add the winner of the Saturday final. This does not change weekly rankings or career records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Week starting (Monday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>{busy ? "Saving champion..." : "Save Hall of Fame entry"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
       <section className="admin-card"><h2>Manage player profiles</h2>
         {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
