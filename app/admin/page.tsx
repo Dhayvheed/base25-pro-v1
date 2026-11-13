@@ -29,6 +29,7 @@ export default function Admin() {
   const [playerOnePickerOpen, setPlayerOnePickerOpen] = useState(false);
   const [playerTwoPickerOpen, setPlayerTwoPickerOpen] = useState(false);
   const [venue, setVenue] = useState("BASE25");
+  const [matchFormat, setMatchFormat] = useState<"single" | "best_of_3">("single");
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
     { winnerId: "", loserBalls: "0" },
@@ -99,14 +100,14 @@ export default function Admin() {
     checkAdmin();
   }, [session]);
 
-  const thirdRackNeeded = !!racks[0].winnerId && !!racks[1].winnerId && racks[0].winnerId !== racks[1].winnerId;
+  const thirdRackNeeded = matchFormat === "best_of_3" && !!racks[0].winnerId && !!racks[1].winnerId && racks[0].winnerId !== racks[1].winnerId;
   const rackWins = useMemo(() => {
-    const completed = thirdRackNeeded ? racks.slice(0, 3) : racks.slice(0, 2);
+    const completed = matchFormat === "single" ? racks.slice(0, 1) : thirdRackNeeded ? racks.slice(0, 3) : racks.slice(0, 2);
     return {
       one: completed.filter((rack) => rack.winnerId === one).length,
       two: completed.filter((rack) => rack.winnerId === two).length,
     };
-  }, [racks, one, two, thirdRackNeeded]);
+  }, [racks, one, two, thirdRackNeeded, matchFormat]);
 
   function updateRack(index: number, field: keyof Rack, value: string) {
     setRacks((current) => current.map((rack, i) => i === index ? { ...rack, [field]: value } : rack));
@@ -206,15 +207,15 @@ export default function Admin() {
   async function addMatch(event: FormEvent) {
     event.preventDefault();
     if (!supabase || !one || !two || one === two) return;
-    if (!racks[0].winnerId || !racks[1].winnerId) {
-      setMessage("Select a winner and balls remaining for racks 1 and 2.");
+    if (!racks[0].winnerId || (matchFormat === "best_of_3" && !racks[1].winnerId)) {
+      setMessage(matchFormat === "single" ? "Select the winner and balls remaining for the rack." : "Select a winner and balls remaining for racks 1 and 2.");
       return;
     }
     if (thirdRackNeeded && !racks[2].winnerId) {
       setMessage("The match is tied 1–1. Complete rack 3.");
       return;
     }
-    const rackCount = thirdRackNeeded ? 3 : 2;
+    const rackCount = matchFormat === "single" ? 1 : thirdRackNeeded ? 3 : 2;
     const payload = racks.slice(0, rackCount).map((rack) => ({
       winner_id: rack.winnerId,
       loser_balls_remaining: Number(rack.loserBalls),
@@ -318,7 +319,7 @@ export default function Admin() {
 
         <section className="admin-card">
           <h2>Record match</h2>
-          <p className="eyebrow">OFFICIAL RANKED FORMAT · BEST OF 3 RACKS</p>
+          <p className="eyebrow">OFFICIAL RANKED FORMAT · ONE RACK</p>
           <form className="form" onSubmit={addMatch}>
             <label>Player one
               <div className="player-picker">
@@ -338,9 +339,10 @@ export default function Admin() {
                 </div>}
               </div>
             </label>
+            <label>Match format<select value={matchFormat} onChange={(e) => { setMatchFormat(e.target.value as "single" | "best_of_3"); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}><option value="single">Ranked match · One rack</option><option value="best_of_3">Special match · Best of 3</option></select></label>
             <label>Venue / table<input value={venue} onChange={(e) => setVenue(e.target.value)} /></label>
 
-            {[0, 1].map((index) => (
+            {(matchFormat === "single" ? [0] : [0, 1]).map((index) => (
               <div className="admin-card" key={index}>
                 <h3>Rack {index + 1}</h3>
                 <label>Rack winner
@@ -376,9 +378,9 @@ export default function Admin() {
             <div className="admin-card">
               <h3>Match score</h3>
               <div className="two-fields"><p>{playerName(one)}<br /><strong>{rackWins.one}</strong></p><p>{playerName(two)}<br /><strong>{rackWins.two}</strong></p></div>
-              <p className="eyebrow">{rackWins.one === 2 ? `Match winner: ${playerName(one)}` : rackWins.two === 2 ? `Match winner: ${playerName(two)}` : thirdRackNeeded ? "Decider required" : "Complete rack 1 and rack 2"}</p>
+              <p className="eyebrow">{matchFormat === "single" ? (rackWins.one === 1 ? `Match winner: ${playerName(one)}` : rackWins.two === 1 ? `Match winner: ${playerName(two)}` : "Complete the rack") : rackWins.one === 2 ? `Match winner: ${playerName(one)}` : rackWins.two === 2 ? `Match winner: ${playerName(two)}` : thirdRackNeeded ? "Decider required" : "Complete rack 1 and rack 2"}</p>
             </div>
-            <button disabled={busy || !one || !two || one === two || !racks[0].winnerId || !racks[1].winnerId || (thirdRackNeeded && !racks[2].winnerId) || (rackWins.one !== 2 && rackWins.two !== 2)}>
+            <button disabled={busy || !one || !two || one === two || !racks[0].winnerId || (matchFormat === "best_of_3" && !racks[1].winnerId) || (thirdRackNeeded && !racks[2].winnerId) || (matchFormat === "single" ? (rackWins.one !== 1 && rackWins.two !== 1) : (rackWins.one !== 2 && rackWins.two !== 2))}>
               {busy ? "Saving match..." : "Save match"}
             </button>
           </form>
