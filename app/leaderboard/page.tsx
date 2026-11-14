@@ -13,7 +13,7 @@ export default function LeaderboardPage(){
  const [champions,setChampions]=useState<Champion[]>([]);
  useEffect(()=>{let active=true;async function load(){if(!supabase){setError("Leaderboard is temporarily unavailable.");setLoading(false);return;}setLoading(true);setError("");
  const leaderboardRequest=period==="all_time"
- ? supabase.from("player_public_leaderboard").select("id,player_code,username,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage").order("elo_rating",{ascending:false})
+ ? supabase.from("player_public_leaderboard").select("id,player_code,username,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage").gt("matches_played",0).order("elo_rating",{ascending:false})
  : supabase.rpc("get_period_leaderboard",{p_period:period});
  const [{data,error},{data:hall,error:hallError}]=await Promise.all([leaderboardRequest,supabase.from("weekly_champions").select("id,week_start,week_end,player_id,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(100)]);
  if(!active)return;if(error)setError(error.message);if(hallError)setError(hallError.message);
