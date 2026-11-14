@@ -26,7 +26,7 @@ export default function HallOfFamePage(){
    {loading?<p className="muted">Loading champions...</p>:champions.length===0?<div className="admin-card"><h2>The first champion is waiting.</h2><p className="muted">Saturday Final winners will appear here after they are recorded.</p></div>:<>
     <div className="eyebrow" style={{marginTop:28}}>LATEST CHAMPION</div>
     <div className="admin-card hall-of-fame-feature">
-     <div className="eyebrow">CHAMPION #001{champions.length>1?"+"+String(champions.length-1).padStart(3,"0"):""}</div>
+     <div className="eyebrow">CHAMPION #{String(champions.length).padStart(3,"0")}</div>
      <div className="leader-player"><span className="avatar">{champions[0].players?.photo_url?<img src={champions[0].players.photo_url} alt=""/>:champions[0].players?.username?.[0]||"?"}</span><span><b>{champions[0].players?.username||"Champion"}</b><small>{champions[0].players?.player_code||""}</small></span></div>
      <h2>Saturday Champion</h2><p className="muted">{new Date(champions[0].week_start+"T00:00:00").toLocaleDateString()} – {new Date(champions[0].week_end+"T00:00:00").toLocaleDateString()}</p>
     </div>
