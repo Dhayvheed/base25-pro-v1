@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null };
+type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
 type StaffMember = { user_id: string; email: string; role: "owner" | "manager" | "attendant"; is_active: boolean; created_at: string };
@@ -16,6 +17,8 @@ export default function Admin() {
   const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
   const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
+  const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -72,6 +75,26 @@ export default function Admin() {
     setPlayers(data || []);
   }
 
+  async function refreshPlayerAccountStatuses() {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_list_player_account_status");
+    if (error) { setMessage(`Could not load account assignments: ${error.message}`); return; }
+    const rows = (data || []) as PlayerAccountStatus[];
+    setPlayerAccountStatuses(rows);
+    setEmailDrafts(Object.fromEntries(rows.map(row => [row.player_id, row.assigned_email || ""])));
+  }
+
+  async function assignPlayerEmail(player: Player) {
+    if (!supabase || staffRole !== "owner") return;
+    const emailValue = (emailDrafts[player.id] || "").trim().toLowerCase();
+    if (!emailValue) { setMessage("Enter an email address first."); return; }
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_assign_player_email", { p_player_id: player.id, p_email: emailValue });
+    if (error) setMessage(`Email assignment failed: ${error.message}`);
+    else { setMessage(`Email assigned to @${player.username}. The player must verify it before signing in.`); await refreshPlayerAccountStatuses(); }
+    setBusy(false);
+  }
+
   async function refreshMatches() {
     if (!supabase) return;
     const { data, error } = await supabase
@@ -99,7 +122,7 @@ export default function Admin() {
       setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
       if (role) { refresh(); refreshMatches(); }
-      if (role === "owner") refreshStaff();
+      if (role === "owner") { refreshStaff(); refreshPlayerAccountStatuses(); }
     }
     checkAdmin();
   }, [session]);
@@ -438,15 +461,16 @@ export default function Admin() {
         </div>)}
       </section>
 
-      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2>
-        {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
+      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2><p className="muted">Assign each existing player an email address. The player must verify that email before their account is linked.</p>
+        {players.map(player=>{ const account = playerAccountStatuses.find(row => row.player_id === player.id); return <div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
             <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
             <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
-        </div>)}
+          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified"} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verification Pending" ? "Update assigned email" : account?.account_status === "Verified" ? "Email verified" : "Assign email"}</button></div>
+        </div>})}
       </section>
       <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
         {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerMatchLabel(editingMatch.one)} vs {playerMatchLabel(editingMatch.two)}</h3>
