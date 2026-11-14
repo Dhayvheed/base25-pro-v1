@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import SiteNavigation from "@/components/SiteNavigation";
 
 type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };
 
@@ -18,7 +19,7 @@ export default function HallOfFamePage(){
   setLoading(false);
  }load();return()=>{active=false;};},[]);
  return <main className="shell redesign-shell">
-  <header className="topbar redesign-topbar"><Link className="brand redesign-brand" href="/">BASE<span>25</span> PRO</Link><nav><Link href="/">Home</Link><Link href="/leaderboard">Leaderboard</Link><Link className="nav-active" href="/hall-of-fame">Hall of Fame</Link><Link href="/matches">Matches</Link><Link className="admin-link" href="/admin">Admin</Link></nav></header>
+  <SiteNavigation />
   <section className="section redesign-section">
    <div className="eyebrow">BASE25 PRO / LEGACY</div><h1>Hall of Fame<span>.</span></h1>
    <p className="muted">Every Saturday Final Champion earns a permanent place in BASE25 history.</p>
