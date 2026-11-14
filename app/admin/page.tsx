@@ -89,9 +89,14 @@ export default function Admin() {
     const emailValue = (emailDrafts[player.id] || "").trim().toLowerCase();
     if (!emailValue) { setMessage("Enter an email address first."); return; }
     setBusy(true);
-    const { error } = await supabase.rpc("admin_assign_player_email", { p_player_id: player.id, p_email: emailValue });
-    if (error) setMessage(`Email assignment failed: ${error.message}`);
-    else { setMessage(`Email assigned to @${player.username}. The player must verify it before signing in.`); await refreshPlayerAccountStatuses(); }
+    const { data: loginResult, error } = await supabase.functions.invoke("owner-assign-player-login", { body: { player_id: player.id, email: emailValue } });
+    if (error || loginResult?.error) setMessage(`Player login setup failed: ${loginResult?.error || error?.message || "Unknown error"}`);
+    else {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, { redirectTo: `${window.location.origin}/reset-password` });
+      if (resetError) setMessage(`Account created for @${player.username}, but password email could not be sent: ${resetError.message}. Use Forgot Password to resend.`);
+      else setMessage(`Player login created for @${player.username}. A password setup link has been sent to ${emailValue}.`);
+      await refreshPlayerAccountStatuses();
+    }
     setBusy(false);
   }
 
