@@ -76,7 +76,7 @@ export default function PredictionsPage(){
  async function settle(q:Question){if(!supabase||!settleChoices[q.id])return;if(!window.confirm("Settle this question and award points? This action cannot be reversed."))return;setBusy(true);setError("");const {data,error}=await supabase.rpc("admin_settle_prediction_question",{p_question_id:q.id,p_correct_option_id:settleChoices[q.id]});if(error)setError(error.message);else{setMessage("Question settled. "+data+" correct predictions received points.");await load();}setBusy(false);}
 
  const totalSubmitted=entries.filter(e=>questions.some(q=>q.id===e.question_id)).length;
- const pointsThisWeek=entries.reduce((sum,e)=>sum+(e.points_awarded||0),0);
+ const pointsThisWeek=entries.filter(e=>questions.some(q=>q.id===e.question_id)).reduce((sum,e)=>sum+(e.points_awarded||0),0);
 
  return <main className="shell redesign-shell"><SiteNavigation/><div className="pred-wrap">
   <section className="pred-hero">
