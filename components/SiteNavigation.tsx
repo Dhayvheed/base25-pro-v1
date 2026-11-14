@@ -102,28 +102,31 @@ export default function SiteNavigation() {
         {brand(true)}
         <button type="button" className="site-drawer-close" aria-label="Close menu" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>×</button>
       </div>
-      <nav className="site-drawer-nav">
-        <Link className={"site-drawer-home" + (pathname === "/" ? " active" : "")} href="/" tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
-        <button className="site-drawer-section" type="button" onClick={() => setCompetitionOpen(v => !v)} aria-expanded={competitionOpen} tabIndex={open ? 0 : -1}><span>♜</span>Competition<i className={competitionOpen ? "rotated" : ""}>⌄</i></button>
-        {competitionOpen && <div className="site-drawer-subnav">{competitionLinks.map(item => <Link key={item.href} href={item.href} tabIndex={open ? 0 : -1}><span>{item.icon}</span>{item.label}</Link>)}</div>}
-        <Link href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
-        <Link href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
-        <Link href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works</Link>
-        <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format</Link>
-      </nav>
-      <div className="site-drawer-footer">
-        <p>BASE25 PRO<br/><small>Competition. Performance. Legacy.</small></p>
-        <div className="site-drawer-account">
-          <span className="site-drawer-account-label">ACCOUNT</span>
-          {!authReady ? <span className="site-drawer-account-loading">Checking account…</span> : signedIn ? <>
-            <Link href="/account" tabIndex={open ? 0 : -1}>♙ &nbsp; My Account <span>→</span></Link>
-            <button type="button" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>↪ &nbsp; {signingOut ? "Signing out…" : "Sign Out"}</button>
-          </> : <>
-            <Link href="/login" tabIndex={open ? 0 : -1}>♙ &nbsp; Player Login <span>→</span></Link>
-            <Link href="/register" tabIndex={open ? 0 : -1}>＋ &nbsp; Create Account <span>→</span></Link>
-          </>}
+      <div className="site-drawer-scroll">
+        <nav className="site-drawer-nav">
+          <Link className={"site-drawer-home" + (pathname === "/" ? " active" : "")} href="/" tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
+          <button className="site-drawer-section" type="button" onClick={() => setCompetitionOpen(v => !v)} aria-expanded={competitionOpen} tabIndex={open ? 0 : -1}><span>♜</span>Competition<i className={competitionOpen ? "rotated" : ""}>⌄</i></button>
+          {competitionOpen && <div className="site-drawer-subnav">{competitionLinks.map(item => <Link key={item.href} href={item.href} tabIndex={open ? 0 : -1}><span>{item.icon}</span>{item.label}<i>→</i></Link>)}</div>}
+          <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
+          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
+          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works<i>›</i></Link>
+          <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format<i>›</i></Link>
+        </nav>
+        <div className="site-drawer-brand-card">
+          <span className="site-drawer-brand-ball">8</span>
+          <span><b>BASE25 <em>PRO</em></b><small>Competition. Performance. Legacy.</small></span>
         </div>
         <Link className="site-drawer-admin" href="/admin" tabIndex={open ? 0 : -1}>♙ &nbsp; Admin / Staff Access <span>→</span></Link>
+      </div>
+      <div className="site-drawer-account-fixed">
+        <span className="site-drawer-account-label">ACCOUNT</span>
+        {!authReady ? <span className="site-drawer-account-loading">Checking account…</span> : signedIn ? <>
+          <Link className="site-drawer-login-cta" href="/account" tabIndex={open ? 0 : -1}>♙ &nbsp; My Account <span>→</span></Link>
+          <button className="site-drawer-signout" type="button" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>{signingOut ? "Signing out…" : "Sign Out"}</button>
+        </> : <>
+          <Link className="site-drawer-login-cta" href="/login" tabIndex={open ? 0 : -1}>♙ &nbsp; Player Login <span>→</span></Link>
+          <Link className="site-drawer-register" href="/register" tabIndex={open ? 0 : -1}>Create Account <span>→</span></Link>
+        </>}
       </div>
     </aside>
     <nav className="site-mobile-bottom" aria-label="Mobile navigation">
