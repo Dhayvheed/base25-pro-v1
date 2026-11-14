@@ -33,7 +33,8 @@ export default function Home(){
   <section className="redesign-hero">
    <div className="hero-copy"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1>
     <p>Track the players. Follow the results.<br/>See who really owns the table.</p>
-    <div className="hero-actions"><a className="primary hero-primary" href="#leaderboard">View Weekly Top 5 <span>→</span></a></div>
+    <div className="hero-actions"><a className="primary hero-primary" href="#leaderboard">View Weekly Top 5 <span>→</span></a><Link className="snapshot-hero-link" href="/weekly-archive">▦ &nbsp; WEEKLY SNAPSHOTS <span>→</span></Link></div>
+    <style jsx>{`.snapshot-hero-link{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 17px;border:1px solid #c5f36a;border-radius:9px;background:#182317;color:#d9f68a;text-decoration:none;font:800 11px monospace;letter-spacing:.07em;box-shadow:0 0 22px #c5f36a18}.snapshot-hero-link span{font-size:15px}.snapshot-hero-link:hover{background:#293b20;transform:translateY(-1px)}@media(max-width:520px){.hero-actions{display:flex;flex-wrap:wrap;gap:10px}.snapshot-hero-link{width:100%;min-height:46px}}`}</style>
    </div>
    <div className="hero-art" aria-hidden="true"><div className="art-light"></div><div className="art-sign">BASE<span>25</span><small>PRO</small></div><div className="pool-table"><div className="table-rail"></div><i className="cue-ball"></i><i className="ball ball-one"></i><i className="ball ball-two"></i><i className="ball ball-three"></i><i className="ball ball-four"></i><i className="ball ball-five"></i><i className="cue-stick"></i></div></div>
   </section>
