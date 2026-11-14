@@ -352,3 +352,5 @@
  .site-mobile-bottom a span{font-size:23px;line-height:1.1}
  .site-mobile-bottom a.active{color:var(--lime)}
 }
+
+.player-directory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.player-directory-card{position:relative;display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:12px;padding:16px;border:1px solid #344139;border-radius:14px;background:linear-gradient(110deg,#121a15,#0b100d);color:#f2f5ef;text-decoration:none}.player-directory-card .avatar{width:52px;height:52px}.player-directory-name b,.player-directory-name small{display:block}.player-directory-name small,.player-directory-record{color:#aeb9ad;font-size:12px}.player-directory-card>strong{color:var(--lime);font-size:18px}.player-directory-card>strong small{font-size:10px}.player-directory-record{grid-column:2/4}.player-directory-arrow{position:absolute;right:15px;top:15px;color:#d7f58a}@media(max-width:760px){.player-directory-grid{grid-template-columns:1fr}.player-directory-card{grid-template-columns:46px 1fr auto;padding:13px}.player-directory-card .avatar{width:44px;height:44px}}
