@@ -45,10 +45,6 @@ export default function SiteNavigation() {
       const metadataName = user.user_metadata?.username || user.user_metadata?.prediction_nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
       setAccountName(metadataName);
       setAuthReady(true);
-      const { data } = await supabase!.rpc("get_my_base25_player_profile");
-      if (!active) return;
-      const profile = Array.isArray(data) ? data[0] : data;
-      if (profile?.username) setAccountName(profile.username);
     };
     supabase.auth.getSession().then(({ data }) => loadAccount(data.session?.user ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
