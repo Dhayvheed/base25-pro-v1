@@ -6,11 +6,19 @@ import SiteNavigation from "@/components/SiteNavigation";
 import { supabase } from "@/lib/supabase";
 
 type Option = { id:string; label:string; sort_order:number; player_id:string|null };
-type Question = { id:string; template_key:string|null; title:string; description:string|null; category:string; status:string; opens_at:string; locks_at:string; points_reward:number; correct_option_id:string|null; options:Option[] };
+type Question = { id:string; week_start:string; template_key:string|null; title:string; description:string|null; category:string; status:string; opens_at:string; locks_at:string; points_reward:number; correct_option_id:string|null; options:Option[] };
 type PredictionProfile = { user_id:string; prediction_id:string; nickname:string; points:number };
 type Entry = { id:string; question_id:string; option_id:string; is_correct:boolean|null; points_awarded:number; submitted_at:string };
 type Leader = { prediction_id:string; nickname:string; points:number };
 
+function currentCompetitionWeekStart(){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+ const localDate=new Date(Date.UTC(Number(values.year),Number(values.month)-1,Number(values.day)));
+ const weekday=localDate.getUTCDay();
+ localDate.setUTCDate(localDate.getUTCDate()-((weekday+1)%7));
+ return localDate.toISOString().slice(0,10);
+}
 function timeLeft(value:string){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return "Locked";const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000);return d?d+"d "+h+"h":h?h+"h "+m+"m":m+"m";}
 function normaliseQuestion(value:any):Question{return {...value,options:Array.isArray(value.options)?value.options:[]};}
 
@@ -27,7 +35,7 @@ export default function PredictionsPage(){
   setLoading(true);setError("");
   const [{data:{session},error:authError},{data:q,error:qe}]=await Promise.all([
    supabase.auth.getSession(),
-   supabase.from("prediction_questions").select("id,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order,player_id)").neq("status","draft").order("locks_at",{ascending:true})
+   supabase.from("prediction_questions").select("id,week_start,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order,player_id)").eq("week_start",currentCompetitionWeekStart()).neq("status","draft").order("locks_at",{ascending:true})
   ]);
   if(authError&&authError.name!=="AuthSessionMissingError")setError(authError.message);
   if(qe)setError(qe.message);
