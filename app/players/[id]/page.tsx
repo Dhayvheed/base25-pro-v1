@@ -14,7 +14,10 @@ export default function PlayerProfile(){
   const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",id).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${id},player_two_id.eq.${id}`).order("played_at",{ascending:false}),
-   supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false})
+   supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false}),
+   supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
+   supabase.from("weekly_leaderboard_archive_entries").select("rank,weekly_elo,matches_played,wins,losses,win_percentage,archive:weekly_leaderboard_archives(week_start,week_end)").eq("player_id",id).order("rank",{ascending:true}),
+   supabase.from("weekly_champions").select("id,week_start,week_end").eq("player_id",id).order("week_start",{ascending:false})
   ]);
   setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===id)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===id)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);if(gamesError)console.error("Could not load player matches:",gamesError);
   const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===id)+1);
