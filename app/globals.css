@@ -273,3 +273,27 @@
 .player-career-panel .eyebrow{margin-top:18px}
 .player-career-panel .match{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:13px 0;border-bottom:1px solid #29332c}
 @media(max-width:760px){.player-career-panel{padding:17px}.player-career-panel h2{font-size:25px}.player-career-panel .profile-stat-grid>div{min-height:95px}.player-career-panel .profile-stat-grid strong{font-size:23px}}
+
+/* Admin desk: compact navigation and focused workspaces */
+.admin-workspace-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin:24px 0 22px;padding:14px;border:1px solid #344139;border-radius:16px;background:#0d130f}
+.admin-workspace-nav button{display:flex;align-items:center;gap:10px;min-height:48px;padding:11px 13px;border:1px solid transparent;border-radius:10px;background:#141d17;color:#dce5dc;text-align:left;font-weight:650;cursor:pointer}
+.admin-workspace-nav button span{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;background:#253328;color:var(--lime);font-size:17px}
+.admin-workspace-nav button.active{border-color:#829c54;background:#202c20;color:#e6f8c8}
+.admin-workspace-nav button.active span{background:#394b2c}
+.admin-overview{padding:26px;margin-bottom:24px}
+.admin-overview h2{font-size:27px;margin:8px 0}
+.admin-overview-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.admin-overview-actions button{display:flex;align-items:center;gap:14px;text-align:left;padding:17px;border:1px solid #3b493e;border-radius:12px;background:#111a14;color:#e6eee4;font-size:21px}
+.admin-overview-actions button span{display:flex;flex-direction:column;gap:5px}
+.admin-overview-actions button b{font-size:14px}
+.admin-overview-actions button small{font-size:12px;color:#aab7aa;font-weight:400}
+.admin-grid{display:block}
+.admin-grid>.admin-card{margin-bottom:18px}
+@media(max-width:680px){
+ .admin-workspace-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:9px}
+ .admin-workspace-nav button{font-size:12px;padding:9px 8px;gap:7px;min-height:46px}
+ .admin-workspace-nav button span{width:22px;height:22px;font-size:14px;flex:0 0 22px}
+ .admin-overview{padding:18px}
+ .admin-overview h2{font-size:23px}
+ .admin-overview-actions{grid-template-columns:1fr}
+}
