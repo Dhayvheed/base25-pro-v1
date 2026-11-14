@@ -242,7 +242,7 @@ export default function Admin() {
   async function saveWeeklyChampion(event: FormEvent) {
     event.preventDefault(); if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer || !/^\\d+$/.test(championPrize) || Number(championPrize) < 0) return;
     setBusy(true); const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer, p_prize_amount: Number(championPrize) });
-    setChampionNotice(error ? `Champion was not saved: ${error.message}` : "Champion and ₦${Number(championPrize).toLocaleString("en-NG")} prize saved to the Hall of Fame."); setBusy(false);
+    setChampionNotice(error ? `Champion was not saved: ${error.message}` : `Champion and ₦${Number(championPrize).toLocaleString("en-NG")} prize saved to the Hall of Fame.`); setBusy(false);
   }
 
   async function addMatch(event: FormEvent) {
