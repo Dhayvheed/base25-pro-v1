@@ -1,0 +1,12 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import Link from "next/link";
+import {supabase} from "@/lib/supabase";
+import SiteNavigation from "@/components/SiteNavigation";
+type Player={id:string;username:string;player_code:string;photo_url:string|null;elo_rating:number;matches_played:number;wins:number;losses:number;win_percentage:number};
+export default function PlayersPage(){
+ const [players,setPlayers]=useState<Player[]>([]),[search,setSearch]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ useEffect(()=>{let active=true;async function load(){if(!supabase){setError("Player directory is temporarily unavailable.");setLoading(false);return;}const {data,error}=await supabase.from("player_public_leaderboard").select("id,username,player_code,photo_url,elo_rating,matches_played,wins,losses,win_percentage").order("elo_rating",{ascending:false});if(!active)return;if(error)setError(error.message);setPlayers((data||[]) as Player[]);setLoading(false);}load();return()=>{active=false;};},[]);
+ const filtered=useMemo(()=>players.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase())),[players,search]);
+ return <main className="shell redesign-shell"><SiteNavigation/><section className="section redesign-section"><div className="eyebrow">BASE25 PRO / COMMUNITY</div><h1>Players<span>.</span></h1><p className="muted">Find every registered player and explore their competition record.</p><label className="redesign-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search player name or code..."/></label>{error&&<p className="notice">{error}</p>}{loading?<p className="muted">Loading players...</p>:filtered.length===0?<div className="empty-state">No players found.</div>:<div className="player-directory-grid">{filtered.map((p,i)=><Link href={"/players/"+p.id} className="player-directory-card" key={p.id}><span className="avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username?.[0]||"?"}</span><span className="player-directory-name"><b>{p.username}</b><small>{p.player_code}</small></span><strong>{Number(p.elo_rating||1000).toLocaleString()} <small>ELO</small></strong><span className="player-directory-record">{p.matches_played} matches · {p.wins}W / {p.losses}L</span><span className="player-directory-arrow">→</span></Link>)}</div>}</section></main>;
+}
