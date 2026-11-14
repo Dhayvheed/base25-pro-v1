@@ -95,6 +95,30 @@ export default function Admin() {
     setBusy(false);
   }
 
+  async function sendPlayerInvitation(player: Player) {
+    if (!supabase || staffRole !== "owner" || !session?.access_token) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/player-invitation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ player_id: player.id }),
+      });
+      const result = await response.json();
+      if (!response.ok) setMessage(`Invitation failed: ${result.error || "Unknown error"}`);
+      else setMessage(result.message || `Invitation sent to @${player.username}.`);
+      await refreshPlayerAccountStatuses();
+    } catch (error) {
+      setMessage(`Invitation failed: ${error instanceof Error ? error.message : "Network error"}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function refreshMatches() {
     if (!supabase) return;
     const { data, error } = await supabase
@@ -469,7 +493,8 @@ export default function Admin() {
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
-          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified"} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verification Pending" ? "Update assigned email" : account?.account_status === "Verified" ? "Email verified" : "Assign email"}</button></div>
+          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified"} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verification Pending" ? "Update assigned email" : account?.account_status === "Verified" ? "Email verified" : "Assign email"}</button>
+            <button type="button" disabled={busy || !account?.assigned_email || account?.account_status === "Verified"} onClick={()=>sendPlayerInvitation(player)}>Send invitation</button></div>
         </div>})}
       </section>
       <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
