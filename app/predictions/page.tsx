@@ -5,7 +5,7 @@ import Link from "next/link";
 import SiteNavigation from "@/components/SiteNavigation";
 import { supabase } from "@/lib/supabase";
 
-type Option = { id:string; label:string; sort_order:number };
+type Option = { id:string; label:string; sort_order:number; player_id:string|null };
 type Question = { id:string; template_key:string|null; title:string; description:string|null; category:string; status:string; opens_at:string; locks_at:string; points_reward:number; correct_option_id:string|null; options:Option[] };
 type PredictionProfile = { user_id:string; prediction_id:string; nickname:string; points:number };
 type Entry = { id:string; question_id:string; option_id:string; is_correct:boolean|null; points_awarded:number; submitted_at:string };
@@ -34,7 +34,7 @@ export default function PredictionsPage(){
   setLoading(true);setError("");
   const [{data:{session},error:authError},{data:q,error:qe}]=await Promise.all([
    supabase.auth.getSession(),
-   supabase.from("prediction_questions").select("id,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order)").neq("status","draft").order("locks_at",{ascending:true})
+   supabase.from("prediction_questions").select("id,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order,player_id)").neq("status","draft").order("locks_at",{ascending:true})
   ]);
   if(authError&&authError.name!=="AuthSessionMissingError")setError(authError.message);
   if(qe)setError(qe.message);
@@ -42,16 +42,13 @@ export default function PredictionsPage(){
   setQuestions(loadedQuestions);
   const championQuestion=loadedQuestions.find(item=>item.template_key==="saturday_champion");
   if(championQuestion){
-   const lockDay=new Date(championQuestion.locks_at).toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"});
-   const [yy,mm,dd]=lockDay.split("-").map(Number);
-   const lockDate=new Date(Date.UTC(yy,mm-1,dd));
-   const daysSinceSaturday=(lockDate.getUTCDay()+1)%7;
-   lockDate.setUTCDate(lockDate.getUTCDate()-daysSinceSaturday);
-   const weekStart=lockDate.toISOString().slice(0,10);
-   const {data:archive}=await supabase.from("weekly_leaderboard_archives").select("id").eq("week_start",weekStart).maybeSingle();
+   // Saturday Champion uses the latest published weekly snapshot (the previous completed week).
+   const {data:archive,error:archiveError}=await supabase.from("weekly_leaderboard_archives").select("id").order("week_start",{ascending:false}).order("snapshot_at",{ascending:false}).limit(1).maybeSingle();
+   if(archiveError)setError(archiveError.message);
    if(archive){
-    const {data:top}=await supabase.from("weekly_leaderboard_archive_entries").select("player_id").eq("archive_id",archive.id).lte("rank",5).order("rank",{ascending:true});
-    const ids=(top||[]).map((row:any)=>row.player_id);
+    const {data:top,error:topError}=await supabase.from("weekly_leaderboard_archive_entries").select("player_id").eq("archive_id",archive.id).lte("rank",5).order("rank",{ascending:true});
+    if(topError)setError(topError.message);
+    const ids=(top||[]).map((row:any)=>row.player_id).filter(Boolean);
     setConfirmedTop5(ids);setTop5Ready(ids.length===5);
    }else{setConfirmedTop5([]);setTop5Ready(false);}
   }else{setConfirmedTop5([]);setTop5Ready(false);}
