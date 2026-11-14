@@ -137,7 +137,8 @@ export default function HallOfFamePage() {
                 </article>;
               }) : <div className="hof-empty">No champions match that search.</div>}
             </div>
-          </section></>}
+          </>}
+          </section>
         </>
       ) : (
         <section className="hof-empty-state">
