@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
@@ -28,10 +29,7 @@ export default function Home(){
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
  const visiblePlayers=filtered.slice(0,5);
  return <main className="shell redesign-shell">
-  <header className="topbar redesign-topbar">
-   <Link className="brand redesign-brand" href="/"><span className="brand-mark">▰</span> BASE<span>25</span> PRO</Link>
-   <nav><a className="nav-active" href="#leaderboard">Leaderboard</a><Link href="/weekly-archive">Weekly Archive</Link><Link href="/hall-of-fame">Hall of Fame</Link><a href="#matches">Matches</a><Link href="/how-it-works">How it works</Link><Link className="admin-link" href="/admin">♙ Admin</Link></nav>
-  </header>
+  <SiteNavigation />
   <section className="redesign-hero">
    <div className="hero-copy"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1>
     <p>Track the players. Follow the results.<br/>See who really owns the table.</p>
