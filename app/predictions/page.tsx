@@ -1,173 +1,67 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNavigation from "@/components/SiteNavigation";
 import { supabase } from "@/lib/supabase";
 
-type PlayerProfile = {
-  id: string;
-  player_code: string;
-  username: string;
-  full_name: string;
-  photo_url: string | null;
-  elo_rating: number;
-  highest_elo: number;
-  matches_played: number;
-  wins: number;
-  losses: number;
-  win_percentage: number;
-  account_status: "new" | "active";
-  created_at: string;
-};
+type Question = { id:string; title:string; description:string|null; category:string; status:string; opens_at:string; locks_at:string; points_reward:number; correct_option_id:string|null; options:{id:string;label:string;sort_order:number}[] };
+type PredictionProfile = { user_id:string; prediction_id:string; nickname:string; points:number };
+type Entry = { id:string; question_id:string; option_id:string; is_correct:boolean|null; points_awarded:number; submitted_at:string };
 
-export default function PredictionsPage() {
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [mode, setMode] = useState<"register" | "login">("register");
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [profile, setProfile] = useState<PlayerProfile | null>(null);
-  const [checking, setChecking] = useState(true);
+function timeLeft(value:string){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return "Locked";const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000);return d?d+"d "+h+"h":h?h+"h "+m+"m":m+"m";}
 
-  async function loadProfile() {
-    if (!supabase) { setChecking(false); return; }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setProfile(null); setChecking(false); return; }
-    const { data, error } = await supabase.rpc("get_my_base25_player_profile");
-    if (error) setMessage("Your account is verified, but we could not load your BASE25 player profile. Please refresh.");
-    setProfile((Array.isArray(data) ? data[0] : null) as PlayerProfile | null);
-    setChecking(false);
-  }
+export default function PredictionsPage(){
+ const [userId,setUserId]=useState<string|null>(null),[profile,setProfile]=useState<PredictionProfile|null>(null);
+ const [questions,setQuestions]=useState<Question[]>([]),[entries,setEntries]=useState<Entry[]>([]);
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
+ const [nickname,setNickname]=useState(""),[selected,setSelected]=useState<Record<string,string>>({});
+ const [adminTitle,setAdminTitle]=useState(""),[adminDescription,setAdminDescription]=useState(""),[adminCategory,setAdminCategory]=useState("Weekly"),[adminOptions,setAdminOptions]=useState("Yes\nNo"),[adminLock,setAdminLock]=useState(""),[adminPoints,setAdminPoints]=useState("100");
+ const [settleChoices,setSettleChoices]=useState<Record<string,string>>({});
 
-  useEffect(() => {
-    if (!supabase) { setChecking(false); return; }
-    void loadProfile();
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      window.setTimeout(() => { void loadProfile(); }, 0);
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
+ const load=useCallback(async()=>{
+  if(!supabase){setLoading(false);return;}
+  setLoading(true);setError("");
+  const [{data:{user},error:authError},{data:q,error:qe}]=await Promise.all([supabase.auth.getUser(),supabase.from("prediction_questions").select("id,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,prediction_options(id,label,sort_order)").neq("status","draft").order("locks_at",{ascending:true})]);
+  if(authError)setError(authError.message);
+  if(qe)setError(qe.message);
+  setQuestions((q||[]) as unknown as Question[]);
+  setUserId(user?.id||null);
+  if(user){
+   const [{data:p,error:pe},{data:e,error:ee}]=await Promise.all([
+    supabase.rpc("ensure_prediction_profile",{p_nickname:null}),
+    supabase.from("prediction_entries").select("id,question_id,option_id,is_correct,points_awarded,submitted_at").eq("user_id",user.id)
+   ]);
+   if(pe)setError(pe.message);
+   else {const row=(Array.isArray(p)?p[0]:p) as PredictionProfile|null;setProfile(row);if(row)setNickname(row.nickname);}
+   if(ee)setError(ee.message);setEntries((e||[]) as Entry[]);
+  }else{setProfile(null);setEntries([]);}
+  setLoading(false);
+ },[]);
 
-  async function requestEmailLink(event: FormEvent) {
-    event.preventDefault();
-    if (!supabase) return;
-    if (mode === "register" && (fullName.trim().length < 2 || username.trim().length < 2)) {
-      setMessage("Enter your name and a username with at least 2 characters.");
-      return;
-    }
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/predictions`,
-        shouldCreateUser: mode === "register",
-        data: mode === "register" ? {
-          full_name: fullName.trim().slice(0, 60),
-          username: username.trim().replace(/^@/, "").slice(0, 24),
-        } : undefined,
-      },
-    });
-    if (error) setMessage(error.message);
-    else setSent(true);
-    setBusy(false);
-  }
+ useEffect(()=>{void load();if(!supabase)return;const {data:{subscription}}=supabase.auth.onAuthStateChange(()=>{window.setTimeout(()=>void load(),0);});return()=>subscription.unsubscribe();},[load]);
 
-  async function signOut() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setProfile(null);
-    setSent(false);
-    setMessage("");
-  }
+ async function saveNickname(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError("");const {data,error}=await supabase.rpc("ensure_prediction_profile",{p_nickname:nickname.trim()});if(error)setError(error.message);else{setProfile((Array.isArray(data)?data[0]:data) as PredictionProfile);setMessage("Your prediction nickname has been saved.");}setBusy(false);}
+ async function submitPrediction(q:Question){if(!supabase||!selected[q.id])return;setBusy(true);setError("");setMessage("");const {error}=await supabase.rpc("submit_prediction",{p_question_id:q.id,p_option_id:selected[q.id]});if(error)setError(error.message);else{setMessage("Prediction submitted. You can change it before the lock time.");await load();}setBusy(false);}
+ async function createQuestion(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError("");setMessage("");const opts=adminOptions.split("\n").map(x=>x.trim()).filter(Boolean);const {error}=await supabase.rpc("admin_create_prediction_question",{p_title:adminTitle.trim(),p_description:adminDescription.trim(),p_category:adminCategory.trim(),p_locks_at:new Date(adminLock).toISOString(),p_points_reward:Number(adminPoints),p_options:opts});if(error)setError(error.message);else{setMessage("Prediction question published.");setAdminTitle("");setAdminDescription("");setAdminOptions("Yes\nNo");await load();}setBusy(false);}
+ async function settle(q:Question){if(!supabase||!settleChoices[q.id])return;if(!window.confirm("Settle this question and award points? This action cannot be reversed."))return;setBusy(true);setError("");const {data,error}=await supabase.rpc("admin_settle_prediction_question",{p_question_id:q.id,p_correct_option_id:settleChoices[q.id]});if(error)setError(error.message);else{setMessage("Question settled. "+data+" correct predictions received points.");await load();}setBusy(false);}
+ const leaderboard=profile?.points!==undefined?[]:[];
+ const [leaders,setLeaders]=useState<{prediction_id:string;nickname:string;points:number}[]>([]);
+ useEffect(()=>{if(!supabase)return;supabase.from("prediction_profiles").select("prediction_id,nickname,points").order("points",{ascending:false}).limit(20).then(({data})=>setLeaders((data||[]) as typeof leaders));},[profile?.points,questions.length]);
 
-  if (!supabase) return <main className="shell"><h1>BASE25 accounts are temporarily unavailable.</h1><p>Supabase configuration is missing.</p></main>;
-
-  return (
-    <main className="shell">
-      <SiteNavigation />
-      <section className="prediction-auth-wrap">
-        <div className="eyebrow">BASE25 PRO · YOUR PLAYER ACCOUNT</div>
-        <h1>One account.<br /><span>Every competition.</span></h1>
-        <p className="prediction-intro">Create your BASE25 player identity once. Use the same account for your player profile, competition records and Predictions League.</p>
-
-        {checking ? <div className="prediction-auth-card">Checking your account…</div> : profile ? (
-          <section className="prediction-auth-card">
-            <div className="eyebrow">YOUR BASE25 PLAYER PROFILE</div>
-            <h2>Welcome, {profile.username}.</h2>
-            <div className="prediction-id">{profile.player_code}</div>
-            <div className="profile-stats">
-              <div><small>Starting / Current ELO</small><b>{profile.elo_rating.toLocaleString()}</b></div>
-              <div><small>Matches played</small><b>{profile.matches_played}</b></div>
-              <div><small>Wins</small><b>{profile.wins}</b></div>
-              <div><small>Win rate</small><b>{Number(profile.win_percentage || 0).toFixed(1)}%</b></div>
-            </div>
-            <p>{profile.account_status === "active" ? "Your competitive record is active." : "Your player profile is ready. Play your first ranked match at BASE25 to enter the competitive leaderboard."}</p>
-            <div className="profile-actions">
-              <Link className="prediction-primary" href={`/players/${profile.id}`}>View player profile</Link>
-              <Link className="prediction-secondary" href="/leaderboard">View leaderboard</Link>
-              <Link className="prediction-secondary" href="/">Explore BASE25 PRO</Link>
-            </div>
-            <button type="button" className="prediction-secondary signout" onClick={signOut}>Sign out</button>
-          </section>
-        ) : sent ? (
-          <section className="prediction-auth-card" aria-live="polite">
-            <div className="prediction-mail-icon">✉</div>
-            <h2>Check your email.</h2>
-            <p>We sent a secure sign-in link to <strong>{email}</strong>. Open it to verify your email and access your BASE25 account.</p>
-            <button type="button" className="prediction-secondary" onClick={() => setSent(false)}>Use a different email</button>
-          </section>
-        ) : (
-          <section className="prediction-auth-card">
-            <div className="prediction-tabs">
-              <button type="button" className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setMessage(""); }}>Create account</button>
-              <button type="button" className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setMessage(""); }}>Sign in</button>
-            </div>
-            <form className="prediction-form" onSubmit={requestEmailLink}>
-              {mode === "register" && <>
-                <label>Full name<input required minLength={2} maxLength={60} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your name" /></label>
-                <label>Choose a username<input required minLength={2} maxLength={24} value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. CueMaster" /></label>
-              </>}
-              <label>Email address<input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>
-              <button className="prediction-primary" disabled={busy}>{busy ? "Sending link…" : mode === "register" ? "Verify email & create player profile" : "Send sign-in link"}</button>
-            </form>
-            {message && <p className="prediction-error" role="alert">{message}</p>}
-            <p className="prediction-privacy">Email verification protects your account. Your player profile is created automatically after registration. No phone number required.</p>
-          </section>
-        )}
-        <p className="prediction-back"><Link href="/">← Back to BASE25 PRO</Link></p>
-      </section>
-      <style jsx>{`
-        .prediction-auth-wrap{max-width:560px;margin:68px auto 110px;padding:0 18px}
-        .prediction-auth-wrap h1{font-size:clamp(2.5rem,8vw,4.5rem);line-height:1.02;letter-spacing:-.055em;margin:14px 0}
-        .prediction-auth-wrap h1 span{color:var(--lime,#c7f36b)}
-        .prediction-intro{color:var(--muted,#a3a3a3);line-height:1.7;max-width:470px;margin-bottom:28px}
-        .prediction-auth-card{background:var(--panel,#151515);border:1px solid var(--line,#303030);border-radius:18px;padding:24px}
-        .prediction-auth-card h2{font-size:1.65rem;margin:10px 0}
-        .prediction-auth-card p{color:var(--muted,#a3a3a3);line-height:1.65}
-        .prediction-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
-        .prediction-tabs button,.prediction-secondary{background:transparent;color:inherit;border:1px solid var(--line,#333);border-radius:10px;padding:12px;font-weight:700;text-align:center;text-decoration:none}
-        .prediction-tabs button.active{background:var(--lime,#c7f36b);color:#111;border-color:var(--lime,#c7f36b)}
-        .prediction-form{display:grid;gap:18px}
-        .prediction-form label{display:grid;gap:8px;font-size:.9rem;font-weight:650}
-        .prediction-form input{width:100%;padding:14px 13px;border-radius:10px;border:1px solid var(--line,#444);background:#0d0d0d;color:white;font:inherit}
-        .prediction-primary{display:block;width:100%;border:0;border-radius:10px;padding:15px;background:var(--lime,#c7f36b);color:#111;font-weight:800;font-size:.95rem;cursor:pointer;text-align:center;text-decoration:none}
-        .prediction-primary:disabled{opacity:.6;cursor:wait}
-        .prediction-privacy{font-size:.78rem;margin:18px 0 0}
-        .prediction-error{color:#ff8e8e!important;font-size:.88rem}
-        .prediction-mail-icon{font-size:2rem}
-        .prediction-id{display:inline-block;padding:10px 14px;border:1px solid var(--line,#444);border-radius:9px;font-weight:800;letter-spacing:.08em;margin:8px 0}
-        .prediction-back{margin-top:24px;font-size:.9rem}
-        .prediction-back a{color:var(--muted,#aaa);text-decoration:none}
-        .profile-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
-        .profile-stats div{background:#0d0d0d;border:1px solid var(--line,#333);border-radius:10px;padding:13px;display:grid;gap:5px}
-        .profile-stats small{color:var(--muted,#aaa);font-size:.75rem}.profile-stats b{font-size:1.2rem}
-        .profile-actions{display:grid;gap:9px;margin-top:18px}.signout{width:100%;margin-top:10px}
-        @media(max-width:600px){.prediction-auth-wrap{margin:38px auto 100px}.prediction-auth-card{padding:19px}}
-      `}</style>
-    </main>
-  );
+ return <main className="shell redesign-shell"><SiteNavigation/><section className="pred-wrap">
+  <div className="pred-hero"><div className="eyebrow">BASE25 PRO · COMMUNITY GAME</div><h1>Call it right.<br/><span>Climb the board.</span></h1><p>Predict BASE25 competition outcomes, earn points for correct calls and compete with players and spectators on one leaderboard.</p><div className="pred-pills"><span>FREE TO PLAY</span><span>NO CASH BETTING</span><span>POINTS ONLY</span></div></div>
+  {loading?<div className="pred-card">Loading Predictions League…</div>:!userId?<div className="pred-card pred-join"><div className="eyebrow">ONE BASE25 ACCOUNT</div><h2>Join the Predictions League.</h2><p>Already have a BASE25 PRO account? Sign in. New here? Create one account to access predictions and, if you play at BASE25, your competition profile too.</p><div className="pred-actions"><Link className="pred-primary" href="/login?next=/predictions">Sign in</Link><Link className="pred-secondary" href="/register">Create BASE25 account</Link></div><small>No separate prediction password or account.</small></div>:profile&&<><div className="pred-account"><div><small>YOUR PREDICTION ID</small><strong>{profile.prediction_id}</strong><span>@{profile.nickname}</span></div><div className="pred-points"><small>POINTS BALANCE</small><b>{profile.points.toLocaleString()}</b></div></div>
+  <form className="pred-card pred-nickname" onSubmit={saveNickname}><label>Prediction nickname<input value={nickname} minLength={2} maxLength={24} onChange={e=>setNickname(e.target.value)} /></label><button disabled={busy||nickname.trim()===profile.nickname}>Save nickname</button></form>
+  <section className="pred-section"><div className="pred-section-head"><div><div className="eyebrow">MAKE YOUR CALL</div><h2>Open predictions<span>.</span></h2></div><span className="pred-count">{questions.filter(q=>q.status==="open"&&new Date(q.locks_at)>new Date()).length} OPEN</span></div>
+  {questions.length===0?<div className="pred-card pred-empty"><h3>No predictions are live yet.</h3><p>New questions will appear here when BASE25 publishes them. Check back soon.</p></div>:<div className="pred-question-list">{questions.map(q=>{const entry=entries.find(x=>x.question_id===q.id);const locked=q.status!=="open"||new Date(q.locks_at)<=new Date();const settled=q.status==="settled";return <article className="pred-card pred-question" key={q.id}><div className="pred-q-meta"><span>{q.category}</span><span className={settled?"settled":locked?"locked":"open"}>{settled?"RESULT PUBLISHED":locked?"LOCKED":"LOCKS IN "+timeLeft(q.locks_at)}</span></div><h3>{q.title}</h3>{q.description&&<p>{q.description}</p>}<div className="pred-options">{q.options.sort((a,b)=>a.sort_order-b.sort_order).map(o=><button type="button" key={o.id} disabled={locked||!!entry&&locked} className={(selected[q.id]||entry?.option_id)===o.id?"chosen":""} onClick={()=>setSelected(s=>({...s,[q.id]:o.id}))}>{o.label}{settled&&q.correct_option_id===o.id?<b> ✓ Correct</b>:null}</button>)}</div><div className="pred-q-footer"><span>{q.points_reward} points for a correct call</span>{!locked?<button type="button" className="pred-submit" disabled={busy||!selected[q.id]} onClick={()=>submitPrediction(q)}>{entry?"Update prediction":"Submit prediction"}</button>:<span>{entry?(settled?(entry.is_correct?"Correct · +"+entry.points_awarded+" points":"Not quite"):"Your pick: "+(q.options.find(o=>o.id===entry.option_id)?.label||"Submitted")):"No prediction submitted"}</span>}</div>{settled&&<div className="pred-result">Correct answer: <b>{q.options.find(o=>o.id===q.correct_option_id)?.label||"—"}</b></div>}</article>})}</div>}</section>
+  <section className="pred-section"><div className="pred-section-head"><div><div className="eyebrow">THE COMMUNITY RACE</div><h2>Prediction leaderboard<span>.</span></h2></div></div><div className="pred-card pred-leaders">{leaders.length===0?<p>No scores yet. Be the first to make a correct prediction.</p>:leaders.map((p,i)=><div className="pred-leader" key={p.prediction_id}><b className="pred-rank">{i+1}</b><span><strong>{p.nickname}</strong><small>{p.prediction_id}</small></span><b>{p.points.toLocaleString()} pts</b></div>)}</div></section>
+  </>}
+  {userId&&<details className="pred-admin"><summary>Owner controls · Manage questions</summary><form className="pred-card pred-admin-form" onSubmit={createQuestion}><h3>Publish a prediction question</h3><label>Question<input required minLength={5} maxLength={140} value={adminTitle} onChange={e=>setAdminTitle(e.target.value)} placeholder="Who will be Saturday's champion?"/></label><label>Description (optional)<textarea value={adminDescription} onChange={e=>setAdminDescription(e.target.value)}/></label><div className="pred-admin-grid"><label>Category<input value={adminCategory} onChange={e=>setAdminCategory(e.target.value)}/></label><label>Points reward<input type="number" min="1" max="10000" value={adminPoints} onChange={e=>setAdminPoints(e.target.value)}/></label></div><label>Lock date and time<input required type="datetime-local" value={adminLock} onChange={e=>setAdminLock(e.target.value)}/></label><label>Options · one per line<textarea required value={adminOptions} onChange={e=>setAdminOptions(e.target.value)}/></label><button className="pred-primary" disabled={busy}>Publish question</button></form><div className="pred-card pred-admin-form"><h3>Settle locked questions</h3>{questions.filter(q=>q.status!=="settled"&&new Date(q.locks_at)<=new Date()).map(q=><div className="pred-settle" key={q.id}><b>{q.title}</b><select value={settleChoices[q.id]||""} onChange={e=>setSettleChoices(s=>({...s,[q.id]:e.target.value}))}><option value="">Choose correct answer</option>{q.options.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select><button disabled={busy||!settleChoices[q.id]} onClick={()=>settle(q)}>Publish result & award points</button></div>)}{questions.filter(q=>q.status!=="settled"&&new Date(q.locks_at)<=new Date()).length===0&&<p>No locked questions waiting for results.</p>}</div></details>}
+  {error&&<p className="pred-error" role="alert">{error}</p>}{message&&<p className="pred-message" role="status">{message}</p>}
+  <p className="pred-foot">Predictions are free entertainment. Points have no cash value. No deposits, stakes or cash betting.</p>
+ </section>
+ <style jsx>{`
+ .pred-wrap{max-width:900px;margin:54px auto 110px;padding:0 18px}.pred-hero{padding:28px 0 32px}.pred-hero h1{font-size:clamp(2.7rem,8vw,5rem);line-height:.98;letter-spacing:-.06em;margin:15px 0}.pred-hero h1 span,.pred-section h2 span{color:var(--lime,#c7f36b)}.pred-hero p{color:var(--muted,#aaa);line-height:1.7;max-width:600px}.pred-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.pred-pills span,.pred-count{font-size:.68rem;letter-spacing:.08em;border:1px solid var(--line,#333);padding:7px 10px;border-radius:30px;color:var(--muted,#aaa)}.pred-card{background:var(--panel,#151515);border:1px solid var(--line,#303030);border-radius:16px;padding:22px;margin-bottom:14px}.pred-join{max-width:600px}.pred-join h2{font-size:1.8rem;margin:10px 0}.pred-join p,.pred-question p{color:var(--muted,#aaa);line-height:1.65}.pred-actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.pred-primary,.pred-secondary,.pred-submit{display:inline-flex;justify-content:center;align-items:center;border:0;border-radius:9px;padding:13px 17px;font-weight:800;text-decoration:none;cursor:pointer}.pred-primary,.pred-submit{background:var(--lime,#c7f36b);color:#111}.pred-secondary{border:1px solid var(--line,#444);color:inherit;background:transparent}.pred-join small{color:var(--muted,#999)}.pred-account{display:flex;justify-content:space-between;gap:18px;align-items:center;background:#111;border:1px solid var(--line,#333);border-radius:14px;padding:17px 20px;margin:12px 0}.pred-account>div{display:grid;gap:5px}.pred-account small,.pred-nickname label{font-size:.75rem;color:var(--muted,#aaa)}.pred-account strong{font-size:1.2rem;letter-spacing:.07em}.pred-account span{color:var(--muted,#aaa)}.pred-points{text-align:right}.pred-points b{font-size:1.7rem;color:var(--lime,#c7f36b)}.pred-nickname{display:flex;align-items:end;gap:12px}.pred-nickname label,.pred-admin-form label{display:grid;gap:7px;flex:1}.pred-nickname input,.pred-admin-form input,.pred-admin-form textarea,.pred-settle select{width:100%;padding:12px;border:1px solid var(--line,#444);border-radius:8px;background:#0d0d0d;color:white;font:inherit}.pred-nickname button,.pred-settle button{background:transparent;border:1px solid var(--line,#444);color:inherit;border-radius:8px;padding:12px;font-weight:700}.pred-section{margin-top:42px}.pred-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:15px}.pred-section h2{font-size:clamp(1.6rem,5vw,2.2rem);margin:6px 0}.pred-question h3{font-size:1.25rem;margin:13px 0 8px}.pred-q-meta,.pred-q-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.pred-q-meta{font-size:.68rem;letter-spacing:.08em;color:var(--muted,#aaa)}.pred-q-meta .open{color:var(--lime,#c7f36b)}.pred-q-meta .locked{color:#e6bd6d}.pred-q-meta .settled{color:#9bd7ff}.pred-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin:18px 0}.pred-options button{background:#0d0d0d;border:1px solid var(--line,#444);border-radius:9px;color:inherit;padding:13px;text-align:left;cursor:pointer}.pred-options button.chosen{border-color:var(--lime,#c7f36b);background:#1a2412}.pred-options button:disabled{cursor:default;opacity:.8}.pred-q-footer{font-size:.82rem;color:var(--muted,#aaa);padding-top:12px;border-top:1px solid var(--line,#333)}.pred-submit:disabled,.pred-primary:disabled{opacity:.55;cursor:wait}.pred-result{margin-top:12px;padding:10px;background:#101a0d;border-radius:8px}.pred-leader{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line,#333)}.pred-leader:last-child{border:0}.pred-rank{width:28px;color:var(--lime,#c7f36b)}.pred-leader span{display:grid;gap:3px;flex:1}.pred-leader small{color:var(--muted,#999);font-size:.72rem}.pred-admin{margin-top:40px}.pred-admin summary{cursor:pointer;color:var(--muted,#aaa);padding:12px 0}.pred-admin-form{display:grid;gap:14px}.pred-admin-form h3{margin:0}.pred-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pred-admin-form textarea{min-height:80px}.pred-settle{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line,#333)}.pred-error{color:#ff8e8e}.pred-message{color:var(--lime,#c7f36b)}.pred-foot{font-size:.75rem;color:var(--muted,#888);margin:28px 0}.pred-empty h3{margin:0}.pred-empty p{color:var(--muted,#aaa)}@media(max-width:600px){.pred-wrap{margin:28px auto 100px}.pred-card{padding:17px}.pred-account{align-items:flex-start}.pred-nickname{align-items:stretch;flex-direction:column}.pred-admin-grid{grid-template-columns:1fr}.pred-settle{grid-template-columns:1fr}.pred-q-footer{align-items:stretch}.pred-submit{width:100%}}
+ `}</style></main>;
 }
