@@ -8,6 +8,7 @@ type Champion = {
   week_start: string;
   week_end: string;
   player_id: string;
+  prize_amount: number;
   players?: { username: string; player_code: string; photo_url: string | null } | null;
 };
 
@@ -22,6 +23,7 @@ export default function HallOfFamePage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [order, setOrder] = useState<"newest" | "oldest">("newest");
+  const [view, setView] = useState<"champions" | "earners">("champions");
 
   useEffect(() => {
     let active = true;
@@ -33,7 +35,7 @@ export default function HallOfFamePage() {
       }
       const { data, error } = await supabase
         .from("weekly_champions")
-        .select("id,week_start,week_end,player_id,players(username,player_code,photo_url)")
+        .select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)")
         .order("week_start", { ascending: false })
         .limit(100);
       if (!active) return;
@@ -57,6 +59,12 @@ export default function HallOfFamePage() {
   }, [champions, search, order]);
 
   const latest = champions[0];
+  const totalPrizeMoney = champions.reduce((sum, champion) => sum + Number(champion.prize_amount || 0), 0);
+  const earners = Object.values(champions.reduce((acc, champion) => {
+    const key = champion.player_id;
+    if (!acc[key]) acc[key] = { player_id: key, username: champion.players?.username || "BASE25 Champion", player_code: champion.players?.player_code || "BASE25 PLAYER", photo_url: champion.players?.photo_url || null, total: 0, wins: 0 };
+    acc[key].total += Number(champion.prize_amount || 0); acc[key].wins += 1; return acc;
+  }, {} as Record<string, {player_id:string;username:string;player_code:string;photo_url:string|null;total:number;wins:number}>)).sort((a,b)=>b.total-a.total);
 
   return (
     <main className="shell redesign-shell hof-shell">
@@ -96,7 +104,7 @@ export default function HallOfFamePage() {
                   <div className="hof-title-line"><span>🏆</span> Saturday Champion</div>
                   <div className="hof-date-line">▦ &nbsp; {dateLabel(latest.week_start)} – {dateLabel(latest.week_end)}</div>
                 </div>
-                <div className="hof-trophy" aria-hidden="true">🏆</div>
+                <div className="hof-prize-block"><div className="hof-trophy" aria-hidden="true">🏆</div><small>PRIZE WON</small><strong>₦{Number(latest.prize_amount || 0).toLocaleString("en-NG")}</strong></div>
               </div>
               <div className="hof-feature-foot"><span>ONE TABLE. ONE CROWN. ONE KING.</span><b>THE LEGACY BEGINS</b></div>
             </article>
@@ -105,10 +113,12 @@ export default function HallOfFamePage() {
           <section className="hof-stats" aria-label="Hall of Fame statistics">
             <div><span className="hof-stat-icon">♛</span><strong>{champions.length}</strong><small>CHAMPION{champions.length === 1 ? "" : "S"}</small></div>
             <div><span className="hof-stat-icon">▦</span><strong>{champions.length}</strong><small>FINALS RECORDED</small></div>
-            <div><span className="hof-stat-icon">#</span><strong>001</strong><small>LATEST HONOREE</small></div>
+            <div><span className="hof-stat-icon">₦</span><strong>₦{totalPrizeMoney.toLocaleString("en-NG")}</strong><small>TOTAL PRIZES AWARDED</small></div>
           </section>
 
           <section className="hof-history">
+            <div className="hof-view-tabs"><button className={view === "champions" ? "active" : ""} onClick={() => setView("champions")}>♛ &nbsp; All Champions</button><button className={view === "earners" ? "active" : ""} onClick={() => setView("earners")}>▤ &nbsp; Highest Earners</button></div>
+            {view === "earners" ? <div className="hof-earners"><div className="hof-history-head"><div><p className="hof-section-label">CAREER PRIZE RECORDS</p><h2>Highest <span>Earners</span></h2><p className="hof-history-note">Ranked by total verified tournament prizes won.</p></div></div>{earners.length ? earners.map((player,index)=><article className="hof-history-row hof-earner-row" key={player.player_id}><div className="hof-history-rank">#{index+1}</div><div className="hof-history-avatar">{player.photo_url?<img src={player.photo_url} alt=""/>:player.username[0]}</div><div className="hof-history-player"><b>{player.username}</b><small>{player.player_code} · {player.wins} win{player.wins===1?"":"s"}</small></div><strong className="hof-earned-amount">₦{player.total.toLocaleString("en-NG")}</strong></article>) : <div className="hof-empty">No prize earnings have been recorded yet.</div>}</div> : <>
             <div className="hof-history-head">
               <div><p className="hof-section-label">THE RECORD BOOK</p><h2>Championship <span>History</span></h2><p className="hof-history-note">Every champion. Every season. Never forgotten.</p></div>
               <label className="hof-sort">SORT BY <select value={order} onChange={(event) => setOrder(event.target.value as "newest" | "oldest")}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
@@ -122,12 +132,12 @@ export default function HallOfFamePage() {
                   <div className="hof-history-rank">#{rank}</div>
                   <div className="hof-history-avatar">{champion.players?.photo_url ? <img src={champion.players.photo_url} alt="" /> : champion.players?.username?.[0] || "?"}</div>
                   <div className="hof-history-player"><b>{champion.players?.username || "BASE25 Champion"}</b><small>{champion.players?.player_code || "BASE25 PLAYER"}</small></div>
-                  <div className="hof-history-title"><span>🏆</span><b>Saturday Champion</b><small>{dateLabel(champion.week_start)} – {dateLabel(champion.week_end)}</small></div>
+                  <div className="hof-history-title"><span>🏆</span><b>Saturday Champion</b><small>{dateLabel(champion.week_start)} – {dateLabel(champion.week_end)}</small></div><strong className="hof-earned-amount">₦{Number(champion.prize_amount || 0).toLocaleString("en-NG")}</strong>
                   {index === 0 && <span className="hof-latest-tag">LATEST</span>}
                 </article>;
               }) : <div className="hof-empty">No champions match that search.</div>}
             </div>
-          </section>
+          </section></>}
         </>
       ) : (
         <section className="hof-empty-state">
@@ -171,12 +181,12 @@ export default function HallOfFamePage() {
         .hof-player-code{margin:0;color:#a4ada5;font:13px 'DM Mono',monospace}
         .hof-title-line{margin-top:15px;color:#f0d477;font-weight:800;font-size:15px}.hof-title-line span{margin-right:7px}
         .hof-date-line{margin-top:9px;color:#aeb6ae;font-size:13px}
-        .hof-trophy{margin-left:auto;flex:0 0 auto;font-size:88px;filter:drop-shadow(0 0 17px rgba(222,174,48,.3))}
+        .hof-prize-block{margin-left:auto;flex:0 0 auto;display:grid;justify-items:center;gap:4px}.hof-trophy{font-size:70px;filter:drop-shadow(0 0 17px rgba(222,174,48,.3))}.hof-prize-block small{color:#e8c65f;font:10px "DM Mono",monospace;letter-spacing:.14em}.hof-prize-block strong,.hof-earned-amount{color:var(--lime);font:900 22px "DM Mono",monospace;white-space:nowrap;text-shadow:0 0 16px #b9f52d33}
         .hof-feature-foot{padding-top:12px;border-top:1px solid rgba(202,174,91,.22)}.hof-feature-foot b{color:var(--lime)}
         .hof-stats{display:grid;grid-template-columns:repeat(3,1fr);margin:22px 0 54px;border:1px solid #303a32;border-radius:12px;background:linear-gradient(110deg,#131915,#0c100e)}
         .hof-stats>div{display:flex;align-items:center;justify-content:center;gap:13px;padding:18px 12px;border-right:1px solid #303a32}.hof-stats>div:last-child{border:0}
         .hof-stat-icon{color:#dfbd5c;font-size:27px}.hof-stats strong{display:block;color:#f4f5ef;font-size:25px;line-height:1}.hof-stats small{display:block;margin-top:5px;color:#9ca69d;font:9px 'DM Mono',monospace;letter-spacing:.1em}
-        .hof-history{padding-bottom:20px}.hof-history-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:22px}
+        .hof-history{padding-bottom:20px}.hof-view-tabs{display:flex;gap:8px;margin:0 0 22px;padding:6px;border:1px solid #303a32;border-radius:12px;background:#101511}.hof-view-tabs button{flex:1;padding:13px 10px;border:0;border-radius:8px;background:transparent;color:#b5beb4;font-weight:800;font-size:12px}.hof-view-tabs button.active{background:linear-gradient(110deg,#f0d477,#b78b2c);color:#17130a}.hof-earners{margin-bottom:20px}.hof-earner-row{grid-template-columns:50px 48px minmax(0,1fr) auto}.hof-history-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:22px}
         .hof-history-head h2{margin:0;font-size:clamp(28px,5vw,40px);letter-spacing:-.06em}.hof-history-head h2 span{color:var(--lime)}
         .hof-history-note{margin:8px 0 0;color:#919b92;font-size:13px}
         .hof-sort{display:grid;gap:7px;color:#929c93;font:9px 'DM Mono',monospace;letter-spacing:.13em}.hof-sort select{min-width:145px;padding:10px 12px;border-radius:7px}
@@ -199,7 +209,7 @@ export default function HallOfFamePage() {
         @media(max-width:700px){
           .hof-shell{padding-left:18px;padding-right:18px}.hof-hero{margin:0 -5px 18px;padding:38px 8px 32px}.hof-crown{font-size:46px}.hof-kicker{font-size:9px;padding:7px 14px}.hof-hero h1{font-size:clamp(31px,8.2vw,48px);letter-spacing:-.06em;white-space:nowrap}.hof-intro{font-size:14px}.hof-subintro{max-width:310px;font-size:11px;line-height:1.6}
           .hof-laurel{top:76px;font-size:57px;opacity:.55}.hof-laurel-left{left:-2%}.hof-laurel-right{right:-2%}
-          .hof-feature{padding:16px 14px 12px}.hof-feature-top,.hof-feature-foot{font-size:8px;letter-spacing:.08em}.hof-feature-main{gap:13px;padding:20px 0}.hof-medallion{flex-basis:83px}.hof-avatar{width:76px;height:76px;font-size:28px;border-width:3px}.hof-medallion-rank{font-size:10px;padding:4px 10px}.hof-winner-copy h2{font-size:25px}.hof-winner-overline{font-size:8px}.hof-player-code{font-size:10px}.hof-title-line{font-size:12px;margin-top:11px}.hof-date-line{font-size:10px}.hof-trophy{font-size:43px;align-self:flex-start;margin-top:10px}
+          .hof-feature{padding:16px 14px 12px}.hof-feature-top,.hof-feature-foot{font-size:8px;letter-spacing:.08em}.hof-feature-main{gap:13px;padding:20px 0}.hof-medallion{flex-basis:83px}.hof-avatar{width:76px;height:76px;font-size:28px;border-width:3px}.hof-medallion-rank{font-size:10px;padding:4px 10px}.hof-winner-copy h2{font-size:25px}.hof-winner-overline{font-size:8px}.hof-player-code{font-size:10px}.hof-title-line{font-size:12px;margin-top:11px}.hof-date-line{font-size:10px}.hof-prize-block{gap:3px}.hof-trophy{font-size:38px}.hof-prize-block small{font-size:7px}.hof-prize-block strong,.hof-earned-amount{font-size:13px}.hof-view-tabs button{font-size:10px;padding:11px 5px}.hof-earner-row{grid-template-columns:32px 34px minmax(0,1fr) auto}.hof-earner-row .hof-earned-amount{font-size:12px}
           .hof-stats{margin:17px 0 40px}.hof-stats>div{gap:7px;padding:14px 5px;flex-direction:column;text-align:center}.hof-stat-icon{font-size:21px}.hof-stats strong{font-size:21px}.hof-stats small{font-size:7px;letter-spacing:.04em}
           .hof-history-head{align-items:flex-start;flex-direction:column}.hof-sort{width:100%}.hof-sort select{width:100%}.hof-controls{align-items:stretch;flex-direction:column}.hof-controls input{width:100%}
           .hof-history-row{grid-template-columns:43px 38px minmax(0,1fr) auto;gap:9px;padding:12px 10px}.hof-history-rank{font-size:12px}.hof-history-avatar{width:36px;height:36px}.hof-history-player b{font-size:11px}.hof-history-player small{font-size:9px}.hof-history-title{grid-column:3;grid-row:2}.hof-history-title b{font-size:10px}.hof-history-title small{font-size:9px}.hof-latest-tag{grid-column:4;grid-row:1;font-size:8px;padding:5px 6px}
