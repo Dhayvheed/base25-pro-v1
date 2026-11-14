@@ -383,3 +383,9 @@
 .site-header-actions{display:flex;align-items:center;gap:8px}
 .site-header-actions .site-admin-link{white-space:nowrap}
 @media(max-width:700px){.auth-wrap{margin:42px auto 90px}.auth-card{padding:20px}.account-stats{grid-template-columns:repeat(2,1fr)}.account-head{align-items:flex-start;flex-direction:column}.account-head>strong{text-align:left}.site-header-actions .site-admin-link{display:none}}
+
+/* Password visibility control */
+.password-input-wrap{position:relative;display:flex;align-items:center}
+.password-input-wrap input{width:100%;padding-right:76px!important}
+.password-input-wrap .password-visibility{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:auto;margin:0;padding:8px 10px;border:1px solid #3c493e;border-radius:7px;background:#172019;color:var(--lime);font-size:12px;font-weight:800;line-height:1;cursor:pointer}
+.password-input-wrap .password-visibility:hover{background:#243322}
