@@ -40,7 +40,7 @@ export default function SiteNavigation() {
         <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works">How It Works</Link>
       </nav>
       <div className="site-header-actions">
-        <Link className="site-admin-link" href="/admin">Admin</Link>
+        <Link className="site-admin-link" href="/login">Player login</Link><Link className="site-admin-link" href="/account">My account</Link><Link className="site-admin-link" href="/admin">Admin</Link>
         <button className="site-menu-button" type="button" aria-label="Open navigation menu" aria-expanded={open} onClick={() => setOpen(true)}><span></span><span></span><span></span></button>
       </div>
     </header>
@@ -57,6 +57,8 @@ export default function SiteNavigation() {
         <Link href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
         <Link href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
         <Link href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works</Link>
+        <Link href="/login" tabIndex={open ? 0 : -1}><span>♙</span>Player login<i>›</i></Link>
+        <Link href="/register" tabIndex={open ? 0 : -1}><span>＋</span>Create account<i>›</i></Link>
         <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format</Link>
       </nav>
       <div className="site-drawer-footer"><p>BASE25 PRO<br/><small>Competition. Performance. Legacy.</small></p><Link href="/admin" tabIndex={open ? 0 : -1}>♙ &nbsp; Admin / Staff Access <span>→</span></Link></div>
