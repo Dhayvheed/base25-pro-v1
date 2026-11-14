@@ -19,6 +19,7 @@ export default function Admin() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
+  const [playerPasswordDrafts, setPlayerPasswordDrafts] = useState<Record<string, string>>({});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -87,14 +88,15 @@ export default function Admin() {
   async function assignPlayerEmail(player: Player) {
     if (!supabase || staffRole !== "owner") return;
     const emailValue = (emailDrafts[player.id] || "").trim().toLowerCase();
+    const passwordValue = playerPasswordDrafts[player.id] || "";
     if (!emailValue) { setMessage("Enter an email address first."); return; }
+    if (passwordValue.length < 8) { setMessage("Choose a password with at least 8 characters."); return; }
     setBusy(true);
-    const { data: loginResult, error } = await supabase.functions.invoke("owner-assign-player-login", { body: { player_id: player.id, email: emailValue } });
+    const { data: loginResult, error } = await supabase.functions.invoke("owner-assign-player-login", { body: { player_id: player.id, email: emailValue, password: passwordValue } });
     if (error || loginResult?.error) setMessage(`Player login setup failed: ${loginResult?.error || error?.message || "Unknown error"}`);
     else {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, { redirectTo: `${window.location.origin}/reset-password` });
-      if (resetError) setMessage(`Account created for @${player.username}, but password email could not be sent: ${resetError.message}. Use Forgot Password to resend.`);
-      else setMessage(`Player login created for @${player.username}. A password setup link has been sent to ${emailValue}.`);
+      setMessage(`Player login created for @${player.username}. Give them the email and password you entered.`);
+      setPlayerPasswordDrafts(current => ({ ...current, [player.id]: "" }));
       await refreshPlayerAccountStatuses();
     }
     setBusy(false);
@@ -466,7 +468,7 @@ export default function Admin() {
         </div>)}
       </section>
 
-      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2><p className="muted">Assign each existing player an email address. The player must verify that email before their account is linked.</p>
+      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2><p className="muted">Create player logins here. Choose the email and temporary password, then give the login details directly to the player.</p>
         {players.map(player=>{ const account = playerAccountStatuses.find(row => row.player_id === player.id); return <div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
             <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
@@ -474,7 +476,7 @@ export default function Admin() {
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
-          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified"} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verification Pending" ? "Update assigned email" : account?.account_status === "Verified" ? "Email verified" : "Assign email"}</button></div>
+          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><label>Choose password<input type="password" autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified" || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verified" ? "Login already created" : "Create player login"}</button></div>
         </div>})}
       </section>
       <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
