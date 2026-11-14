@@ -1,17 +1,10 @@
 import Link from "next/link";
+import SiteNavigation from "@/components/SiteNavigation";
 
 export default function HowItWorks() {
   return (
     <main className="shell">
-      <header className="topbar">
-        <Link className="brand" href="/">BASE<span>25</span> PRO</Link>
-        <nav>
-          <Link href="/#leaderboard">Leaderboard</Link>
-          <Link href="/#results">Results</Link>
-          <Link href="/how-it-works" aria-current="page">How it works</Link>
-          <Link href="/admin">Admin</Link>
-        </nav>
-      </header>
+      <SiteNavigation />
 
       <section className="how-hero">
         <div className="eyebrow">THE BASE25 RANKING SYSTEM</div>
