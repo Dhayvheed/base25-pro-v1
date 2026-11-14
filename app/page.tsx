@@ -30,7 +30,7 @@ export default function Home(){
  return <main className="shell redesign-shell">
   <header className="topbar redesign-topbar">
    <Link className="brand redesign-brand" href="/"><span className="brand-mark">▰</span> BASE<span>25</span> PRO</Link>
-   <nav><a className="nav-active" href="#leaderboard">Leaderboard</a><Link href="/hall-of-fame">Hall of Fame</Link><a href="#matches">Matches</a><Link href="/how-it-works">How it works</Link><Link className="admin-link" href="/admin">♙ Admin</Link></nav>
+   <nav><a className="nav-active" href="#leaderboard">Leaderboard</a><Link href="/weekly-archive">Weekly Archive</Link><Link href="/hall-of-fame">Hall of Fame</Link><a href="#matches">Matches</a><Link href="/how-it-works">How it works</Link><Link className="admin-link" href="/admin">♙ Admin</Link></nav>
   </header>
   <section className="redesign-hero">
    <div className="hero-copy"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1>
