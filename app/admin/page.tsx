@@ -192,7 +192,7 @@ export default function Admin() {
 
   async function addPlayer(event: FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || staffRole !== "owner") { setMessage("Owner access required to register players."); return; }
     setBusy(true);
     const { error } = await supabase.rpc("admin_create_player", { p_full_name: fullName.trim(), p_username: username.trim(), p_photo_url: photo.trim() || null });
     if (error) {
@@ -345,7 +345,7 @@ export default function Admin() {
       <div className="eyebrow">CONTROL ROOM · {staffRole.toUpperCase()}</div><h1>Admin desk<span>.</span></h1>
       <nav className="admin-workspace-nav" aria-label="Admin sections">
         <button type="button" className={activeSection==="overview"?"active":""} onClick={()=>setActiveSection("overview")}><span>⌂</span>Overview</button>
-        <button type="button" className={activeSection==="register"?"active":""} onClick={()=>setActiveSection("register")}><span>＋</span>Register player</button>
+        {staffRole==="owner"&&<button type="button" className={activeSection==="register"?"active":""} onClick={()=>setActiveSection("register")}><span>＋</span>Register player</button>}
         <button type="button" className={activeSection==="match"?"active":""} onClick={()=>setActiveSection("match")}><span>▣</span>Record match</button>
         {staffRole==="owner"&&<button type="button" className={activeSection==="champion"?"active":""} onClick={()=>setActiveSection("champion")}><span>♛</span>Saturday Champion</button>}
         {staffRole==="owner"&&<button type="button" className={activeSection==="staff"?"active":""} onClick={()=>setActiveSection("staff")}><span>♙</span>Staff management</button>}
@@ -357,7 +357,7 @@ export default function Admin() {
         <div className="eyebrow">YOUR WORKSPACE</div><h2>What would you like to do?</h2>
         <p className="muted">Choose an action from the navigation. Each workspace is kept separate so the desk stays tidy.</p>
         <div className="admin-overview-actions">
-          <button type="button" onClick={()=>setActiveSection("register")}>＋ <span><b>Register a player</b><small>Add a new BASE25 competitor</small></span></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}>＋ <span><b>Register a player</b><small>Add a new BASE25 competitor</small></span></button>}
           <button type="button" onClick={()=>setActiveSection("match")}>▣ <span><b>Record a match</b><small>Publish a result and update ELO</small></span></button>
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("champion")}>♛ <span><b>Record Saturday Champion</b><small>Update the Hall of Fame and archive</small></span></button>}
           <button type="button" onClick={()=>setActiveSection("directory")}>☷ <span><b>Player directory</b><small>View all registered players</small></span></button>
@@ -366,7 +366,7 @@ export default function Admin() {
 
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
-        <section className="admin-card" style={{display:activeSection==="register"?"block":"none"}}>
+        <section className="admin-card" style={{display:staffRole==="owner"&&activeSection==="register"?"block":"none"}}>
           <h2>Register player</h2>
           <form className="form" onSubmit={addPlayer}>
             <label>Full name<input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></label>
