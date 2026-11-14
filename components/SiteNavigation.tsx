@@ -36,6 +36,7 @@ export default function SiteNavigation() {
           <div className="site-desktop-dropdown">{competitionLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</div>
         </div>
         <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players">Players</Link>
+        <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions">Predictions</Link>
         <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works">How It Works</Link>
       </nav>
       <div className="site-header-actions">
@@ -54,6 +55,7 @@ export default function SiteNavigation() {
         <button className="site-drawer-section" type="button" onClick={() => setCompetitionOpen(v => !v)} aria-expanded={competitionOpen} tabIndex={open ? 0 : -1}><span>♜</span>Competition<i className={competitionOpen ? "rotated" : ""}>⌄</i></button>
         {competitionOpen && <div className="site-drawer-subnav">{competitionLinks.map(item => <Link key={item.href} href={item.href} tabIndex={open ? 0 : -1}><span>{item.icon}</span>{item.label}</Link>)}</div>}
         <Link href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
+        <Link href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
         <Link href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works</Link>
         <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format</Link>
       </nav>
@@ -63,7 +65,7 @@ export default function SiteNavigation() {
       <Link className={pathname === "/" ? "active" : ""} href="/"><span>⌂</span>Home</Link>
       <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/leaderboard"><span>♜</span>Competition</Link>
       <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players"><span>♧</span>Players</Link>
-      <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works"><span>▤</span>How It Works</Link>
+      <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions"><span>◎</span>Predictions</Link>
     </nav>
   </>;
 }
