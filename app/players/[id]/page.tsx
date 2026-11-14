@@ -43,10 +43,12 @@ export default function PlayerProfile(){
  if(loading)return <main className="shell">Loading player...</main>;
  if(!player)return <main className="shell redesign-shell"><Link href="/">← Leaderboard</Link><h1>Player not found</h1></main>;
  const elo=Number(player.elo_rating)||1000;
+ const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
+
  return <main className="shell redesign-shell player-profile-page">
   <SiteNavigation />
   <section className="player-profile-hero">
-   <div className="player-identity"><div className="profile-avatar">{player.photo_url?<img src={player.photo_url} alt=""/>:player.username?.[0]?.toUpperCase()}</div><div className="profile-name"><small>{player.player_code}</small><h1>@{player.username}</h1><span className="player-tag">PLAYER</span></div></div>
+   <div className="player-identity"><div className="profile-avatar">{player.photo_url?<img src={player.photo_url} alt=""/>:player.username?.[0]?.toUpperCase()}</div><div className="profile-name"><small>{player.player_code}</small><h1>@{player.username}</h1><span className="player-tag">PLAYER</span></div><button type="button" className="profile-share-button" onClick={shareProfile}>↗ SHARE PLAYER CARD</button></div>
    <div className="profile-pool-art" aria-hidden="true"><div className="profile-art-light"></div><i className="profile-cue-ball"></i><i className="profile-ball pball1"></i><i className="profile-ball pball2"></i><i className="profile-ball pball3"></i><i className="profile-ball pball4"></i><i className="profile-cue-stick"></i></div>
   </section>
   <section className="elo-rank-panel"><div className="current-elo"><small>CURRENT ELO</small><strong>{elo.toLocaleString()}</strong></div><div className="rank-display"><span className="laurel">❧</span><div><small>RANK</small><strong>#{rank>0?rank:"—"}</strong></div><span className="laurel mirror">❧</span></div></section>
@@ -74,7 +76,7 @@ export default function PlayerProfile(){
    </div>
   </section>
   <section className="admin-card player-career-panel">
-   <div className="eyebrow">COMPETITION RECORD</div><h2>Achievements<span>.</span></h2>
+   <div className="profile-achievement-strip"><div><span>♛</span><b>{championHistory.length}</b><small>CHAMPION TITLES</small></div><div><span>✦</span><b>{weeklyHistory.filter((r:any)=>r.rank===1).length}</b><small>WEEKLY WINS</small></div><div><span>⌑</span><b>{weeklyHistory.filter((r:any)=>r.rank<=5).length}</b><small>TOP 5 FINISHES</small></div><div><span>↗</span><b>{Number(player.highest_elo??elo).toLocaleString()}</b><small>PEAK ELO</small></div></div><div className="eyebrow">COMPETITION RECORD</div><h2>Achievements<span>.</span></h2>
    <div className="profile-stat-grid">
     <div><small>WEEKLY TOP 5</small><strong>{weeklyHistory.filter((r:any)=>r.rank<=5).length}</strong></div>
     <div><small>WEEKLY LEADER</small><strong>{weeklyHistory.filter((r:any)=>r.rank===1).length}</strong></div>
