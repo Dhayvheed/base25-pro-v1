@@ -34,7 +34,7 @@ export default function PredictionsPage(){
   setLoading(true);setError("");
   const [{data:{session},error:authError},{data:q,error:qe}]=await Promise.all([
    supabase.auth.getSession(),
-   supabase.from("prediction_questions").select("id,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,prediction_options!prediction_options_question_id_fkey(id,label,sort_order)").neq("status","draft").order("locks_at",{ascending:true})
+   supabase.from("prediction_questions").select("id,template_key,title,description,category,status,opens_at,locks_at,points_reward,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order)").neq("status","draft").order("locks_at",{ascending:true})
   ]);
   if(authError&&authError.name!=="AuthSessionMissingError")setError(authError.message);
   if(qe)setError(qe.message);
