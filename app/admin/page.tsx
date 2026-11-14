@@ -48,6 +48,7 @@ export default function Admin() {
   const [championWeek, setChampionWeek] = useState("");
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
+  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory">("overview");
 
   async function refreshStaff() {
     if (!supabase) return;
@@ -314,6 +315,27 @@ export default function Admin() {
         </div>
       )}
       <div className="eyebrow">CONTROL ROOM · {staffRole.toUpperCase()}</div><h1>Admin desk<span>.</span></h1>
+      <nav className="admin-workspace-nav" aria-label="Admin sections">
+        <button type="button" className={activeSection==="overview"?"active":""} onClick={()=>setActiveSection("overview")}><span>⌂</span>Overview</button>
+        <button type="button" className={activeSection==="register"?"active":""} onClick={()=>setActiveSection("register")}><span>＋</span>Register player</button>
+        <button type="button" className={activeSection==="match"?"active":""} onClick={()=>setActiveSection("match")}><span>▣</span>Record match</button>
+        {staffRole==="owner"&&<button type="button" className={activeSection==="champion"?"active":""} onClick={()=>setActiveSection("champion")}><span>♛</span>Saturday Champion</button>}
+        {staffRole==="owner"&&<button type="button" className={activeSection==="staff"?"active":""} onClick={()=>setActiveSection("staff")}><span>♙</span>Staff management</button>}
+        {staffRole==="owner"&&<button type="button" className={activeSection==="players"?"active":""} onClick={()=>setActiveSection("players")}><span>◎</span>Manage profiles</button>}
+        {staffRole==="owner"&&<button type="button" className={activeSection==="matches"?"active":""} onClick={()=>setActiveSection("matches")}><span>◷</span>Manage matches</button>}
+        <button type="button" className={activeSection==="directory"?"active":""} onClick={()=>setActiveSection("directory")}><span>☷</span>Player directory</button>
+      </nav>
+      {activeSection==="overview"&&<section className="admin-card admin-overview">
+        <div className="eyebrow">YOUR WORKSPACE</div><h2>What would you like to do?</h2>
+        <p className="muted">Choose an action from the navigation. Each workspace is kept separate so the desk stays tidy.</p>
+        <div className="admin-overview-actions">
+          <button type="button" onClick={()=>setActiveSection("register")}>＋ <span><b>Register a player</b><small>Add a new BASE25 competitor</small></span></button>
+          <button type="button" onClick={()=>setActiveSection("match")}>▣ <span><b>Record a match</b><small>Publish a result and update ELO</small></span></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("champion")}>♛ <span><b>Record Saturday Champion</b><small>Update the Hall of Fame and archive</small></span></button>}
+          <button type="button" onClick={()=>setActiveSection("directory")}>☷ <span><b>Player directory</b><small>View all registered players</small></span></button>
+        </div>
+      </section>}
+
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
         <section className="admin-card">
@@ -397,8 +419,8 @@ export default function Admin() {
       </div>
 
       {staffRole === "owner" && <>
-      <section className="admin-card"><h2>Record Saturday Champion</h2><p className="muted">Add the winner of the Saturday final. This does not change weekly rankings or career records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Week starting (Monday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>{busy ? "Saving champion..." : "Save Hall of Fame entry"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
-            <section className="admin-card"><h2>Staff management</h2>
+      <section className="admin-card" style={{display:activeSection==="champion"?"block":"none"}}><h2>Record Saturday Champion</h2><p className="muted">Add the winner of the Saturday final. This does not change weekly rankings or career records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Week starting (Monday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>{busy ? "Saving champion..." : "Save Hall of Fame entry"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
+            <section className="admin-card" style={{display:activeSection==="staff"?"block":"none"}}><h2>Staff management</h2>
         <p className="muted">Only the Owner can grant, change or deactivate staff access. Staff must already have a Supabase login using the email below.</p>
         <form className="form" onSubmit={addStaff}>
           <label>Staff email<input type="email" required value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder="staff@example.com" /></label>
@@ -416,7 +438,7 @@ export default function Admin() {
         </div>)}
       </section>
 
-      <section className="admin-card"><h2>Manage player profiles</h2>
+      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2>
         {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
             <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
@@ -426,7 +448,7 @@ export default function Admin() {
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
         </div>)}
       </section>
-      <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
+      <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
         {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerMatchLabel(editingMatch.one)} vs {playerMatchLabel(editingMatch.two)}</h3>
           <label>Venue<input value={editingMatch.venue} onChange={e=>setEditingMatch({...editingMatch,venue:e.target.value})}/></label>
           {editingMatch.racks.map((rack,index)=><div className="admin-card" key={index}><h3>Rack {index+1}</h3>
@@ -441,7 +463,7 @@ export default function Admin() {
         </div>)}
       </section>
       </>}
-      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
+      <section className="admin-card" style={{display:activeSection==="directory"?"block":"none"}}><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
     </main>
   );
 }
