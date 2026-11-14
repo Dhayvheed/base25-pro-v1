@@ -338,7 +338,7 @@ export default function Admin() {
 
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
-        <section className="admin-card">
+        <section className="admin-card" style={{display:activeSection==="register"?"block":"none"}}>
           <h2>Register player</h2>
           <form className="form" onSubmit={addPlayer}>
             <label>Full name<input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></label>
@@ -348,7 +348,7 @@ export default function Admin() {
           </form>
         </section>
 
-        <section className="admin-card">
+        <section className="admin-card" style={{display:activeSection==="match"?"block":"none"}}>
           <h2>Record match</h2>
           <p className="eyebrow">OFFICIAL RANKED FORMAT · ONE RACK</p>
           <form className="form" onSubmit={addMatch}>
