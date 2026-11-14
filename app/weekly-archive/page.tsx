@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import SiteNavigation from "@/components/SiteNavigation";
 
 type Archive = { id:string; week_start:string; week_end:string; snapshot_at:string; entries?: Entry[] };
 type Entry = { player_id:string; rank:number; username:string; player_code:string|null; photo_url:string|null; weekly_elo:number; matches_played:number; wins:number; losses:number; win_percentage:number };
@@ -28,7 +29,7 @@ export default function WeeklyArchivePage(){
  }loadEntries();return()=>{active=false;};},[selected]);
  const current=archives.find(a=>a.id===selected);
  return <main className="shell redesign-shell">
-  <header className="topbar redesign-topbar"><Link className="brand redesign-brand" href="/">BASE<span>25</span> PRO</Link><nav><Link href="/">Home</Link><Link href="/leaderboard">Leaderboard</Link><Link href="/hall-of-fame">Hall of Fame</Link><Link className="admin-link" href="/admin">Admin</Link></nav></header>
+  <SiteNavigation />
   <section className="section redesign-section">
    <div className="eyebrow">BASE25 PRO / COMPETITION RECORDS</div><h1>Weekly Archive<span>.</span></h1>
    <p className="muted">Every completed week, preserved exactly as the standings looked when the Saturday Champion was recorded.</p>
