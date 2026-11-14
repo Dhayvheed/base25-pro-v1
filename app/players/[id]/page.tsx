@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import SiteNavigation from "@/components/SiteNavigation";
 
 type Rack={id:string;match_id:string;rack_number:number;winner_id:string;loser_id:string;loser_balls_remaining:number;black_ball_finish:boolean};
 export default function PlayerProfile(){
@@ -43,7 +44,7 @@ export default function PlayerProfile(){
  if(!player)return <main className="shell redesign-shell"><Link href="/">← Leaderboard</Link><h1>Player not found</h1></main>;
  const elo=Number(player.elo_rating)||1000;
  return <main className="shell redesign-shell player-profile-page">
-  <header className="topbar redesign-topbar"><Link className="brand redesign-brand" href="/"><span className="brand-mark">▰</span> BASE<span>25</span> PRO</Link><nav><Link href="/">← &nbsp;Leaderboard</Link><Link href="/how-it-works">How it works</Link><Link className="admin-link" href="/admin">♙ Admin</Link></nav></header>
+  <SiteNavigation />
   <section className="player-profile-hero">
    <div className="player-identity"><div className="profile-avatar">{player.photo_url?<img src={player.photo_url} alt=""/>:player.username?.[0]?.toUpperCase()}</div><div className="profile-name"><small>{player.player_code}</small><h1>@{player.username}</h1><span className="player-tag">PLAYER</span></div></div>
    <div className="profile-pool-art" aria-hidden="true"><div className="profile-art-light"></div><i className="profile-cue-ball"></i><i className="profile-ball pball1"></i><i className="profile-ball pball2"></i><i className="profile-ball pball3"></i><i className="profile-ball pball4"></i><i className="profile-cue-stick"></i></div>
