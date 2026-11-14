@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 const competitionLinks = [
   { href: "/leaderboard", label: "Leaderboard", icon: "▥" },
@@ -12,8 +13,14 @@ const competitionLinks = [
 
 export default function SiteNavigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [competitionOpen, setCompetitionOpen] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (!open) return;
@@ -22,13 +29,59 @@ export default function SiteNavigation() {
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    if (!supabase) { setAuthReady(true); return; }
+    let active = true;
+    const loadAccount = async (user: any) => {
+      if (!active) return;
+      if (!user) {
+        setSignedIn(false);
+        setAccountName("");
+        setAuthReady(true);
+        return;
+      }
+      setSignedIn(true);
+      const metadataName = user.user_metadata?.username || user.user_metadata?.prediction_nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
+      setAccountName(metadataName);
+      setAuthReady(true);
+      const { data } = await supabase!.rpc("get_my_base25_player_profile");
+      if (!active) return;
+      const profile = Array.isArray(data) ? data[0] : data;
+      if (profile?.username) setAccountName(profile.username);
+    };
+    supabase.auth.getSession().then(({ data }) => loadAccount(data.session?.user ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadAccount(session?.user ?? null);
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, []);
+
+  const handleSignOut = async () => {
+    if (!supabase || signingOut) return;
+    setSigningOut(true);
+    const { error } = await supabase.auth.signOut();
+    setSigningOut(false);
+    if (!error) {
+      setOpen(false);
+      setSignedIn(false);
+      setAccountName("");
+      router.push("/");
+      router.refresh();
+    }
+  };
+
   const active = (href: string) => pathname === href || (href === "/leaderboard" && pathname === "/");
+  const brand = (drawer = false) => <Link className="site-brand" href="/" aria-label="BASE25 PRO home" tabIndex={!drawer || open ? 0 : -1}>
+    <span className="site-brand-mark">8</span>
+    <span className="site-brand-copy"><strong>BASE<span>25</span> <em>PRO</em></strong><small>The Official Billiards Competition</small>
+      {authReady && signedIn && <span className="site-account-identity">Signed in as <b>@{accountName}</b></span>}
+    </span>
+  </Link>;
+
   return <>
     <header className="site-header">
-      <Link className="site-brand" href="/" aria-label="BASE25 PRO home">
-        <span className="site-brand-mark">8</span>
-        <span className="site-brand-copy"><strong>BASE<span>25</span> <em>PRO</em></strong><small>The Official Billiards Competition</small></span>
-      </Link>
+      {brand()}
       <nav className="site-desktop-nav" aria-label="Main navigation">
         <Link className={pathname === "/" ? "active" : ""} href="/">Home</Link>
         <div className="site-desktop-group">
@@ -40,14 +93,17 @@ export default function SiteNavigation() {
         <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works">How It Works</Link>
       </nav>
       <div className="site-header-actions">
-        <Link className="site-admin-link" href="/login">Player login</Link><Link className="site-admin-link" href="/account">My account</Link><Link className="site-admin-link" href="/admin">Admin</Link>
+        {authReady && (signedIn
+          ? <><Link className="site-admin-link" href="/account">My account</Link><button className="site-admin-link site-signout-button" type="button" onClick={handleSignOut} disabled={signingOut}>{signingOut ? "Signing out…" : "Sign out"}</button></>
+          : <Link className="site-admin-link" href="/login">Player login</Link>)}
+        <Link className="site-admin-link" href="/admin">Admin</Link>
         <button className="site-menu-button" type="button" aria-label="Open navigation menu" aria-expanded={open} onClick={() => setOpen(true)}><span></span><span></span><span></span></button>
       </div>
     </header>
     <div className={"site-drawer-backdrop" + (open ? " is-open" : "")} onClick={() => setOpen(false)} aria-hidden="true"></div>
     <aside className={"site-drawer" + (open ? " is-open" : "")} aria-hidden={!open} aria-label="Site navigation">
       <div className="site-drawer-head">
-        <Link className="site-brand" href="/" tabIndex={open ? 0 : -1}><span className="site-brand-mark">8</span><span className="site-brand-copy"><strong>BASE<span>25</span> <em>PRO</em></strong><small>The Official Billiards Competition</small></span></Link>
+        {brand(true)}
         <button type="button" className="site-drawer-close" aria-label="Close menu" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>×</button>
       </div>
       <nav className="site-drawer-nav">
@@ -57,11 +113,22 @@ export default function SiteNavigation() {
         <Link href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
         <Link href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
         <Link href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works</Link>
-        <Link href="/login" tabIndex={open ? 0 : -1}><span>♙</span>Player login<i>›</i></Link>
-        <Link href="/register" tabIndex={open ? 0 : -1}><span>＋</span>Create account<i>›</i></Link>
         <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format</Link>
       </nav>
-      <div className="site-drawer-footer"><p>BASE25 PRO<br/><small>Competition. Performance. Legacy.</small></p><Link href="/admin" tabIndex={open ? 0 : -1}>♙ &nbsp; Admin / Staff Access <span>→</span></Link></div>
+      <div className="site-drawer-footer">
+        <p>BASE25 PRO<br/><small>Competition. Performance. Legacy.</small></p>
+        <div className="site-drawer-account">
+          <span className="site-drawer-account-label">ACCOUNT</span>
+          {!authReady ? <span className="site-drawer-account-loading">Checking account…</span> : signedIn ? <>
+            <Link href="/account" tabIndex={open ? 0 : -1}>♙ &nbsp; My Account <span>→</span></Link>
+            <button type="button" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>↪ &nbsp; {signingOut ? "Signing out…" : "Sign Out"}</button>
+          </> : <>
+            <Link href="/login" tabIndex={open ? 0 : -1}>♙ &nbsp; Player Login <span>→</span></Link>
+            <Link href="/register" tabIndex={open ? 0 : -1}>＋ &nbsp; Create Account <span>→</span></Link>
+          </>}
+        </div>
+        <Link className="site-drawer-admin" href="/admin" tabIndex={open ? 0 : -1}>♙ &nbsp; Admin / Staff Access <span>→</span></Link>
+      </div>
     </aside>
     <nav className="site-mobile-bottom" aria-label="Mobile navigation">
       <Link className={pathname === "/" ? "active" : ""} href="/"><span>⌂</span>Home</Link>
