@@ -8,15 +8,15 @@ type Rack={id:string;match_id:string;rack_number:number;winner_id:string;loser_i
 export default function PlayerProfile(){
  const {id}=useParams<{id:string}>();
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
- const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
+ const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);\n const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]);
  useEffect(()=>{async function load(){
   if(!supabase){setLoading(false);return;}
-  const [{data:profile},{data:games,error:gamesError},{data:board}]=await Promise.all([
+  const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",id).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${id},player_two_id.eq.${id}`).order("played_at",{ascending:false}),
    supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false})
   ]);
-  setPlayer(profile);if(gamesError)console.error("Could not load player matches:",gamesError);
+  setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===id)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===id)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);if(gamesError)console.error("Could not load player matches:",gamesError);
   const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===id)+1);
   if(rows.length){const {data:rackRows,error:rackError}=await supabase.from("match_racks").select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").in("match_id",rows.map((m:any)=>m.id)).order("rack_number",{ascending:true});
    if(rackError)console.error("Could not load rack details:",rackError);
@@ -50,6 +50,36 @@ export default function PlayerProfile(){
    <div><span className="profile-stat-icon">♜</span><small>WINS / LOSSES</small><strong>{player.wins??0} / {player.losses??0}</strong></div>
    <div><span className="profile-stat-icon">◎</span><small>WIN RATE</small><strong>{player.win_percentage??0}%</strong></div>
    <div><span className="profile-stat-icon">↗</span><small>HIGHEST ELO</small><strong>{Number(player.highest_elo??elo).toLocaleString()}</strong></div>
+  </section>
+
+  <section className="admin-card player-career-panel">
+   <div className="eyebrow">CURRENT WEEK</div><h2>Weekly performance<span>.</span></h2>
+   <div className="profile-stat-grid">
+    <div><small>WEEKLY POSITION</small><strong>#{currentWeekRank||"—"}</strong></div>
+    <div><small>WEEKLY ELO</small><strong>{Number(currentWeek?.elo_rating??1000).toLocaleString()}</strong></div>
+    <div><small>WEEKLY MATCHES</small><strong>{currentWeek?.matches_played??0}</strong></div>
+    <div><small>WEEKLY W / L</small><strong>{currentWeek?currentWeek.wins+" / "+currentWeek.losses:"0 / 0"}</strong></div>
+   </div>
+   <div className="eyebrow">CAREER RECORD · ALL TIME</div>
+   <div className="profile-stat-grid">
+    <div><small>CAREER ELO</small><strong>{elo.toLocaleString()}</strong></div>
+    <div><small>CAREER MATCHES</small><strong>{player.matches_played??0}</strong></div>
+    <div><small>CAREER W / L</small><strong>{player.wins??0} / {player.losses??0}</strong></div>
+    <div><small>PEAK ELO</small><strong>{Number(player.highest_elo??elo).toLocaleString()}</strong></div>
+   </div>
+  </section>
+  <section className="admin-card player-career-panel">
+   <div className="eyebrow">COMPETITION RECORD</div><h2>Achievements<span>.</span></h2>
+   <div className="profile-stat-grid">
+    <div><small>WEEKLY TOP 5</small><strong>{weeklyHistory.filter((r:any)=>r.rank<=5).length}</strong></div>
+    <div><small>WEEKLY LEADER</small><strong>{weeklyHistory.filter((r:any)=>r.rank===1).length}</strong></div>
+    <div><small>SATURDAY CHAMPION</small><strong>{championHistory.length}</strong></div>
+    <div><small>BEST WEEKLY RANK</small><strong>{weeklyHistory.length?"#"+Math.min(...weeklyHistory.map((r:any)=>r.rank)):"—"}</strong></div>
+   </div>
+   <div className="eyebrow">WEEKLY RANKING HISTORY</div>
+   {weeklyHistory.length===0?<p className="muted">No archived competition weeks yet. Your history will appear here as weekly archives are created.</p>:<div className="match-list">{weeklyHistory.map((r:any,i:number)=><div className="match" key={i}><b>Week of {new Date(r.archive.week_start+"T00:00:00").toLocaleDateString()}</b><span>Rank #{r.rank} · {r.weekly_elo} ELO · {r.matches_played} matches · {r.wins}W / {r.losses}L</span></div>)}</div>}
+   <div className="eyebrow">SATURDAY FINAL TITLES</div>
+   {championHistory.length===0?<p className="muted">No Saturday Champion titles recorded yet.</p>:championHistory.map((r:any)=><div className="match" key={r.id}><b>Saturday Champion</b><span>Week of {new Date(r.week_start+"T00:00:00").toLocaleDateString()}</span></div>)}
   </section>
   <section className="elo-chart-card">
    <div className="elo-chart-heading"><h2>ELO PROGRESSION <span title="Shows your rating after each recorded match">ⓘ</span></h2><select value={range} onChange={e=>setRange(e.target.value)}><option value="10">Last 10 matches</option><option value="5">Last 5 matches</option><option value="all">All matches</option></select></div>
