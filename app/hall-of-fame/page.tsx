@@ -61,16 +61,16 @@ export default function HallOfFamePage() {
   return (
     <main className="shell redesign-shell hof-shell">
       <SiteNavigation />
-      <div className="hof-crumb">BASE25 PRO <span>/</span> LEGACY <span>/</span> <b>HALL OF FAME</b></div>
+      <div className="hof-crumb">BASE25 PRO <span>/</span> LEGACY <span>/</span> <b>BASE25 HALL OF FAME</b></div>
 
       <section className="hof-hero">
         <div className="hof-hero-glow" />
         <div className="hof-laurel hof-laurel-left">❧</div>
         <div className="hof-laurel hof-laurel-right">❧</div>
         <div className="hof-crown" aria-hidden="true">♛</div>
-        <p className="hof-kicker">THE CHAMPIONS’ LEGACY</p>
-        <h1>HALL OF <span>FAME</span></h1>
-        <p className="hof-intro">Great players win matches. Champions earn a place in history.</p>
+        <p className="hof-kicker">THE BASE25 CHAMPIONS’ LEGACY</p>
+        <h1><span className="hof-brand">BASE25</span> <span>HALL OF FAME</span></h1>
+        <p className="hof-intro">Great players win matches. Champions earn a place in BASE25 history.</p>
         <p className="hof-subintro">Every Saturday Final Champion is remembered here — permanently.</p>
       </section>
 
@@ -133,8 +133,8 @@ export default function HallOfFamePage() {
         <section className="hof-empty-state">
           <div className="hof-empty-crown">♛</div>
           <p className="hof-section-label">THE FIRST CHAPTER</p>
-          <h2>The throne is waiting.</h2>
-          <p>The first Saturday Final Champion will be immortalised here. The crown is waiting for its owner.</p>
+          <h2>The BASE25 throne is waiting.</h2>
+          <p>The first Saturday Final Champion will be immortalised in the BASE25 Hall of Fame. The crown is waiting for its owner.</p>
           <span>ONE TABLE. ONE CROWN. ONE KING.</span>
         </section>
       )}
@@ -147,8 +147,8 @@ export default function HallOfFamePage() {
         .hof-hero-glow{position:absolute;z-index:-1;left:50%;top:48%;width:420px;height:220px;transform:translate(-50%,-50%);background:#b68a27;opacity:.09;filter:blur(85px);border-radius:50%}
         .hof-crown{font-size:58px;line-height:1;color:#e6c15d;text-shadow:0 0 25px rgba(226,185,72,.45)}
         .hof-kicker{display:inline-block;margin:16px 0 0;padding:8px 22px;border:1px solid #8d7132;border-radius:3px;background:linear-gradient(90deg,rgba(155,111,28,.12),rgba(230,194,91,.2),rgba(155,111,28,.12));color:#f0d47d;font:700 11px 'DM Mono',monospace;letter-spacing:.2em}
-        .hof-hero h1{margin:14px 0 12px;font-size:clamp(44px,8vw,82px);line-height:.98;letter-spacing:-.065em;font-weight:800;text-shadow:0 3px 24px #000}
-        .hof-hero h1 span{color:#e8c65f}
+        .hof-hero h1{margin:14px 0 12px;font-size:clamp(34px,6.4vw,68px);line-height:1.04;letter-spacing:-.065em;font-weight:800;text-shadow:0 3px 24px #000}
+        .hof-hero h1 span{color:#e8c65f}.hof-hero h1 .hof-brand{color:#f2f3ee}
         .hof-intro{margin:0 auto;color:#f0f1ec;font-size:17px;font-weight:700}
         .hof-subintro{margin:9px auto 0;color:#9ca69d;font-size:13px}
         .hof-laurel{position:absolute;top:65px;color:rgba(225,188,83,.65);font-size:100px;line-height:1}
@@ -197,7 +197,7 @@ export default function HallOfFamePage() {
         .hof-empty-state>span{color:var(--lime);font:10px 'DM Mono',monospace;letter-spacing:.15em}
         .hof-loading{display:flex;align-items:center;justify-content:center;gap:12px;margin:30px 0}.hof-loader{width:17px;height:17px;border:2px solid #536341;border-top-color:var(--lime);border-radius:50%;animation:hof-spin .8s linear infinite}@keyframes hof-spin{to{transform:rotate(360deg)}}
         @media(max-width:700px){
-          .hof-shell{padding-left:18px;padding-right:18px}.hof-hero{margin:0 -5px 18px;padding:38px 8px 32px}.hof-crown{font-size:46px}.hof-kicker{font-size:9px;padding:7px 14px}.hof-hero h1{font-size:clamp(43px,12vw,66px)}.hof-intro{font-size:14px}.hof-subintro{max-width:310px;font-size:11px;line-height:1.6}
+          .hof-shell{padding-left:18px;padding-right:18px}.hof-hero{margin:0 -5px 18px;padding:38px 8px 32px}.hof-crown{font-size:46px}.hof-kicker{font-size:9px;padding:7px 14px}.hof-hero h1{font-size:clamp(31px,8.2vw,48px);letter-spacing:-.06em;white-space:nowrap}.hof-intro{font-size:14px}.hof-subintro{max-width:310px;font-size:11px;line-height:1.6}
           .hof-laurel{top:76px;font-size:57px;opacity:.55}.hof-laurel-left{left:-2%}.hof-laurel-right{right:-2%}
           .hof-feature{padding:16px 14px 12px}.hof-feature-top,.hof-feature-foot{font-size:8px;letter-spacing:.08em}.hof-feature-main{gap:13px;padding:20px 0}.hof-medallion{flex-basis:83px}.hof-avatar{width:76px;height:76px;font-size:28px;border-width:3px}.hof-medallion-rank{font-size:10px;padding:4px 10px}.hof-winner-copy h2{font-size:25px}.hof-winner-overline{font-size:8px}.hof-player-code{font-size:10px}.hof-title-line{font-size:12px;margin-top:11px}.hof-date-line{font-size:10px}.hof-trophy{font-size:43px;align-self:flex-start;margin-top:10px}
           .hof-stats{margin:17px 0 40px}.hof-stats>div{gap:7px;padding:14px 5px;flex-direction:column;text-align:center}.hof-stat-icon{font-size:21px}.hof-stats strong{font-size:21px}.hof-stats small{font-size:7px;letter-spacing:.04em}
