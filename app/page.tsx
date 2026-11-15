@@ -30,7 +30,7 @@ export default function Home(){
   if(!active)return;
   if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
   setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setLoading(false);
- }load();return()=>{active=false;};},[]);
+ }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const filtered=weeklyPlayers.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
@@ -57,8 +57,9 @@ export default function Home(){
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-meta">{Number(kingsPot?.contributor_count||0)} contributing players <span>·</span> ₦200 per player</div>
-   <p>Every player contributes ₦200 on their first qualifying one-rack ranking match of the Saturday–Friday week. The full pot goes to the champion.</p>
+   <div className="home-v2-pot-meta"><strong>{weeklyPlayers.length}</strong> players on the leaderboard. ₦200 each</div>
+   <p><strong>+ ₦200</strong> on the prize pool for every new player who records their first qualifying one-rack ranking match during the week.</p>
+   <div className="home-v2-pot-winner">Winner takes it all on Saturday 🎉</div>
    <Link href="/competition">How it works →</Link>
   </section>
   <section className="home-v2-stats">
