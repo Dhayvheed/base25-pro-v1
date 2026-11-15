@@ -101,6 +101,6 @@ export default function Home(){
    </div>}
    <Link className="home-v2-all-matches" href="/matches">View all matches <span>→</span></Link>
   </section>
-  <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span><Link href="/hall-of-fame">Hall of Fame ↗</Link><Link href="/admin">Admin access ↗</Link></footer>
+  <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span></footer>
  </main>;
 }
