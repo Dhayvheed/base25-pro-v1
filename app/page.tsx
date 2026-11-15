@@ -6,7 +6,8 @@ import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
-type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };\ntype KingsPot = {week_start:string;pot_amount:number;contributor_count:number};
+type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };
+type KingsPot = {week_start:string;pot_amount:number;contributor_count:number};
 
 export default function Home(){
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
@@ -18,7 +19,8 @@ export default function Home(){
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(8),
-   supabase.from("weekly_champions").select("id,week_start,week_end,player_id,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1)
+   supabase.from("weekly_champions").select("id,week_start,week_end,player_id,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
+   supabase.rpc("get_current_kings_pot")
   ]);
   if(!active)return;
   if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
