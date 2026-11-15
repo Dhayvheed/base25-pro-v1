@@ -647,3 +647,9 @@
  .home-v2-action-icon{font-size:17px}
  .home-v2-ball-art{width:43%;right:-4%;top:47%}
 }
+
+
+.home-v2-pot-meta strong{color:#f5d547;font-size:1.15em;font-weight:900;font-variant-numeric:tabular-nums}
+.home-v2-pot p strong{color:#c8f169;font-weight:900;white-space:nowrap}
+.home-v2-pot-winner{margin-top:13px;color:#f5d547;font-size:15px;font-weight:850}
+@media(max-width:760px){.home-v2-pot-winner{font-size:13px}.home-v2-pot-meta{font-size:12px}}
