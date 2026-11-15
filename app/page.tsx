@@ -6,23 +6,23 @@ import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
-type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };
+type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };\ntype KingsPot = {week_start:string;pot_amount:number;contributor_count:number};
 
 export default function Home(){
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
- const [champion,setChampion]=useState<Champion|null>(null);
+ const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
  const [search,setSearch]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
-  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce}]=await Promise.all([
+  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(8),
    supabase.from("weekly_champions").select("id,week_start,week_end,player_id,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1)
   ]);
   if(!active)return;
-  if(pe||we||me||ce)setError(pe?.message||we?.message||me?.message||ce?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setLoading(false);
+  if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setLoading(false);
  }load();return()=>{active=false;};},[]);
  const filtered=weeklyPlayers.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
@@ -45,7 +45,7 @@ export default function Home(){
   </section>
   <section className="section redesign-section" style={{paddingBottom:8}}>
    <div className="redesign-section-head"><div><div className="eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5<span>.</span></h2></div><div className="live-pill">⌁ &nbsp;LIVE STANDINGS</div></div>
-   <p className="muted">The top five players qualify for the Saturday final. Weekly points reset every Monday.</p>
+   <p className="muted">The top five players qualify for the Saturday final. Each player contributes ₦200 on their first ranked match of the Saturday–Friday competition week.</p>\n   <div className="admin-card" style={{margin:"18px 0",border:"1px solid #a88739",background:"linear-gradient(110deg,#171b17,#0c100d)"}}><div className="eyebrow" style={{color:"#e8c65f"}}>♛ THIS WEEK’S KING’S POT</div><div style={{fontSize:32,fontWeight:900,color:"#f4d66e",margin:"7px 0"}}>₦{Number(kingsPot?.pot_amount||0).toLocaleString("en-NG")}</div><p className="muted" style={{margin:0}}>{Number(kingsPot?.contributor_count||0)} player contributions · ₦200 per player · Resets after Saturday snapshot</p></div>
    {weeklyPlayers[0]&&<div className="admin-card" style={{margin:"18px 0"}}><div className="eyebrow">WEEKLY LEADER</div><h2>{weeklyPlayers[0].username}</h2><p className="muted">Currently #1 this week. The Saturday final decides the Saturday Champion.</p></div>}
    {champion&&<Link href="/hall-of-fame" className="leaderboard-card hall-of-fame-card hall-of-fame-latest" style={{display:"flex",alignItems:"center",gap:14,padding:16,marginBottom:18,textDecoration:"none"}}><span className="leader-rank">♛</span><span className="leader-player"><span className="avatar">{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]||"?"}</span><span><b>{champion.players?.username||"Saturday Champion"}</b><small>Latest Saturday Champion</small></span></span><strong className="leader-rating" style={{marginLeft:"auto"}}>HALL OF FAME →</strong></Link>}
   </section>
