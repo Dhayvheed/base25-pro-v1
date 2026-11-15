@@ -58,5 +58,130 @@ export default function LeaderboardPage(){
  .competition-rules{margin:18px 0;padding:17px;border:1px solid #344a34;border-radius:14px;background:#0b150e}.competition-rules>span{font:700 10px monospace;letter-spacing:.15em;color:#c5f36a}.competition-rules h2{font-size:20px;margin:6px 0}.competition-rules p{font-size:12px;line-height:1.6;color:#bac6b5;margin:0 0 10px}.competition-rules a{font:700 10px monospace;color:#d3ef50;text-decoration:none}
  @media(max-width:650px){.competition-page{padding:0 12px}.competition-hero{min-height:160px;padding:20px 15px;margin-top:10px}.competition-hero:after{right:7%;width:105px;height:105px}.competition-hero-ball{right:calc(7% + 31px);top:calc(18% + 34px);width:43px;height:43px;font-size:24px}.competition-hero h1{font-size:34px}.competition-hero p{font-size:12px}.competition-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.competition-shortcut,.competition-shortcut>a{min-height:83px}.competition-shortcut>a>span{font-size:23px}.competition-shortcut>a>b{font-size:12px}.competition-shortcut>a>small{font-size:9px}.competition-periods{gap:5px}.competition-periods button{min-height:41px;font-size:10px;padding:4px}.current-competition-card{padding:14px 12px 11px}.current-competition-main{min-height:78px}.competition-label{font-size:9px}.current-competition-main h2{font-size:34px}.current-competition-main p{font-size:11px}.live-pill{font-size:9px;padding:7px 9px}.competition-metrics{margin-top:9px;padding-top:10px}.competition-metrics>div>b{font-size:15px}.competition-metrics strong{font-size:18px}.competition-metrics small{font-size:8px;text-align:center}.champion-spotlight{grid-template-columns:62px minmax(0,1fr) 58px;gap:8px;padding:10px}.champion-trophy{font-size:46px}.champion-copy small{font-size:8px}.champion-copy b{font-size:23px}.champion-copy em{font-size:9px}.champion-avatar{width:55px;height:55px;font-size:19px}.champion-name{grid-column:2/4;display:flex;align-items:center;gap:7px;border-left:0;border-top:1px solid #8e7026;padding:7px 0 0}.champion-name i{font-size:18px}.champion-name b{font-size:15px}.standings-heading{align-items:stretch;flex-direction:column;gap:8px}.standings-heading h2{font-size:21px}.standings-heading label{width:100%;box-sizing:border-box}.competition-table-wrap{padding:5px;border-radius:12px}.competition-table-head,.competition-table-row{grid-template-columns:8% minmax(0,1fr) 9% 9% 19%;gap:3px}.competition-table-head{font-size:8px;padding:7px 3px}.competition-table-row{min-height:52px;padding:5px 4px}.competition-rank{font-size:11px}.competition-player{gap:6px}.competition-avatar{width:32px;height:32px;font-size:12px}.competition-player b{font-size:10px}.competition-player small{font-size:8px}.competition-table-row>strong{font-size:10px}.competition-elo{font-size:12px}.competition-rules{padding:13px}.competition-rules h2{font-size:18px}.competition-rules p{font-size:11px}}
  @media(max-width:370px){.competition-hero:after{right:4%;width:85px;height:85px}.competition-hero-ball{right:calc(4% + 25px);width:35px;height:35px;font-size:20px}.competition-player{gap:4px}.competition-avatar{width:28px;height:28px}.competition-player b{font-size:9px}.competition-player small{font-size:7px}.competition-elo{font-size:11px}}
+
+ /* Competition page visual refresh: premium billiards dashboard */
+ .competition-page{max-width:1120px;padding:0 22px 30px}
+ .competition-hero{min-height:250px;padding:34px 32px;margin:18px 0 18px;border:1px solid #31583b;border-radius:22px;background:radial-gradient(ellipse at 78% 50%,rgba(14,120,65,.52),transparent 46%),radial-gradient(ellipse at 95% 0%,rgba(191,211,61,.12),transparent 30%),linear-gradient(115deg,#07100b 0%,#0b1c11 56%,#082719 100%);box-shadow:inset 0 1px #ffffff0a,0 16px 42px #0005}
+ .competition-hero:before{content:"";position:absolute;right:5%;bottom:14%;width:190px;height:16px;border-radius:50%;background:#020805;filter:blur(8px);opacity:.8}
+ .competition-hero:after{right:9%;top:50%;width:172px;height:172px;transform:translateY(-50%);border:9px solid #151a17;background:radial-gradient(circle at 32% 25%,#5c6260,#171b19 48%,#030504 78%);box-shadow:inset -14px -18px 24px #000b,0 20px 35px #0009}
+ .competition-hero-ball{right:calc(9% + 56px);top:calc(50% - 26px);width:58px;height:58px;transform:translateY(-50%);font-size:32px;background:#f5f4e8;box-shadow:0 3px 12px #0008}
+ .competition-hero-copy{max-width:62%}
+ .competition-kicker{display:inline-flex;align-items:center;padding:8px 12px;border:1px solid #38583d;border-radius:30px;background:#c5f32d12;font-size:10px;letter-spacing:.2em}
+ .competition-hero h1{font-size:clamp(42px,6vw,64px);margin:17px 0 10px;letter-spacing:-.065em;font-weight:900}
+ .competition-hero p{max-width:390px;color:#c5d2c7;font-size:16px;line-height:1.55}
+ .competition-shortcuts{gap:12px;margin:18px 0}
+ .competition-shortcut{min-height:108px;border-color:#2c4834;border-radius:17px;background:linear-gradient(145deg,#111e15,#09110c);transition:border-color .2s,transform .2s,box-shadow .2s}
+ .competition-shortcut:hover{border-color:#b9ed4b;transform:translateY(-2px);box-shadow:0 8px 22px #0005}
+ .competition-shortcut.featured{border-color:#b9ed4b;background:linear-gradient(145deg,#1d3217,#0d1a10);box-shadow:inset 0 0 22px #c5f32d0c,0 0 14px #c5f32d1a}
+ .competition-shortcut>a{min-height:108px;gap:6px;padding:13px 8px}
+ .competition-shortcut>a>span{width:37px;height:37px;display:grid;place-items:center;border:1px solid #49653a;border-radius:12px;background:#c5f32d12;font-size:22px}
+ .competition-shortcut>a>b{font-size:13px}
+ .competition-shortcut>a>small{font-size:10px;color:#9eae9f}
+ .competition-periods{gap:7px;padding:6px;border:1px solid #24392a;border-radius:14px;background:#080f0a}
+ .competition-periods button{border-color:transparent;border-radius:10px;background:transparent;color:#aebcaf;font-size:12px}
+ .competition-periods button.active{background:#c5f32d;color:#10160b;box-shadow:0 3px 12px #c5f32d2e}
+ .current-competition-card{position:relative;overflow:hidden;padding:24px 24px 16px;border:1px solid #6b9735;border-radius:22px;background:radial-gradient(ellipse at 88% 20%,#1a512a 0%,transparent 45%),linear-gradient(112deg,#0b170e,#102418 58%,#08120b);box-shadow:inset 0 0 35px #c5f32d0a,0 12px 32px #0004}
+ .current-competition-card:after{content:"";position:absolute;right:5%;top:10%;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#f5f5ed 0 6%,#c62828 7% 16%,#7d1111 17% 21%,transparent 22%),radial-gradient(circle at 70% 25%,#e83b31 0 9%,#790d0d 10% 14%,transparent 15%),radial-gradient(circle at 50% 48%,#d82c25 0 10%,#760b0b 11% 15%,transparent 16%),radial-gradient(circle at 30% 70%,#d72c24 0 9%,#780e0e 10% 14%,transparent 15%),radial-gradient(circle at 70% 70%,#d72c24 0 9%,#780e0e 10% 14%,transparent 15%);opacity:.65;filter:drop-shadow(0 10px 10px #0008);pointer-events:none}
+ .current-competition-main{position:relative;z-index:1;min-height:104px}
+ .competition-label{color:#c5f36a;font:700 10px monospace;letter-spacing:.18em}
+ .current-competition-main h2{font-size:clamp(39px,6vw,55px);font-weight:900;letter-spacing:-.06em}
+ .current-competition-main p{color:#b8c7b9}
+ .live-pill{background:#c5f32d;color:#0a140c;border:0;box-shadow:0 0 15px #c5f32d30}
+ .live-pill i{background:#0a140c;box-shadow:none}
+ .competition-metrics{position:relative;z-index:1;margin-top:18px;padding-top:16px;border-color:#385b3d}
+ .competition-metrics>div{border-color:#35513a}
+ .competition-metrics>div>b{color:#c5f36a}
+ .competition-metrics strong{font-size:27px;font-weight:900}
+ .competition-metrics small{color:#aab9aa;font-size:11px}
+ .champion-spotlight{grid-template-columns:100px minmax(0,1fr) 76px 135px;gap:15px;margin:18px 0;padding:18px 22px;border-color:#725c27;border-radius:20px;background:radial-gradient(ellipse at 10% 50%,#503b13 0%,transparent 42%),linear-gradient(100deg,#19170d,#111710 65%,#171508);box-shadow:inset 0 1px #ffffff0a}
+ .champion-trophy{font-size:65px}
+ .champion-copy small{color:#e8c547;font-size:10px;letter-spacing:.18em}
+ .champion-copy b{font-size:clamp(27px,4vw,39px);font-weight:900}
+ .champion-copy em{font-size:12px;color:#aeb9ac}
+ .champion-avatar{width:72px;height:72px;border-color:#c5f36a;box-shadow:0 0 16px #c5f32d2e}
+ .champion-name{border-color:#766026}
+ .champion-name i{color:#e8c547}
+ .competition-standings{margin-top:25px}
+ .standings-heading{margin-bottom:15px}
+ .standings-heading h2{font-size:clamp(23px,3vw,30px);font-weight:850;letter-spacing:-.04em}
+ .standings-heading h2 span{color:#c5f36a}
+ .standings-heading label{border-radius:12px;background:#0a120d}
+ .competition-table-wrap{padding:9px;border-color:#314d36;border-radius:18px;background:linear-gradient(145deg,#0d1810,#080e0a)}
+ .competition-table-head{padding:11px 12px;color:#87988a;font:10px monospace;letter-spacing:.14em}
+ .competition-table-row{min-height:72px;padding:8px 12px;border-color:#23372a;border-radius:12px}
+ .competition-table-row.first-place{border-color:#a8d948;background:linear-gradient(90deg,#233b18,#101e12);box-shadow:0 0 16px #c5f32d16}
+ .competition-rank{font-size:16px}
+ .competition-player{gap:12px}
+ .competition-avatar{width:46px;height:46px;border-color:#49683b;background:#17271a}
+ .competition-player b{font-size:14px}
+ .competition-player small{font:10px monospace;color:#91a191}
+ .competition-elo{font-size:18px}
+ .competition-rules{margin-top:22px;padding:22px;border-color:#2b4430;border-radius:18px;background:linear-gradient(145deg,#101b13,#09110c)}
+ .competition-rules h2{font-size:24px;font-weight:850;letter-spacing:-.04em}
+ .competition-rules p{max-width:760px;font-size:13px;color:#aab8aa}
+ .competition-rules a{display:inline-flex;padding:11px 14px;border:1px solid #506b35;border-radius:10px;background:#c5f32d0d;font-size:11px}
+ @media(max-width:650px){
+  .competition-page{padding:0 14px 30px}
+  .competition-hero{min-height:205px;padding:25px 18px;margin:12px 0 14px;border-radius:18px}
+  .competition-hero-copy{max-width:65%}
+  .competition-kicker{font-size:9px;padding:7px 9px}
+  .competition-hero h1{font-size:clamp(35px,9vw,46px);margin:15px 0 9px}
+  .competition-hero p{font-size:12px}
+  .competition-hero:after{right:3%;top:52%;width:116px;height:116px;border-width:6px}
+  .competition-hero-ball{right:calc(3% + 38px);top:calc(52% - 13px);width:40px;height:40px;font-size:23px}
+  .competition-shortcuts{gap:9px;margin:13px 0}
+  .competition-shortcut,.competition-shortcut>a{min-height:91px}
+  .competition-shortcut>a{gap:5px;padding:10px 5px}
+  .competition-shortcut>a>span{width:31px;height:31px;font-size:19px}
+  .competition-shortcut>a>b{font-size:11px}
+  .competition-shortcut>a>small{font-size:9px}
+  .competition-periods{gap:3px;padding:4px;margin:13px 0;border-radius:12px}
+  .competition-periods button{min-height:39px;font-size:10px;padding:3px 2px}
+  .current-competition-card{padding:17px 13px 13px;border-radius:18px}
+  .current-competition-card:after{right:1%;top:8%;width:105px;height:105px;opacity:.42}
+  .current-competition-main{min-height:82px}
+  .competition-label{font-size:8px}
+  .current-competition-main h2{font-size:36px}
+  .current-competition-main p{font-size:11px}
+  .live-pill{font-size:9px;padding:7px 10px}
+  .competition-metrics{margin-top:13px;padding-top:12px}
+  .competition-metrics>div>b{font-size:15px}
+  .competition-metrics strong{font-size:19px}
+  .competition-metrics small{font-size:8px}
+  .champion-spotlight{grid-template-columns:58px minmax(0,1fr) 54px;gap:9px;margin:14px 0;padding:12px 11px;border-radius:16px}
+  .champion-trophy{font-size:43px}
+  .champion-copy small{font-size:8px}
+  .champion-copy b{font-size:23px}
+  .champion-copy em{font-size:9px}
+  .champion-avatar{width:52px;height:52px;border-width:2px}
+  .champion-name{grid-column:2/4;padding:8px 0 0}
+  .competition-standings{margin-top:20px}
+  .standings-heading h2{font-size:21px}
+  .standings-heading label{padding:11px 13px}
+  .competition-table-wrap{padding:6px;border-radius:14px}
+  .competition-table-head{padding:9px 6px;font-size:8px}
+  .competition-table-row{min-height:61px;padding:6px 6px}
+  .competition-player{gap:7px}
+  .competition-avatar{width:34px;height:34px}
+  .competition-player b{font-size:11px}
+  .competition-player small{font-size:8px}
+  .competition-rank{font-size:12px}
+  .competition-table-row>strong{font-size:11px}
+  .competition-elo{font-size:13px}
+  .competition-rules{padding:16px}
+  .competition-rules h2{font-size:20px}
+ }
+ @media(max-width:370px){
+  .competition-hero-copy{max-width:68%}
+  .competition-hero:after{right:1%;width:95px;height:95px}
+  .competition-hero-ball{right:calc(1% + 31px);width:34px;height:34px}
+  .competition-periods button{font-size:9px}
+  .competition-table-head,.competition-table-row{grid-template-columns:7% minmax(0,1fr) 8% 8% 20%;gap:2px}
+  .competition-player{gap:5px}
+  .competition-avatar{width:29px;height:29px}
+  .competition-player b{font-size:10px}
+  .competition-elo{font-size:12px}
+ }
+
  `}</style></main>;
 }
