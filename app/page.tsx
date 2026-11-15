@@ -87,14 +87,18 @@ export default function Home(){
    <Link className="home-v2-full-link" href="/leaderboard">View full weekly leaderboard <span>→</span></Link>
   </section>
   {champion&&<section className="home-v2-champion">
-   <div className="home-v2-champion-mark">♛</div>
-   <div className="home-v2-champion-copy"><div className="home-v2-eyebrow">LATEST CHAMPION</div><strong>{champion.players?.username||"Saturday Champion"}</strong><small>{champion.players?.player_code||"BASE25 PRO"}</small></div>
-   {champion.prize_amount!=null&&<div className="home-v2-champion-prize"><small>PRIZE WON</small><strong>{money(champion.prize_amount)}</strong></div>}
-   <Link href="/hall-of-fame">Hall of Fame →</Link>
+   <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
+   <div className="home-v2-champion-copy"><div className="home-v2-eyebrow">LATEST CHAMPION</div><strong>{champion.players?.username||"Saturday Champion"}</strong><Link href="/hall-of-fame">Hall of Fame <span>→</span></Link></div>
   </section>}
   <section className="home-v2-matches">
-   <div className="home-v2-section-head"><div><div className="home-v2-eyebrow">RECENT ACTION</div><h2>Match history</h2></div><Link href="/matches">View all →</Link></div>
-   {matches.length===0?<p className="home-v2-empty">Matches will appear here once recorded.</p>:<div className="home-v2-match-list">{matches.map(m=><div className="home-v2-match" key={m.id}><div><strong>{m.one?.username||"Player 1"}</strong><small>{m.one?.player_code}</small></div><b>{m.player_one_score} — {m.player_two_score}</b><div className="home-v2-match-right"><strong>{m.two?.username||"Player 2"}</strong><small>{m.two?.player_code}</small></div><time>{new Date(m.played_at).toLocaleDateString("en-NG",{day:"2-digit",month:"short"})}</time></div>)}</div>}
+   <div className="home-v2-section-head"><div><div className="home-v2-eyebrow">MATCH HISTORY</div><h2>Latest matches</h2></div></div>
+   {matches.length===0?<p className="home-v2-empty">Matches will appear here once recorded.</p>:<div className="home-v2-match-list">
+    {matches.map((m,i)=>{const date=new Date(m.played_at);const previous=i>0?new Date(matches[i-1].played_at):null;const dateKey=date.toLocaleDateString("en-CA");const previousKey=previous?.toLocaleDateString("en-CA");return <div key={m.id}>
+     {dateKey!==previousKey&&<div className="home-v2-match-date">{date.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase()}<span/></div>}
+     <div className="home-v2-match-card"><span className="home-v2-match-accent"/><div className="home-v2-match-names"><strong>{m.one?.username||"Player 1"}</strong><span>{m.two?.username||"Player 2"}</span></div><b className="home-v2-match-score">{m.player_one_score} - {m.player_two_score}</b></div>
+    </div>})}
+   </div>}
+   <Link className="home-v2-all-matches" href="/matches">View all matches <span>→</span></Link>
   </section>
   <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span><Link href="/hall-of-fame">Hall of Fame ↗</Link><Link href="/admin">Admin access ↗</Link></footer>
  </main>;
