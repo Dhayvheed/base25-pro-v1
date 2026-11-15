@@ -551,3 +551,59 @@
  .home-v2-record{font-size:9px}
  .home-v2-rating{font-size:11px}
 }
+
+
+/* Homepage lower sections: match the supplied mobile reference */
+.home-v2-champion{display:flex;align-items:center;gap:22px;margin:24px 4% 0;padding:24px 25px;min-height:154px;border:1px solid #55451d;border-radius:28px;background:linear-gradient(115deg,#191609,#10130f 75%);box-shadow:inset 0 1px #ffffff08}
+.home-v2-champion-sun{width:150px;height:112px;flex:0 0 150px;display:grid;place-items:center;position:relative}
+.home-v2-champion-sun:before{content:"";position:absolute;inset:0;background:repeating-conic-gradient(from 0deg,#e8c547 0deg 5deg,transparent 5deg 22.5deg);clip-path:circle(48%);opacity:.95}
+.home-v2-champion-sun>span{position:relative;z-index:1;width:78px;height:78px;display:grid;place-items:center;overflow:hidden;border:5px solid #c8f169;border-radius:50%;background:#172018;color:#c8f169;font-size:36px;font-weight:900}
+.home-v2-champion-sun img{width:100%;height:100%;object-fit:cover}
+.home-v2-champion-copy{display:grid;gap:7px;min-width:0}
+.home-v2-champion-copy .home-v2-eyebrow{color:#e8c547;font-weight:800;letter-spacing:.2em}
+.home-v2-champion-copy strong{color:#f3cf4f;font-size:clamp(22px,4vw,36px);font-weight:900;line-height:1.05;text-transform:uppercase;overflow-wrap:anywhere}
+.home-v2-champion-copy>a{color:#c8f169;font-size:17px;font-weight:800}
+.home-v2-champion-copy>a span{font-size:22px}
+.home-v2-matches{margin:54px 4% 0;padding-bottom:34px}
+.home-v2-matches .home-v2-section-head{margin-bottom:24px}
+.home-v2-matches .home-v2-section-head h2{font-size:36px;margin-top:12px}
+.home-v2-matches .home-v2-eyebrow{letter-spacing:.22em}
+.home-v2-match-list{margin:0;border:0}
+.home-v2-match-date{display:flex;align-items:center;gap:18px;margin:24px 0 15px;color:#c8f169;font:500 13px 'DM Mono',monospace;letter-spacing:.2em}
+.home-v2-match-date span{height:1px;flex:1;background:#33453a}
+.home-v2-match-card{min-height:112px;display:flex;align-items:center;gap:22px;margin:0 0 14px;padding:19px 28px;border:1px solid #29372e;border-radius:25px;background:#101713}
+.home-v2-match-accent{width:10px;height:78px;flex:0 0 10px;border-radius:12px;background:#c8f169}
+.home-v2-match-names{display:grid;gap:6px;min-width:0}
+.home-v2-match-names strong{font-size:21px;color:#f2f5ef}
+.home-v2-match-names span{font-size:19px;color:#9ba79f}
+.home-v2-match-score{margin-left:auto;min-width:160px;padding:15px 20px;border:2px solid #344a3a;border-radius:40px;color:#c8f169;text-align:center;font:500 27px 'DM Mono',monospace;white-space:nowrap}
+.home-v2-all-matches{min-height:96px;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:30px;border:2px solid #c8f169;border-radius:26px;color:#c8f169;font-size:22px;font-weight:850}
+.home-v2-all-matches span{font-size:27px}
+@media(max-width:760px){
+ .home-v2-champion{margin:18px 0 0;padding:18px 14px;min-height:126px;gap:13px;border-radius:20px}
+ .home-v2-champion-sun{width:92px;height:92px;flex-basis:92px}
+ .home-v2-champion-sun>span{width:55px;height:55px;border-width:4px;font-size:25px}
+ .home-v2-champion-copy .home-v2-eyebrow{font-size:9px;letter-spacing:.14em}
+ .home-v2-champion-copy strong{font-size:clamp(19px,5vw,25px)}
+ .home-v2-champion-copy>a{font-size:14px}
+ .home-v2-matches{margin:38px 0 0;padding-bottom:25px}
+ .home-v2-matches .home-v2-section-head h2{font-size:29px}
+ .home-v2-match-date{font-size:11px;margin:20px 0 12px}
+ .home-v2-match-card{min-height:88px;gap:14px;margin-bottom:12px;padding:13px 14px;border-radius:19px}
+ .home-v2-match-accent{width:7px;height:62px;flex-basis:7px}
+ .home-v2-match-names{gap:4px}
+ .home-v2-match-names strong{font-size:17px}
+ .home-v2-match-names span{font-size:16px}
+ .home-v2-match-score{min-width:108px;padding:11px 12px;font-size:21px;border-width:1px}
+ .home-v2-all-matches{min-height:70px;margin-top:22px;border-radius:20px;font-size:17px}
+ .home-v2-all-matches span{font-size:21px}
+}
+@media(max-width:390px){
+ .home-v2-champion{gap:9px;padding:15px 10px}
+ .home-v2-champion-sun{width:78px;height:78px;flex-basis:78px}
+ .home-v2-champion-sun>span{width:48px;height:48px}
+ .home-v2-match-card{gap:10px;padding:12px 10px}
+ .home-v2-match-score{min-width:94px;padding:10px 8px;font-size:18px}
+ .home-v2-match-names strong{font-size:15px}
+ .home-v2-match-names span{font-size:14px}
+}
