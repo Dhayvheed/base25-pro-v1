@@ -89,6 +89,7 @@ export default function Home(){
   {champion&&<section className="home-v2-champion">
    <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
    <div className="home-v2-champion-copy"><div className="home-v2-eyebrow">LATEST CHAMPION</div><strong>{champion.players?.username||"Saturday Champion"}</strong><Link href="/hall-of-fame">Hall of Fame <span>→</span></Link></div>
+   {champion.prize_amount!=null&&<div className="home-v2-champion-prize"><small>PRIZE WON</small><strong>₦{Number(champion.prize_amount).toLocaleString("en-NG")}</strong></div>}
   </section>}
   <section className="home-v2-matches">
    <div className="home-v2-section-head"><div><div className="home-v2-eyebrow">MATCH HISTORY</div><h2>Latest matches</h2></div></div>
