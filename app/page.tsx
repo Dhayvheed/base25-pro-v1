@@ -72,7 +72,7 @@ export default function Home(){
     <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
     <span className="home-v2-live-pill"><i/> LIVE</span>
    </div>
-   <p className="home-v2-subtitle">Top five qualify for the Saturday final. Weekly standings run Saturday to Friday.</p>
+   <p className="home-v2-subtitle">Top five qualify for the Saturday final. Weekly leaderboard runs Saturday to Friday. Points reset every Saturday.</p>
    <label className="home-v2-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="home-v2-empty">Loading weekly standings...</p>:filtered.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
