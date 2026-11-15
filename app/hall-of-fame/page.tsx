@@ -35,7 +35,7 @@ export default function HallOfFamePage() {
       }
       const { data, error } = await supabase
         .from("weekly_champions")
-        .select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)")
+        .select("id,week_start,week_end,player_id,prize_amount,payout_confirmed_at,players(username,player_code,photo_url)")
         .order("week_start", { ascending: false })
         .limit(100);
       if (!active) return;
@@ -104,7 +104,7 @@ export default function HallOfFamePage() {
                   <div className="hof-title-line"><span>🏆</span> Saturday Champion</div>
                   <div className="hof-date-line">▦ &nbsp; {dateLabel(latest.week_start)} – {dateLabel(latest.week_end)}</div>
                 </div>
-                <div className="hof-prize-block"><span className="hof-prize-crown" aria-hidden="true">♛</span><div className="hof-trophy" aria-hidden="true">🏆</div><small>CASH PRIZE</small><strong>₦{Number(latest.prize_amount || 0).toLocaleString("en-NG")}</strong><span className="hof-prize-caption">CHAMPION REWARD</span></div>
+                <div className="hof-prize-block"><span className="hof-prize-crown" aria-hidden="true">♛</span><div className="hof-trophy" aria-hidden="true">🏆</div><small>CASH PRIZE</small><strong>₦{Number(latest.prize_amount || 0).toLocaleString("en-NG")}</strong><span className="hof-prize-caption">CHAMPION REWARD</span><span className="hof-prize-caption">{latest.payout_confirmed_at ? "PAYOUT RECORDED" : "PAYOUT PENDING"}</span></div>
               </div>
               <div className="hof-feature-foot"><span>ONE TABLE. ONE CROWN. ONE KING.</span><b>THE LEGACY BEGINS</b></div>
             </article>
