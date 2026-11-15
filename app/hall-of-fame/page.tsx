@@ -9,6 +9,7 @@ type Champion = {
   week_end: string;
   player_id: string;
   prize_amount: number;
+  payout_confirmed_at: string | null;
   players?: { username: string; player_code: string; photo_url: string | null } | null;
 };
 
