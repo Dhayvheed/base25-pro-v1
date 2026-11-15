@@ -6,8 +6,13 @@ import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
-type Champion = { id:string; week_start:string; week_end:string; player_id:string; players?:{username:string;player_code:string;photo_url:string|null}|null };
-type KingsPot = {week_start:string;pot_amount:number;contributor_count:number};
+type Champion = { id:string; week_start:string; week_end:string; player_id:string; prize_amount?:number|null; players?:{username:string;player_code:string;photo_url:string|null}|null };
+type KingsPot = { week_start:string; pot_amount:number; contributor_count:number };
+
+function Avatar({player}:{player:{username:string;photo_url?:string|null}}){
+ return <span className="home-v2-avatar">{player.photo_url?<img src={player.photo_url} alt="" />:player.username?.[0]?.toUpperCase()||"?"}</span>;
+}
+function money(value:number){return "₦"+Number(value||0).toLocaleString("en-NG");}
 
 export default function Home(){
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
@@ -18,8 +23,8 @@ export default function Home(){
   const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
-   supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(8),
-   supabase.from("weekly_champions").select("id,week_start,week_end,player_id,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
+   supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
+   supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
    supabase.rpc("get_current_kings_pot")
   ]);
   if(!active)return;
@@ -30,48 +35,67 @@ export default function Home(){
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
  const visiblePlayers=filtered.slice(0,5);
- return <main className="shell redesign-shell">
+ return <main className="shell redesign-shell home-v2">
   <SiteNavigation />
-  <section className="redesign-hero">
-   <div className="hero-copy"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1>
-    <p>Track the players. Follow the results.<br/>See who really owns the table.</p>
-    <div className="hero-actions"><a className="primary hero-primary" href="#leaderboard">View Weekly Top 5 <span>→</span></a></div>
-   </div>
-   <div className="hero-art" aria-hidden="true"><div className="art-light"></div><div className="art-sign">BASE<span>25</span><small>PRO</small></div><div className="pool-table"><div className="table-rail"></div><i className="cue-ball"></i><i className="ball ball-one"></i><i className="ball ball-two"></i><i className="ball ball-three"></i><i className="ball ball-four"></i><i className="ball ball-five"></i><i className="cue-stick"></i></div></div>
-  </section>
-  <section className="redesign-stats">
-   <div><span className="stat-icon">♧</span><div><strong>{players.length}</strong><small>Registered Players</small></div></div>
-   <div><span className="stat-icon">▱</span><div><strong>{totalMatches}</strong><small>Recorded Matches</small></div></div>
-   <div><span className="stat-icon">♜</span><div><strong>{totalWins}</strong><small>Total Wins</small></div></div>
-   <div><span className="stat-icon">▥</span><div><strong>1,000</strong><small>Starting Rating</small></div></div>
-  </section>
-  <section className="section redesign-section" style={{paddingBottom:8}}>
-   <div className="redesign-section-head"><div><div className="eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5<span>.</span></h2></div><div className="live-pill">⌁ &nbsp;LIVE STANDINGS</div></div>
-   <p className="muted">The top five players qualify for the Saturday final. Each player contributes ₦200 on their first ranked match of the Saturday–Friday competition week.</p>\n   <div className="admin-card" style={{margin:"18px 0",border:"1px solid #a88739",background:"linear-gradient(110deg,#171b17,#0c100d)"}}><div className="eyebrow" style={{color:"#e8c65f"}}>♛ THIS WEEK’S KING’S POT</div><div style={{fontSize:32,fontWeight:900,color:"#f4d66e",margin:"7px 0"}}>₦{Number(kingsPot?.pot_amount||0).toLocaleString("en-NG")}</div><p className="muted" style={{margin:0}}>{Number(kingsPot?.contributor_count||0)} player contributions · ₦200 per player · Resets after Saturday snapshot</p></div>
-   {weeklyPlayers[0]&&<div className="admin-card" style={{margin:"18px 0"}}><div className="eyebrow">WEEKLY LEADER</div><h2>{weeklyPlayers[0].username}</h2><p className="muted">Currently #1 this week. The Saturday final decides the Saturday Champion.</p></div>}
-   {champion&&<Link href="/hall-of-fame" className="leaderboard-card hall-of-fame-card hall-of-fame-latest" style={{display:"flex",alignItems:"center",gap:14,padding:16,marginBottom:18,textDecoration:"none"}}><span className="leader-rank">♛</span><span className="leader-player"><span className="avatar">{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]||"?"}</span><span><b>{champion.players?.username||"Saturday Champion"}</b><small>Latest Saturday Champion</small></span></span><strong className="leader-rating" style={{marginLeft:"auto"}}>HALL OF FAME →</strong></Link>}
-  </section>
-  <section id="leaderboard" className="section redesign-section">
-   <div className="redesign-section-head"><div><div className="eyebrow">01 / WEEKLY COMPETITION</div><h2>Top 5 standings<span>.</span></h2></div><Link className="view-matches" href="/leaderboard">Full Leaderboard →</Link></div>
-   <label className="redesign-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
-   {error&&<p className="notice">{error}</p>}
-   {loading?<p className="muted">Loading weekly standings...</p>:filtered.length===0?<div className="empty-state">No weekly rankings yet. Players will appear here after their first ranked match.</div>:
-    <><div className="leaderboard-card"><div className="leaderboard-columns"><span>#</span><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
-     {visiblePlayers.map(p=>{const rank=weeklyPlayers.findIndex(x=>x.id===p.id)+1;return <Link className={`leader-row ${rank===1?"leader-first":""}`} href={`/players/${p.id}`} key={p.id}>
-      <span className={`leader-rank rank-${rank}`}>{rank<=3?<b className="crown">♛</b>:null}{rank}</span>
-      <span className="leader-player"><span className="avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username[0]}</span><span><b>{p.username}</b><small>{p.player_code}{rank<=5?" · SATURDAY FINAL QUALIFIER":""}</small></span></span>
-      <strong className="leader-win-rate">{p.wins}W / {p.losses}L</strong><strong className="leader-rating">{p.elo_rating.toLocaleString()}</strong>
-     </Link>})}
+  <div className="home-v2-glow" aria-hidden="true"/>
+  <section className="home-v2-hero">
+   <div className="home-v2-hero-copy">
+    <div className="home-v2-eyebrow">THE OFFICIAL BILLIARDS COMPETITION</div>
+    <h1>Every match<br/><span>counts.</span></h1>
+    <p>Your game. Your ranking. Your crown.</p>
+    <div className="home-v2-actions">
+     <Link className="home-v2-primary" href="/leaderboard">View Leaderboard <span>↗</span></Link>
+     <Link className="home-v2-secondary" href="/competition">Competition <span>♛</span></Link>
     </div>
-    <Link className="view-full-leaderboard" href="/leaderboard">View Full Weekly Leaderboard <span>→</span></Link>
-    <p className="muted" style={{textAlign:"center",marginTop:10}}>Career ratings and all-time records remain permanent.</p></>
-   }
+   </div>
+   <div className="home-v2-ball-art" aria-hidden="true">
+    <div className="home-v2-cue"/>
+    <div className="home-v2-eight"><span>8</span></div>
+   </div>
   </section>
-  <section id="matches" className="section redesign-section matches-section">
-   <div className="redesign-section-head"><div><div className="eyebrow">02 / MATCH HISTORY</div><h2>Latest matches<span>.</span></h2></div><Link className="view-matches" href="/matches">View all matches <span>→</span></Link></div>
-   {matches.length===0?<div className="matches-empty"><div className="ball-rack">○<br/>○ ○<br/>○ ○ ○</div><b>No matches yet</b><p>Matches will appear here once they are recorded.</p></div>:
-    <div className="match-list">{matches.map(m=><div className="match" key={m.id}><div><b>{m.one?.username||"Player 1"}</b><small>{m.one?.player_code}</small></div><strong>{m.player_one_score} — {m.player_two_score}</strong><div className="right"><b>{m.two?.username||"Player 2"}</b><small>{m.two?.player_code}</small></div><time>{new Date(m.played_at).toLocaleDateString()}</time></div>)}</div>}
+  <section className="home-v2-pot" aria-label="King's Pot">
+   <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
+   <div className="home-v2-live"><i/> LIVE POT</div>
+   <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
+   <div className="home-v2-pot-meta">{Number(kingsPot?.contributor_count||0)} contributing players <span>·</span> ₦200 per player</div>
+   <p>Every player contributes ₦200 on their first qualifying one-rack ranking match of the Saturday–Friday week. The full pot goes to the champion.</p>
+   <Link href="/competition">How it works →</Link>
   </section>
-  <footer><b>BASE25 PRO</b><span>Built for competition. Powered by performance.</span><Link href="/hall-of-fame">Hall of Fame ↗</Link><Link href="/admin">Admin access ↗</Link></footer>
+  <section className="home-v2-stats">
+   <div><strong>{players.length}</strong><span>Registered players</span></div>
+   <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
+   <div><strong>{totalWins}</strong><span>Total wins</span></div>
+  </section>
+  <section className="home-v2-weekly">
+   <div className="home-v2-section-head">
+    <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
+    <span className="home-v2-live-pill"><i/> LIVE</span>
+   </div>
+   <p className="home-v2-subtitle">Top five qualify for the Saturday final. Weekly standings run Saturday to Friday.</p>
+   <label className="home-v2-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
+   {error&&<p className="notice">{error}</p>}
+   {loading?<p className="home-v2-empty">Loading weekly standings...</p>:filtered.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
+    <div className="home-v2-table">
+     <div className="home-v2-columns"><span>#</span><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
+     {visiblePlayers.map(p=>{const rank=weeklyPlayers.findIndex(x=>x.id===p.id)+1;return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
+      <span className={"home-v2-rank rank-"+rank}>{rank<=3?<b>{rank===1?"♛":rank===2?"♛":"♛"}</b>:null}{rank}</span>
+      <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}</strong><small>{p.player_code}</small></span></span>
+      <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
+      <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
+     </Link>})}
+    </div>}
+   <Link className="home-v2-full-link" href="/leaderboard">View full weekly leaderboard <span>→</span></Link>
+  </section>
+  {champion&&<section className="home-v2-champion">
+   <div className="home-v2-champion-mark">♛</div>
+   <div className="home-v2-champion-copy"><div className="home-v2-eyebrow">LATEST CHAMPION</div><strong>{champion.players?.username||"Saturday Champion"}</strong><small>{champion.players?.player_code||"BASE25 PRO"}</small></div>
+   {champion.prize_amount!=null&&<div className="home-v2-champion-prize"><small>PRIZE WON</small><strong>{money(champion.prize_amount)}</strong></div>}
+   <Link href="/hall-of-fame">Hall of Fame →</Link>
+  </section>}
+  <section className="home-v2-matches">
+   <div className="home-v2-section-head"><div><div className="home-v2-eyebrow">RECENT ACTION</div><h2>Match history</h2></div><Link href="/matches">View all →</Link></div>
+   {matches.length===0?<p className="home-v2-empty">Matches will appear here once recorded.</p>:<div className="home-v2-match-list">{matches.map(m=><div className="home-v2-match" key={m.id}><div><strong>{m.one?.username||"Player 1"}</strong><small>{m.one?.player_code}</small></div><b>{m.player_one_score} — {m.player_two_score}</b><div className="home-v2-match-right"><strong>{m.two?.username||"Player 2"}</strong><small>{m.two?.player_code}</small></div><time>{new Date(m.played_at).toLocaleDateString("en-NG",{day:"2-digit",month:"short"})}</time></div>)}</div>}
+  </section>
+  <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span><Link href="/hall-of-fame">Hall of Fame ↗</Link><Link href="/admin">Admin access ↗</Link></footer>
  </main>;
 }
