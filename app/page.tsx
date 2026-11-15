@@ -44,8 +44,8 @@ export default function Home(){
     <h1>Every match<br/><span>counts.</span></h1>
     <p>Your game. Your ranking. Your crown.</p>
     <div className="home-v2-actions">
-     <Link className="home-v2-primary" href="/leaderboard">View Leaderboard <span>↗</span></Link>
-     <Link className="home-v2-secondary" href="/competition">Competition <span>♛</span></Link>
+     <Link className="home-v2-primary" href="/leaderboard"><span className="home-v2-action-icon" aria-hidden="true">▥</span>View Leaderboard</Link>
+     <Link className="home-v2-secondary" href="/competition"><span className="home-v2-action-icon" aria-hidden="true">♜</span>Competition</Link>
     </div>
    </div>
    <div className="home-v2-ball-art" aria-hidden="true">
