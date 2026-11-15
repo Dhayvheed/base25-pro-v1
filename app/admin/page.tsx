@@ -50,7 +50,6 @@ export default function Admin() {
   const [editPhoto, setEditPhoto] = useState("");
   const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
   const [championWeek, setChampionWeek] = useState("");
-  const [championPrize, setChampionPrize] = useState("5000");
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
   const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory">("overview");
@@ -240,9 +239,16 @@ export default function Admin() {
   }
 
   async function saveWeeklyChampion(event: FormEvent) {
-    event.preventDefault(); if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer || !/^[0-9]+$/.test(championPrize) || Number(championPrize) < 0) return;
-    setBusy(true); const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer, p_prize_amount: Number(championPrize) });
-    setChampionNotice(error ? `Champion was not saved: ${error.message}` : `Champion and ₦${Number(championPrize).toLocaleString("en-NG")} prize saved to the Hall of Fame.`); setBusy(false);
+    event.preventDefault();
+    if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer });
+    if (error) setChampionNotice("Champion was not saved: " + error.message);
+    else {
+      const { data: saved } = await supabase.from("weekly_champions").select("prize_amount,payout_confirmed_at").eq("week_start", championWeek).maybeSingle();
+      setChampionNotice("Champion published. ₦" + Number(saved?.prize_amount || 0).toLocaleString("en-NG") + " King's Pot recorded as prize and payout automatically marked paid.");
+    }
+    setBusy(false);
   }
 
   async function addMatch(event: FormEvent) {
@@ -450,7 +456,7 @@ export default function Admin() {
       </div>
 
       {staffRole === "owner" && <>
-      <section className="admin-card" style={{display:activeSection==="champion"?"block":"none"}}><h2>Record Saturday Champion</h2><p className="muted">Add the winner of the Saturday final. This does not change weekly rankings or career records.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Competition week starting (Saturday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Winner’s prize (₦)<input type="number" min="0" step="1" required value={championPrize} onChange={e=>{setChampionPrize(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer || !/^[0-9]+$/.test(championPrize)}>{busy ? "Saving champion..." : "Save Hall of Fame entry"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
+      <section className="admin-card" style={{display:activeSection==="champion"?"block":"none"}}><h2>Record Saturday Champion</h2><p className="muted">Publishing the official winner automatically awards the full accumulated King’s Pot and records the payout. Only publish after the cash has been paid at BASE25.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Competition week starting (Saturday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>{busy ? "Publishing champion..." : "Publish Champion & Record Payout"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
             <section className="admin-card" style={{display:activeSection==="staff"?"block":"none"}}><h2>Staff management</h2>
         <p className="muted">Only the Owner can grant, change or deactivate staff access. Staff must already have a Supabase login using the email below.</p>
         <form className="form" onSubmit={addStaff}>
