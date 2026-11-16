@@ -56,10 +56,7 @@ export default function Home(){
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-meta"><strong>{weeklyPlayers.length}</strong> players on the leaderboard. ₦200 each</div>
-   <p><strong>+ ₦200</strong> on the prize pool for every new player who records their first qualifying one-rack ranking match during the week.</p>
-   <div className="home-v2-pot-winner">Winner takes it all on Saturday 🎉</div>
-   <Link href="/competition">How it works →</Link>
+   <div className="home-v2-pot-winner">Winner takes it all on Saturday 🏆</div>
   </section>
   <section className="home-v2-stats">
    <div><strong>{players.length}</strong><span>Registered players</span></div>
