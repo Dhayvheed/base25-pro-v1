@@ -158,7 +158,7 @@ export default function CompetitionPage() {
         <div className="competition-ref-stats">
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon">♧</span>
-            <div><strong>{loading ? "—" : players.length}</strong><small>Players joined</small></div>
+            <div><strong>{potLoading ? "—" : Number(kingsPot?.contributor_count || 0)}</strong><small>Players joined</small></div>
           </div>
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon gold">◉</span>
