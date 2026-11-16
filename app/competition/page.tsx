@@ -340,7 +340,7 @@ export default function CompetitionPage() {
           .competition-ref-record{font-size:9px!important}
           .competition-ref-rating{font-size:13px!important}
         }
-        @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-live i{animation:none}.competition-ref-progress span{transition:none}}
+        @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-progress span{transition:none}}
       `}</style>
     </main>
   );
