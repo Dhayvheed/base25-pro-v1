@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
@@ -60,6 +60,8 @@ function Avatar({ player, rank }: { player: WeeklyPlayer; rank: number }) {
 export default function CompetitionPage() {
   const [players, setPlayers] = useState<WeeklyPlayer[]>([]);
   const [kingsPot, setKingsPot] = useState<KingsPot | null>(null);
+  const [potIncreaseKey, setPotIncreaseKey] = useState(0);
+  const previousPotAmount = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [potLoading, setPotLoading] = useState(true);
   const [error, setError] = useState("");
@@ -101,6 +103,11 @@ export default function CompetitionPage() {
       } else {
         const raw = potResult.data as KingsPot[] | KingsPot | null;
         const current = Array.isArray(raw) ? raw[0] : raw;
+        const nextAmount = Math.max(0, Number(current?.pot_amount || 0));
+        if (previousPotAmount.current !== null && nextAmount > previousPotAmount.current) {
+          setPotIncreaseKey((key) => key + 1);
+        }
+        previousPotAmount.current = nextAmount;
         setKingsPot(current || null);
         setPotError("");
       }
@@ -141,9 +148,7 @@ export default function CompetitionPage() {
           <div className="competition-ref-live"><i /> LIVE POT</div>
           <div className="competition-ref-pot-value">
             {potLoading ? <span className="competition-ref-loading-value">Loading…</span> : potError ? "Unavailable" : money(potAmount || 0)}
-            <span className="competition-ref-chip chip-one">+₦200</span>
-            <span className="competition-ref-chip chip-two">+₦200</span>
-            <span className="competition-ref-chip chip-three">+₦200</span>
+{potIncreaseKey > 0 && <span key={potIncreaseKey} className="competition-ref-chip">+₦200</span>}
           </div>
           <div className="competition-ref-milestone">
             <span>Next milestone</span>
@@ -250,7 +255,7 @@ export default function CompetitionPage() {
         .competition-ref-crown{font-size:30px;color:#e8c547;line-height:1}
         .competition-ref-prize-label{display:inline-flex;margin-top:10px;padding:6px 14px;border-radius:6px;background:#e8c547;color:#0a0e0c;font-size:11px;font-weight:900;letter-spacing:.13em}
         .competition-ref-live{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;color:#c8f169;font-size:10px;font-weight:900;letter-spacing:.15em}
-        .competition-ref-live i,.competition-ref-live-pill i{width:7px;height:7px;border-radius:50%;background:#c8f169;box-shadow:0 0 10px #c8f169;display:inline-block}
+        .competition-ref-live i,.competition-ref-live-pill i{width:7px;height:7px;border-radius:50%;background:#c8f169;box-shadow:0 0 10px #c8f169;display:inline-block}.competition-ref-live i{animation:competition-live-blink 1.15s ease-in-out infinite}@keyframes competition-live-blink{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 10px #c8f169}50%{opacity:.28;transform:scale(.78);box-shadow:0 0 2px #c8f169}}
         .competition-ref-pot-value{position:relative;display:inline-block;min-height:65px;margin-top:1px;color:#fff;font-size:clamp(42px,12vw,58px);font-weight:900;line-height:1.18;letter-spacing:-.065em;font-variant-numeric:tabular-nums}
         .competition-ref-loading-value{font-size:20px;color:#aeb8af;letter-spacing:0}
         .competition-ref-chip{position:absolute;top:5px;right:-60px;color:#c8f169;font-size:12px;font-weight:900;opacity:0;animation:competition-chip-rise 3.6s ease-out infinite}
@@ -335,7 +340,7 @@ export default function CompetitionPage() {
           .competition-ref-record{font-size:9px!important}
           .competition-ref-rating{font-size:13px!important}
         }
-        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;display:none}.competition-ref-progress span{transition:none}}
+        @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-live i{animation:none}.competition-ref-progress span{transition:none}}
       `}</style>
     </main>
   );
