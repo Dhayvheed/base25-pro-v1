@@ -173,9 +173,9 @@ export default function CompetitionPage() {
 
         <section className="competition-ref-final">
           <div className="competition-ref-final-head">
-            <div className="competition-ref-final-icon">▣</div>
+            <div className="competition-ref-final-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg></div>
             <div className="competition-ref-final-title"><small>WEEKLY FINAL</small><strong>Saturday</strong></div>
-            <div className="competition-ref-count-label">NEXT SATURDAY IN</div>
+            <div className="competition-ref-count-label">FINAL STARTS IN</div>
           </div>
           <div className="competition-ref-countdown">
             {[
@@ -192,20 +192,19 @@ export default function CompetitionPage() {
           </div>
           <div className="competition-ref-winner-note">
             <span>♛</span>
-            <p><strong>The King takes it all.</strong> 100% of the pot goes to this week's Saturday Champion.</p>
+            <p><strong>The King takes it all.</strong> 100% of the pot goes to this week's champion.</p>
           </div>
         </section>
 
         <nav className="competition-ref-tabs" aria-label="Competition sections">
-          <a className="active" href="#weekly-leaderboard"><span>▥</span>Leaderboard</a>
-          <Link href="/hall-of-fame"><span>♛</span>Hall of Fame</Link>
-          <Link href="/how-it-works"><span>ⓘ</span>How it works</Link>
+          <a className="active" href="#weekly-leaderboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>Leaderboard</a>
+          <Link href="/hall-of-fame"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg>Hall of Fame</Link>
+          <Link href="/how-it-works"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></svg>How it works</Link>
         </nav>
 
         <section className="competition-ref-leaderboard" id="weekly-leaderboard">
           <div className="competition-ref-leaderboard-heading">
             <h2>This week's leaderboard</h2>
-            <span className="competition-ref-live-pill"><i /> LIVE</span>
           </div>
           <div className="competition-ref-table-head">
             <span>PLAYER</span><span>RECORD</span><span>RATING</span>
@@ -234,7 +233,6 @@ export default function CompetitionPage() {
             </div>
           )}
 
-          <p className="competition-ref-qualifier-note">Top five qualify for the Saturday final. The weekly leaderboard runs Saturday to Friday, with ratings resetting every Saturday.</p>
           <Link href="/leaderboard" className="competition-ref-full-link">View full leaderboard <span>→</span></Link>
         </section>
       </div>
@@ -271,26 +269,26 @@ export default function CompetitionPage() {
         .competition-ref-grow p{margin:6px 0 0;color:#c9cfcb;font-size:12px;line-height:1.55}
         .competition-ref-final{margin-top:12px;padding:15px 14px;border:1px solid #24402f;border-radius:17px;background:#101512}
         .competition-ref-final-head{display:flex;align-items:center;gap:10px}
-        .competition-ref-final-icon{color:#c8f169;font-size:25px;line-height:1}
+        .competition-ref-final-icon{color:#c8f169;display:flex;align-items:center;justify-content:center;line-height:1;flex:none}
         .competition-ref-final-title{display:grid;gap:2px}
         .competition-ref-final-title small{color:#c8f169;font-size:9px;font-weight:900;letter-spacing:.15em}
         .competition-ref-final-title strong{font-size:21px;line-height:1.1}
-        .competition-ref-count-label{margin-left:auto;color:#9aa69f;font-size:9px;letter-spacing:.12em;text-align:right}
+        .competition-ref-count-label{margin-left:auto;color:#9aa69f;font-size:11px;letter-spacing:.12em;text-align:right;white-space:nowrap}
         .competition-ref-countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}
         .competition-ref-count-unit{text-align:center}
-        .competition-ref-count-unit strong{height:49px;display:grid;place-items:center;border:1px solid #2b3a31;border-radius:10px;background:#0c120e;font-size:23px;font-weight:900;font-variant-numeric:tabular-nums}
+        .competition-ref-count-unit strong{height:52px;display:grid;place-items:center;border:1px solid #2b3a31;border-radius:12px;background:#101512;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
         .competition-ref-count-unit small{display:block;margin-top:4px;color:#9aa69f;font-size:9px;letter-spacing:.12em}
         .competition-ref-winner-note{display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:11px;border-top:1px solid #1f2a24}
         .competition-ref-winner-note>span{color:#e8c547;font-size:23px}
         .competition-ref-winner-note p{margin:0;color:#d5dad6;font-size:11px;line-height:1.5}
         .competition-ref-winner-note strong{color:#e8c547}
         .competition-ref-tabs{display:flex;gap:3px;margin-top:15px;padding:4px;border:1px solid #1f2a24;border-radius:14px;background:#101512}
-        .competition-ref-tabs a{flex:1;min-width:0;min-height:43px;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:10px;color:#d5dad6;font-size:11px;font-weight:800;text-align:center}
-        .competition-ref-tabs a span{font-size:15px}
+        .competition-ref-tabs a{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;color:#d5dad6;font-size:14px;font-weight:800;text-align:center}
+        .competition-ref-tabs a svg{flex:none}
         .competition-ref-tabs a.active{background:#c8f169;color:#0a0e0c}
         .competition-ref-leaderboard{margin-top:12px;padding:14px 11px 13px;border:1px solid #24402f;border-radius:19px;background:linear-gradient(180deg,#112018,#0e1511)}
         .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 8px}
-        .competition-ref-leaderboard-heading h2{margin:0;font-size:17px;font-weight:900;letter-spacing:-.035em}
+        .competition-ref-leaderboard-heading h2{margin:0;font-size:22px;font-weight:900;letter-spacing:-.035em}
         .competition-ref-live-pill{display:flex;align-items:center;gap:5px;color:#c8f169;font-size:9px;font-weight:900;letter-spacing:.1em}
         .competition-ref-live-pill i{width:6px;height:6px}
         .competition-ref-table-head{display:grid;grid-template-columns:minmax(0,1fr) 58px 58px;gap:8px;padding:5px 8px 8px 68px;color:#9aa69f;font:9px/1.2 ui-monospace,SFMono-Regular,monospace;letter-spacing:.12em}
@@ -310,7 +308,7 @@ export default function CompetitionPage() {
         .competition-ref-rating{color:#c8f169;font-size:14px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
         .competition-ref-empty{margin:0;padding:22px 10px;color:#aeb8af;font-size:12px;line-height:1.5;text-align:center}
         .competition-ref-qualifier-note{margin:10px 4px 0;color:#aab6ad;font-size:10px;line-height:1.55}
-        .competition-ref-full-link{display:flex;align-items:center;justify-content:space-between;margin:10px 4px 0;padding-top:10px;border-top:1px solid #26352b;color:#c8f169;font-size:11px;font-weight:900}
+        .competition-ref-full-link{min-height:50px;display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 4px 0;padding:0 14px;border:0;border-radius:14px;background:#c8f169;color:#0a0e0c;font-size:16px;font-weight:900;text-align:center}
         @media(min-width:700px){.competition-reference-page{max-width:600px;padding:0 20px 36px}.competition-ref-pot{padding:22px 20px}.competition-ref-stat{padding:16px}.competition-ref-final{padding:18px}.competition-ref-leaderboard{padding:17px 14px}.competition-ref-player-row{min-height:60px}.competition-ref-player-name strong{font-size:14px}.competition-ref-record{font-size:11px}.competition-ref-rating{font-size:16px}}
         @media(max-width:370px){.competition-reference-page{padding-left:10px;padding-right:10px}.competition-ref-pot{padding:16px 12px}.competition-ref-stat{gap:8px;padding:11px 9px}.competition-ref-stat strong{font-size:21px}.competition-ref-stat small{font-size:9px}.competition-ref-final{padding:13px 10px}.competition-ref-countdown{gap:5px}.competition-ref-count-unit strong{height:45px;font-size:20px}.competition-ref-tabs a{font-size:9px;gap:3px}.competition-ref-player-row{grid-template-columns:23px 30px minmax(0,1fr) 51px 53px;gap:6px;padding:5px 5px}.competition-ref-avatar{width:30px;height:30px}.competition-ref-table-head{grid-template-columns:minmax(0,1fr) 51px 53px;padding-left:62px}.competition-ref-player-name strong{font-size:11px}.competition-ref-record{font-size:9px}.competition-ref-rating{font-size:12px}}
         @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;display:none}.competition-ref-progress span{transition:none}}
