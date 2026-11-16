@@ -17,7 +17,7 @@ function money(value:number){return "₦"+Number(value||0).toLocaleString("en-NG
 export default function Home(){
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
- const [search,setSearch]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const [loading,setLoading]=useState(true),[error,setError]=useState("");
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
   const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
@@ -31,10 +31,9 @@ export default function Home(){
   if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
   setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
- const filtered=weeklyPlayers.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
- const visiblePlayers=filtered.slice(0,5);
+ const visiblePlayers=weeklyPlayers.slice(0,5);
  return <main className="shell redesign-shell home-v2">
   <SiteNavigation />
   <div className="home-v2-glow" aria-hidden="true"/>
@@ -73,14 +72,13 @@ export default function Home(){
     <span className="home-v2-live-pill"><i/> LIVE</span>
    </div>
    <p className="home-v2-subtitle">Top five qualify for the Saturday final. Weekly leaderboard runs Saturday to Friday. Points reset every Saturday.</p>
-   <label className="home-v2-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></label>
    {error&&<p className="notice">{error}</p>}
-   {loading?<p className="home-v2-empty">Loading weekly standings...</p>:filtered.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
+   {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
     <div className="home-v2-table">
-     <div className="home-v2-columns"><span>#</span><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
-     {visiblePlayers.map(p=>{const rank=weeklyPlayers.findIndex(x=>x.id===p.id)+1;return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
-      <span className={"home-v2-rank rank-"+rank}>{rank<=3?<b>{rank===1?"♛":rank===2?"♛":"♛"}</b>:null}{rank}</span>
-      <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}</strong><small>{p.player_code}</small></span></span>
+     <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
+     {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
+      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]}}><i>{rank}</i></span></span>
+      <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong><small>{p.player_code}</small></span></span>
       <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
