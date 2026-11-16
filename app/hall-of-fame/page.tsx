@@ -136,9 +136,7 @@ export default function HallOfFamePage() {
       <SiteNavigation />
       <div className="hof-content">
         <section className="hof-intro">
-          <div className="hof-crown-icon" aria-hidden="true">♛</div>
-          <p className="hof-eyebrow">THE BASE25 LEGACY</p>
-          <h1>HALL OF <span>FAME</span></h1>
+          <div className="hof-title-line"><span className="hof-title-crown" aria-hidden="true">♛</span><h1>HALL OF <span>FAME</span></h1></div>
           <p className="hof-tagline">Every Saturday champion is remembered here, permanently.</p>
         </section>
 
@@ -147,23 +145,23 @@ export default function HallOfFamePage() {
           <section className="hof-latest">
             <div className="hof-card-heading"><span>🏆 &nbsp; LATEST CHAMPION</span><b>WEEK {champions.length.toString().padStart(2, "0")}</b></div>
             <div className="hof-winner">
-              <div className="hof-winner-avatar-wrap">
-                <span className="hof-winner-crown">♛</span>
-                <div className="hof-winner-avatar">{latest.players?.photo_url ? <img src={latest.players.photo_url} alt="" /> : championInitial(latest)}</div>
-                <span className="hof-record-number">#{String(champions.length).padStart(3, "0")}</span>
+              <div className="hof-winner-main">
+                <div className="hof-winner-avatar-wrap">
+                  <span className="hof-winner-crown">♛</span>
+                  <div className="hof-winner-avatar">{latest.players?.photo_url ? <img src={latest.players.photo_url} alt="" /> : championInitial(latest)}</div>
+                  <span className="hof-record-number">#{String(champions.length).padStart(3, "0")}</span>
+                </div>
+                <div className="hof-winner-info">
+                  <small>THE INAUGURAL KING</small>
+                  <h2>{latest.players?.username || "BASE25 Champion"}</h2>
+                  <p className="hof-player-code">{latest.players?.player_code || "BASE25 PLAYER"}</p>
+                  <span className="hof-title-chip">🏆 &nbsp; Saturday Champion</span>
+                </div>
               </div>
-              <div className="hof-winner-info">
-                <small>WEEKLY CHAMPION</small>
-                <h2>{latest.players?.username || "BASE25 Champion"}</h2>
-                <p className="hof-player-code">{latest.players?.player_code || "BASE25 PLAYER"}</p>
-                <span className="hof-title-chip">🏆 &nbsp; Saturday Champion</span>
-                <p className="hof-week-dates">{dateLabel(latest.week_start)} – {dateLabel(latest.week_end)}</p>
-              </div>
+              <div className="hof-week-dates"><span aria-hidden="true">▣</span> {dateLabel(latest.week_start)} – {dateLabel(latest.week_end)}</div>
               <div className="hof-prize">
-                <span className="hof-prize-crown">♛</span>
                 <small>PRIZE WON</small>
                 <strong>{money(latest.prize_amount)}</strong>
-                <span>{latest.payout_confirmed_at ? "PAYOUT CONFIRMED" : "AWARD RECORDED"}</span>
               </div>
             </div>
           </section>
@@ -282,6 +280,89 @@ export default function HallOfFamePage() {
         .hof-empty-state{margin:10px 0 14px;padding:38px 20px;background:radial-gradient(ellipse at 50% 0%,#c8f16915,transparent 65%),#101612}.hof-empty-state>span{display:block;color:#e8c547;font-size:42px}.hof-empty-state>small{color:#c8f169;font:9px 'DM Mono',monospace;letter-spacing:.15em}.hof-empty-state h2{margin:9px 0;color:#f4f5f2;font-size:25px}.hof-empty-state p{max-width:420px;margin:0 auto}
         @media(max-width:600px){.hof-page{padding-left:14px;padding-right:14px}.hof-content{max-width:520px}.hof-intro{padding:28px 8px 21px}.hof-intro h1{font-size:clamp(34px,9vw,46px)}.hof-tagline{font-size:11px}.hof-latest{padding:15px 12px;border-radius:18px}.hof-card-heading{font-size:9px}.hof-winner{grid-template-columns:78px minmax(0,1fr) 99px;gap:9px;padding:22px 0 14px}.hof-winner-avatar{width:67px;height:67px;font-size:25px}.hof-winner-crown{font-size:20px}.hof-record-number{font-size:8px;padding:4px 9px}.hof-winner-info h2{font-size:clamp(16px,4.7vw,22px)}.hof-winner-info>small{font-size:7px}.hof-player-code{font-size:9px}.hof-title-chip{font-size:8px;padding:5px 6px}.hof-week-dates{font-size:8px}.hof-prize{padding:10px 3px;gap:5px}.hof-prize-crown{font-size:16px}.hof-prize small{font-size:7px}.hof-prize strong{font-size:clamp(12px,3.5vw,16px)}.hof-prize>span:last-child{font-size:6px}.hof-summary{gap:8px;margin:12px 0 21px}.hof-summary>div{gap:8px;padding:13px 9px}.hof-summary-icon{font-size:22px}.hof-summary strong{font-size:17px}.hof-summary small{font-size:7px;letter-spacing:.03em}.hof-tabs button{font-size:10px}.hof-record-heading h2{font-size:22px}.hof-list-tools{align-items:stretch;flex-direction:column}.hof-list-tools input{width:100%}.hof-row{grid-template-columns:31px 34px minmax(0,1fr) auto;gap:8px;padding:10px 8px;min-height:64px}.hof-rank{font-size:10px}.hof-row-avatar{width:32px;height:32px}.hof-row-player strong{font-size:10px}.hof-row-player small{font-size:8px}.hof-row-prize{font-size:10px}.hof-total{padding:12px 10px}.hof-total span{font-size:7px}.hof-total strong{font-size:12px}.hof-next-crown{padding:20px 13px 15px}.hof-next-countdown{gap:5px}.hof-next-countdown b{font-size:18px}}
         @media(max-width:360px){.hof-winner{grid-template-columns:66px minmax(0,1fr) 88px;gap:7px}.hof-winner-avatar{width:59px;height:59px}.hof-winner-info h2{font-size:15px}.hof-prize strong{font-size:11px}.hof-row{grid-template-columns:27px 30px minmax(0,1fr) auto;gap:6px}.hof-row-avatar{width:29px;height:29px}.hof-row-prize{font-size:9px}}
+
+        /* Hall of Fame: match the supplied 390px reference composition */
+        .hof-page{background:#0a0e0c}
+        .hof-page:before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:430px;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#1f7a42 0%,#0f3d22 38%,rgba(10,14,12,0) 75%)}
+        .hof-content{position:relative;z-index:1;max-width:760px}
+        .hof-intro{padding:18px 20px 0;text-align:center}
+        .hof-title-line{display:flex;align-items:center;justify-content:center;gap:10px;color:#e8c547}
+        .hof-title-crown{font-size:29px;line-height:1;text-shadow:0 0 14px #e8c54755}
+        .hof-intro h1{margin:0;color:#e8c547;font-size:clamp(25px,6.7vw,34px);font-weight:800;font-style:italic;letter-spacing:-.5px;line-height:1.15}
+        .hof-intro h1 span{color:#e8c547}
+        .hof-tagline{margin:6px 0 0;color:#c9cfcb;font-size:14px;line-height:1.45}
+        .hof-latest{margin:18px 20px 0;padding:16px;border:1.5px solid #d4a93a;border-radius:24px;background:linear-gradient(180deg,#1c1708,#0f120e);box-shadow:0 0 28px rgba(232,197,71,.2);overflow:hidden}
+        .hof-card-heading{font-size:12px;letter-spacing:1.5px}
+        .hof-card-heading b{font:700 11px 'DM Mono',monospace;letter-spacing:1px;color:#d5dad6}
+        .hof-winner{display:flex;flex-direction:column;gap:0;padding:0}
+        .hof-winner-main{display:flex;align-items:center;gap:16px;margin-top:16px}
+        .hof-winner-avatar-wrap{position:relative;width:112px;flex:none;padding:0}
+        .hof-winner-avatar{width:112px;height:126px;border:0;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#f5d547,#9a6f12);box-shadow:none;font-size:48px}
+        .hof-winner-avatar img{width:106px;height:120px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+        .hof-winner-crown{top:-12px;left:50%;transform:translateX(-50%);z-index:2;color:#e8c547;font-size:28px}
+        .hof-record-number{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);z-index:3;margin:0;width:64px;padding:3px 0;border:0;border-radius:8px;background:linear-gradient(180deg,#f5d547,#c99a1e);color:#0a0e0c;text-align:center;font:800 14px Inter,system-ui,sans-serif}
+        .hof-winner-info{flex:1;min-width:0}
+        .hof-winner-info>small{color:#9aa69f;font:11px 'DM Mono',monospace;letter-spacing:2px}
+        .hof-winner-info h2{margin:4px 0 0;font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1.05;text-transform:uppercase}
+        .hof-player-code{margin-top:2px;font:12px 'DM Mono',monospace;color:#9aa69f}
+        .hof-title-chip{margin-top:8px;padding:0;border:0;background:none;color:#e8c547;font-size:15px;font-weight:700}
+        .hof-week-dates{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0 0;color:#c9cfcb;font-size:13px}
+        .hof-week-dates span{font-size:16px}
+        .hof-prize{display:grid;justify-items:center;gap:0;margin-top:12px;padding:10px;border:1px solid #d4a93a;border-radius:16px;background:rgba(232,197,71,.08);text-align:center}
+        .hof-prize small{color:#d5dad6;font:700 12px Inter,system-ui,sans-serif;letter-spacing:1.5px}
+        .hof-prize strong{margin-top:2px;color:#f5d547;font:800 38px Inter,system-ui,sans-serif;letter-spacing:-1px;text-shadow:0 0 18px rgba(245,213,71,.35)}
+        .hof-prize>span:last-child{display:none}
+        .hof-summary{margin:12px 20px 0;gap:10px}
+        .hof-summary>div{padding:14px;background:#101512;border:1px solid #1f2a24;border-radius:16px;gap:12px}
+        .hof-summary strong{font-size:26px}
+        .hof-summary small{font:13px Inter,system-ui,sans-serif;letter-spacing:0;color:#b4beb8}
+        .hof-tabs{margin:16px 20px 0;height:52px;padding:4px;gap:4px;border-radius:16px;background:#101512;border:1px solid #1f2a24}
+        .hof-tabs button{height:100%;min-height:0;font-size:14px}
+        .hof-tabs button.active{flex:1.2}
+        .hof-records{margin:12px 20px 0;padding:16px 12px;border:1px solid #4a3f1c;border-radius:22px;background:linear-gradient(180deg,#17140a,#0e1210)}
+        .hof-record-heading{margin:0 4px 12px}
+        .hof-record-heading small{display:none}
+        .hof-record-heading h2{margin:0;font-size:18px;color:#f4f5f2}
+        .hof-record-heading h2 span{color:inherit}
+        .hof-list-tools{margin:0 0 10px;padding:0 4px 12px;border:0;background:transparent}
+        .hof-list-tools input{display:none}
+        .hof-row{grid-template-columns:auto 44px minmax(0,1fr) auto;gap:10px;padding:12px;background:#101512;border:1px solid #1f2a24;border-radius:16px}
+        .hof-rank{padding:4px 7px;border:1px solid #d4a93a;border-radius:8px;background:#2a2310;color:#e8c547}
+        .hof-row-avatar{width:44px;height:44px}
+        .hof-row-player strong{font-size:16px}
+        .hof-row-player small{font:12px Inter,system-ui,sans-serif;color:#9aa69f}
+        .hof-row-prize{font:800 18px Inter,system-ui,sans-serif;color:#f5d547}
+        .hof-total{margin-top:10px;border-color:#4a3f1c;background:rgba(232,197,71,.06)}
+        .hof-next-crown{margin:14px 20px 0;padding:16px;border-radius:22px;background:linear-gradient(180deg,#1c1708,#0f120e)}
+        @media(max-width:600px){
+          .hof-page{padding-left:0;padding-right:0}
+          .hof-content{max-width:none}
+          .hof-latest{margin-left:20px;margin-right:20px}
+          .hof-summary{margin-left:20px;margin-right:20px}
+          .hof-tabs{margin-left:20px;margin-right:20px}
+          .hof-records{margin-left:20px;margin-right:20px}
+          .hof-next-crown{margin-left:20px;margin-right:20px}
+          .hof-winner-main{gap:16px}
+          .hof-winner-avatar-wrap{width:112px}
+          .hof-winner-avatar{width:112px;height:126px}
+          .hof-winner-info h2{font-size:clamp(22px,8vw,34px)}
+          .hof-summary strong{font-size:26px}
+          .hof-summary small{font-size:13px}
+          .hof-tabs button{font-size:14px}
+          .hof-row{grid-template-columns:auto 44px minmax(0,1fr) auto;gap:10px;padding:12px}
+          .hof-row-avatar{width:44px;height:44px}
+          .hof-row-player strong{font-size:16px}
+          .hof-row-player small{font-size:12px}
+          .hof-row-prize{font-size:18px}
+        }
+        @media(max-width:390px){
+          .hof-latest{padding:16px}
+          .hof-winner-avatar-wrap{width:96px}
+          .hof-winner-avatar{width:96px;height:110px}
+          .hof-winner-avatar img{width:90px;height:104px}
+          .hof-winner-info h2{font-size:29px}
+          .hof-prize strong{font-size:38px}
+        }
       `}</style>
     </main>
   );
