@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const competitionLinks = [
+  { href: "/competition", label: "Competition Home", icon: "♜" },
   { href: "/leaderboard", label: "Leaderboard", icon: "▥" },
   { href: "/matches", label: "Match History", icon: "⚒" },
   { href: "/weekly-archive", label: "Weekly Archive", icon: "▦" },
@@ -81,7 +82,7 @@ export default function SiteNavigation() {
       <nav className="site-desktop-nav" aria-label="Main navigation">
         <Link className={pathname === "/" ? "active" : ""} href="/">Home</Link>
         <div className="site-desktop-group">
-          <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/leaderboard">Competition⌄</Link>
+          <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition">Competition⌄</Link>
           <div className="site-desktop-dropdown">{competitionLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</div>
         </div>
         <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players">Players</Link>
@@ -131,7 +132,7 @@ export default function SiteNavigation() {
     </aside>
     <nav className="site-mobile-bottom" aria-label="Mobile navigation">
       <Link className={pathname === "/" ? "active" : ""} href="/"><span>⌂</span>Home</Link>
-      <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/leaderboard"><span>♜</span>Competition</Link>
+      <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition"><span>♜</span>Competition</Link>
       <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players"><span>♧</span>Players</Link>
       <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions"><span>◎</span>Predictions</Link>
     </nav>
