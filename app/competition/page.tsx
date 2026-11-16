@@ -50,9 +50,9 @@ function getCountdown(target: Date, now: Date): Countdown {
 
 function Avatar({ player, rank }: { player: WeeklyPlayer; rank: number }) {
   return (
-    <span className="competition-ref-avatar">
-      {player.photo_url ? <img src={player.photo_url} alt="" /> : player.username?.[0]?.toUpperCase() || "?"}
-      {rank === 1 && <i aria-label="Weekly leader">♛</i>}
+    <span className="competition-ref-avatar" style={{width:42,height:42,flex:"0 0 42px",display:"grid",placeItems:"center",position:"relative",overflow:"visible",border:"3px solid #c8f169",borderRadius:"50%",background:"#17251b",color:"#c8f169",fontSize:20,fontWeight:900,lineHeight:1}}>
+      {player.photo_url ? <img src={player.photo_url} alt="" style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} /> : player.username?.[0]?.toUpperCase() || "?"}
+      {rank === 1 && <i aria-label="Weekly leader" style={{position:"absolute",right:-7,top:-8,color:"#e8c547",fontSize:16,fontStyle:"normal"}}>♛</i>}
     </span>
   );
 }
@@ -206,8 +206,8 @@ export default function CompetitionPage() {
           <div className="competition-ref-leaderboard-heading">
             <h2>This week's leaderboard</h2>
           </div>
-          <div className="competition-ref-table-head">
-            <span>PLAYER</span><span>RECORD</span><span>RATING</span>
+          <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 92px 92px",alignItems:"center",gap:10,padding:"8px 12px 12px 112px",color:"#9aa69f",font:"11px 'DM Mono',monospace",letterSpacing:".14em"}}>
+            <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
           </div>
 
           {loading ? (
@@ -221,19 +221,23 @@ export default function CompetitionPage() {
               {topFive.map((player, index) => {
                 const rank = index + 1;
                 return (
-                  <Link href={"/players/" + player.id} className={"competition-ref-player-row " + (rank === 1 ? "is-leader" : "")} key={player.id}>
-                    <span className={"competition-ref-rank rank-" + rank}><b>{rank}</b></span>
+                  <Link href={"/players/" + player.id} className={"competition-ref-player-row " + (rank === 1 ? "is-leader" : "")} key={player.id}
+                    style={{display:"grid",gridTemplateColumns:"34px 42px minmax(0,1fr) 92px 92px",alignItems:"center",columnGap:10,minHeight:76,padding:"10px 12px",border:rank===1?"1.5px solid #9cbd55":"1px solid transparent",borderBottomColor:rank===1?"#9cbd55":"#26352b",borderRadius:rank===1?18:0,background:rank===1?"linear-gradient(90deg,rgba(200,241,105,.20),rgba(200,241,105,.05))":"transparent",color:"#f4f5f2",textDecoration:"none",width:"100%",boxSizing:"border-box"}}>
+                    <span className={"competition-ref-rank rank-" + rank} style={{width:34,height:34,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#3264cf":rank===3?"#d84838":rank===4?"#354b3e":"#354b3e",color:"#fff",fontSize:16,fontWeight:900,lineHeight:1,flexShrink:0}}><b>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
-                    <span className="competition-ref-player-name"><strong>{player.username}</strong><small>{player.player_code}</small></span>
-                    <span className="competition-ref-record">{player.wins}W / {player.losses}L</span>
-                    <strong className="competition-ref-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
+                    <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
+                      <strong style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:17,fontWeight:800,color:"#f4f5f2"}}>{player.username}</strong>
+                      <small style={{display:"block",font:"12px 'DM Mono',monospace",letterSpacing:".08em",color:"#9aa69f"}}>{player.player_code}</small>
+                    </span>
+                    <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:14,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
+                    <strong className="competition-ref-rating" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:20,fontWeight:900,color:"#c8f169",fontVariantNumeric:"tabular-nums"}}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
                   </Link>
                 );
               })}
             </div>
           )}
 
-          <Link href="/leaderboard" className="competition-ref-full-link">View full leaderboard <span>→</span></Link>
+          <Link href="/leaderboard" className="competition-ref-full-link" style={{minHeight:66,display:"flex",alignItems:"center",justifyContent:"center",gap:12,margin:"18px 4px 0",padding:"12px 16px",border:0,borderRadius:18,background:"#c8f169",color:"#0a0e0c",fontSize:20,fontWeight:900,textAlign:"center"}}>View full leaderboard <span style={{fontSize:24}}>→</span></Link>
         </section>
       </div>
 
@@ -311,6 +315,26 @@ export default function CompetitionPage() {
         .competition-ref-full-link{min-height:50px;display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 4px 0;padding:0 14px;border:0;border-radius:14px;background:#c8f169;color:#0a0e0c;font-size:16px;font-weight:900;text-align:center}
         @media(min-width:700px){.competition-reference-page{max-width:600px;padding:0 20px 36px}.competition-ref-pot{padding:22px 20px}.competition-ref-stat{padding:16px}.competition-ref-final{padding:18px}.competition-ref-leaderboard{padding:17px 14px}.competition-ref-player-row{min-height:60px}.competition-ref-player-name strong{font-size:14px}.competition-ref-record{font-size:11px}.competition-ref-rating{font-size:16px}}
         @media(max-width:370px){.competition-reference-page{padding-left:10px;padding-right:10px}.competition-ref-pot{padding:16px 12px}.competition-ref-stat{gap:8px;padding:11px 9px}.competition-ref-stat strong{font-size:21px}.competition-ref-stat small{font-size:9px}.competition-ref-final{padding:13px 10px}.competition-ref-countdown{gap:5px}.competition-ref-count-unit strong{height:45px;font-size:20px}.competition-ref-tabs a{font-size:9px;gap:3px}.competition-ref-player-row{grid-template-columns:23px 30px minmax(0,1fr) 51px 53px;gap:6px;padding:5px 5px}.competition-ref-avatar{width:30px;height:30px}.competition-ref-table-head{grid-template-columns:minmax(0,1fr) 51px 53px;padding-left:62px}.competition-ref-player-name strong{font-size:11px}.competition-ref-record{font-size:9px}.competition-ref-rating{font-size:12px}}
+
+        @media(max-width:520px){
+          .competition-ref-leaderboard{padding:18px 12px 16px}
+          .competition-ref-leaderboard-heading h2{font-size:clamp(21px,5.5vw,27px)}
+          .competition-ref-table-head{grid-template-columns:minmax(0,1fr) 66px 66px!important;padding-left:96px!important;font-size:9px!important;gap:6px!important}
+          .competition-ref-player-row{grid-template-columns:30px 36px minmax(0,1fr) 66px 66px!important;column-gap:6px!important;min-height:70px!important;padding:8px 7px!important}
+          .competition-ref-player-row .competition-ref-avatar{width:36px!important;height:36px!important;flex-basis:36px!important}
+          .competition-ref-player-name strong{font-size:clamp(12px,3.6vw,15px)!important}
+          .competition-ref-player-name small{font-size:9px!important}
+          .competition-ref-record{font-size:10px!important}
+          .competition-ref-rating{font-size:clamp(13px,4vw,17px)!important}
+          .competition-ref-full-link{min-height:58px!important;font-size:17px!important;border-radius:15px!important}
+        }
+        @media(max-width:370px){
+          .competition-ref-table-head{grid-template-columns:minmax(0,1fr) 57px 59px!important;padding-left:88px!important}
+          .competition-ref-player-row{grid-template-columns:27px 33px minmax(0,1fr) 57px 59px!important;column-gap:5px!important;padding:7px 5px!important}
+          .competition-ref-player-row .competition-ref-avatar{width:33px!important;height:33px!important;flex-basis:33px!important}
+          .competition-ref-record{font-size:9px!important}
+          .competition-ref-rating{font-size:13px!important}
+        }
         @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;display:none}.competition-ref-progress span{transition:none}}
       `}</style>
     </main>
