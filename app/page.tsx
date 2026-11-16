@@ -56,7 +56,9 @@ export default function Home(){
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-winner">Winner takes it all on Saturday 🏆</div>
+   <div className="home-v2-pot-meta">{weeklyPlayers.length} players have joined the leaderboard this week.</div>
+   <p>Every player who joins automatically adds <strong>₦200</strong> to the pot.</p>
+   <div className="home-v2-pot-winner">Winner takes it all 🏆</div>
   </section>
   <section className="home-v2-stats">
    <div><strong>{players.length}</strong><span>Registered players</span></div>
