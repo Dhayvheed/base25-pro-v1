@@ -151,9 +151,9 @@ export default function PublicPlayerProfile() {
       setMatchupError("This comparison is available when viewing another player's profile.");
       return;
     }
-    const [{ data: ownProfile, error: ownError }, { count: allMatches, error: countError }] = await Promise.all([
+    const [{ data: ownProfile, error: ownError }, { data: allMatches, error: countError }] = await Promise.all([
       supabase.from("player_public_leaderboard").select("id,username,player_code,elo_rating").eq("id", own.id).single(),
-      supabase.from("matches").select("player_one_id,player_two_id", { count: "exact" })
+      supabase.from("matches").select("player_one_id,player_two_id")
     ]);
     if (ownError || countError || !ownProfile) {
       setMatchupReady(false);
