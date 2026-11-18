@@ -699,3 +699,36 @@
  .home-v2-weekly .home-v2-record{width:44px;font-size:10px}
  .home-v2-weekly .home-v2-rating{width:42px;font-size:14px}
 }
+
+
+/* Menu drawer v2 — aligned to the supplied logged-in / logged-out menu reference */
+.site-drawer{width:min(420px,100vw);padding:18px 18px 0;background:#0a0e0c;border-left:1px solid #24402f;box-shadow:-18px 0 50px #0009}
+.menu-v2-head{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #1f2a24}
+.menu-v2-brand{display:flex;align-items:center;gap:10px;color:#f4f5f2;font-size:19px;font-weight:900;letter-spacing:-.04em}
+.menu-v2-brand b{color:#c8f169}
+.menu-v2-mark{width:34px;height:34px;display:grid;place-items:center;border:2px solid #c8f169;border-radius:50%;color:#c8f169;font-size:18px;font-weight:900}
+.menu-v2-close{width:40px;height:40px;display:grid;place-items:center;margin:0;padding:0;border:1px solid #2b3a31;border-radius:12px;background:#101512;color:#f4f5f2;font-size:27px;font-weight:400;line-height:1}
+.menu-v2-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 0 16px;scrollbar-width:thin}
+.menu-v2-account{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:12px;row-gap:12px;padding:14px;border:1px solid #24402f;border-radius:18px;background:#101512}
+.menu-v2-avatar{width:44px;height:44px;display:grid;place-items:center;grid-row:1;color:#c8f169;border:1px solid #35483b;border-radius:50%;background:#18241b;font-size:20px;font-weight:800}
+.menu-v2-account-copy{min-width:0;display:grid;gap:4px}
+.menu-v2-account-copy strong{color:#f4f5f2;font-size:16px;font-weight:800;overflow-wrap:anywhere}
+.menu-v2-account-copy p{margin:0;color:#b4beb8;font-size:12px;line-height:1.45}
+.menu-v2-login{grid-column:1/-1;min-height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;border-radius:14px;background:#c8f169;color:#0a0e0c;font-size:14px;font-weight:850}
+.menu-v2-login span{font-size:20px}
+.menu-v2-register{grid-column:1/-1;text-align:center;color:#b4beb8;font-size:12px}
+.menu-v2-register b{color:#c8f169}
+.menu-v2-account-in{grid-template-columns:44px minmax(0,1fr);row-gap:10px}
+.menu-v2-kicker{color:#9aa69f;font:10px 'DM Mono',monospace;letter-spacing:1.5px}
+.menu-v2-profile-link{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 12px;border:1px solid #344139;border-radius:12px;color:#c8f169;font-size:13px;font-weight:750}
+.menu-v2-section-label{margin:20px 12px 6px;color:#9aa69f;font:10px 'DM Mono',monospace;letter-spacing:2px}
+.menu-v2-nav{display:grid;gap:2px}
+.menu-v2-nav a{min-height:48px;display:flex;align-items:center;gap:14px;padding:0 12px;border:1px solid transparent;border-radius:14px;color:#f4f5f2;font-size:16px;font-weight:650}
+.menu-v2-nav a>span{width:22px;flex:none;color:#c8f169;text-align:center;font-size:20px}
+.menu-v2-nav a.active{border-color:#344b38;background:#142019}
+.menu-v2-footer{flex:none;padding:12px 0 calc(14px + env(safe-area-inset-bottom));border-top:1px solid #1f2a24;background:#0a0e0c}
+.menu-v2-logout{display:block;width:100%;margin:0 0 10px;padding:10px 12px;border:1px solid #344139;border-radius:12px;background:#101512;color:#d8e0da;text-align:left;font-size:13px;font-weight:700}
+.menu-v2-admin{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;color:#b4beb8;font-size:12px}
+.menu-v2-admin span{color:#c8f169;font-size:17px}
+.menu-v2-tagline{padding:10px 12px 0;color:#78877e;font:9px 'DM Mono',monospace;letter-spacing:1.4px}
+@media(max-width:760px){.site-drawer{width:min(420px,100vw);padding:16px 18px 0}.menu-v2-head{padding-bottom:10px}.menu-v2-scroll{padding-top:18px}.menu-v2-footer{padding-bottom:calc(14px + env(safe-area-inset-bottom))}}
