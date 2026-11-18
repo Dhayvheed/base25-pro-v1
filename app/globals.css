@@ -782,3 +782,40 @@
 @media(max-width:390px){
  .menu-v2-nav .menu-v2-competition-toggle{font-size:16px}
 }
+
+
+/* Signed-in drawer card — match the supplied signed-in HTML screen */
+.menu-v2-account-ranked{display:grid;grid-template-columns:1fr;gap:14px;padding:17px 18px;border-radius:24px;background:linear-gradient(145deg,#102719,#0b1510 78%);border-color:#244b32}
+.menu-v2-player-top{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:15px;min-width:0}
+.menu-v2-account-ranked .menu-v2-avatar{width:64px;height:64px;grid-row:auto;border:2px solid #c8f169;background:#101a13;color:#c8f169;font-size:27px}
+.menu-v2-account-ranked .menu-v2-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.menu-v2-account-ranked .menu-v2-account-copy{gap:5px}
+.menu-v2-account-ranked .menu-v2-account-copy strong{display:flex;align-items:center;gap:8px;font-size:21px;line-height:1.15}
+.menu-v2-account-ranked .menu-v2-account-copy p{font:500 13px 'DM Mono',monospace;color:#9ba99f;line-height:1.4}
+.menu-v2-verified{width:18px;height:18px;display:inline-grid;place-items:center;border-radius:50%;background:#c8f169;color:#102012;font:900 12px Manrope,Arial,sans-serif;flex:none}
+.menu-v2-rating-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-v2-rating-grid>div{min-height:66px;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:9px 12px;border:1px solid #2d3b32;border-radius:15px;background:#0c1410}
+.menu-v2-rating-grid>div:first-child{border-color:#c8f169}
+.menu-v2-rating-grid strong{color:#f2f5ef;font-size:22px;font-weight:850;line-height:1.05;font-variant-numeric:tabular-nums}
+.menu-v2-rating-grid>div:first-child strong{color:#c8f169}
+.menu-v2-rating-grid span{color:#aab5ad;font-size:12px}
+.menu-v2-no-player{margin:0;color:#aab5ad;font-size:13px}
+.menu-v2-account-ranked .menu-v2-profile-link{grid-column:auto;min-height:58px;justify-content:center;gap:8px;border:1.5px solid #c8f169;border-radius:17px;background:transparent;color:#c8f169;font-size:17px;font-weight:850}
+.menu-v2-account-ranked .menu-v2-profile-link span{font-size:21px}
+@media(max-width:760px){
+ .menu-v2-account-ranked{padding:16px 15px;gap:12px}
+ .menu-v2-player-top{grid-template-columns:58px minmax(0,1fr);gap:12px}
+ .menu-v2-account-ranked .menu-v2-avatar{width:58px;height:58px}
+ .menu-v2-account-ranked .menu-v2-account-copy strong{font-size:19px}
+ .menu-v2-account-ranked .menu-v2-account-copy p{font-size:11px}
+ .menu-v2-rating-grid>div{min-height:62px;padding:8px 10px}
+ .menu-v2-rating-grid strong{font-size:20px}
+ .menu-v2-account-ranked .menu-v2-profile-link{min-height:54px;font-size:16px}
+}
+@media(max-width:390px){
+ .menu-v2-account-ranked{padding:14px 12px}
+ .menu-v2-player-top{grid-template-columns:50px minmax(0,1fr);gap:10px}
+ .menu-v2-account-ranked .menu-v2-avatar{width:50px;height:50px}
+ .menu-v2-account-ranked .menu-v2-account-copy strong{font-size:17px}
+ .menu-v2-rating-grid strong{font-size:18px}
+}
