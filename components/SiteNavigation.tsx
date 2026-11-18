@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -40,6 +40,7 @@ export default function SiteNavigation() {
   const [accountName, setAccountName] = useState("");
   const [playerSummary, setPlayerSummary] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
@@ -135,7 +136,23 @@ export default function SiteNavigation() {
       </div>
     </header>
     <div className={"site-drawer-backdrop" + (open ? " is-open" : "")} onClick={() => setOpen(false)} aria-hidden="true"></div>
-    <aside className={"site-drawer" + (open ? " is-open" : "")} aria-hidden={!open} aria-label="Site navigation">
+    <aside
+      className={"site-drawer" + (open ? " is-open" : "")}
+      aria-hidden={!open}
+      aria-label="Site navigation"
+      onTouchStart={(event) => {
+        const touch = event.touches[0];
+        touchStart.current = { x: touch.clientX, y: touch.clientY };
+      }}
+      onTouchEnd={(event) => {
+        if (!touchStart.current) return;
+        const touch = event.changedTouches[0];
+        const deltaX = touch.clientX - touchStart.current.x;
+        const deltaY = touch.clientY - touchStart.current.y;
+        if (deltaX > 70 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) setOpen(false);
+        touchStart.current = null;
+      }}
+    >
       <div className="menu-v2-head">
         <Link className="menu-v2-brand" href="/" tabIndex={open ? 0 : -1} aria-label="BASE25 PRO home">
           <span className="menu-v2-mark">8</span>
