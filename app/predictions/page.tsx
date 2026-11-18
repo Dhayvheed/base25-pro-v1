@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNavigation from "@/components/SiteNavigation";
+import MatchupCalculator from "@/components/MatchupCalculator";
 import { supabase } from "@/lib/supabase";
 
 type Option = { id:string; label:string; sort_order:number; player_id:string|null };
@@ -83,6 +84,8 @@ export default function PredictionsPage(){
    <div className="pred-hero-copy"><div className="pred-eyebrow">BASE25 PRO · WEEKLY PREDICTIONS</div><h1>Predict &amp; Win<br/><span>₦300 Game Voucher</span></h1><p>Make your calls on this week's BASE25 action. Get predictions right and stand a chance to earn a ₦300 gaming voucher, usable for any games at BASE25.</p><div className="pred-hero-stats"><div><i>🎮</i><span><b>Game Voucher</b><small>₦300 Value</small></span></div><div><i>ϟ</i><span><b>Live Predictions</b><small>As data becomes available</small></span></div><div><i>☆</i><span><b>Earn Points</b><small>For correct calls</small></span></div></div></div>
    <div className="pred-voucher" aria-label="BASE25 game voucher worth 300 naira"><small>BASE25</small><b>GAME VOUCHER</b><strong>₦300</strong><span>🎮</span></div>
   </section>
+
+  <MatchupCalculator />
 
   <section className="pred-section pred-weekly"><div className="pred-section-head"><div><div className="pred-eyebrow">THE WEEKLY CHALLENGE</div><h2>This Week's Predictions</h2></div><span className="pred-week-tag">◷ COMPETITION · SAT–FRI / PREDICTIONS · SUN–SAT</span></div>
    <div className="pred-list">{questions.length===0?<div className="pred-loading">No predictions are available yet. New questions will appear automatically when the required data is ready.</div>:questions.map((q,index)=>{
