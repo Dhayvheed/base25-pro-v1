@@ -103,6 +103,35 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
     if(error)setNotice("Could not update question: "+error.message);else{setNotice(row.active?"Question disabled for future weeks.":"Question enabled for future weeks.");await load();}
   }
 
+  async function voidThisWeek(row:Template){
+    if(!supabase||!window.confirm(`Void this week's "${row.title}" question? Existing picks will receive zero points.`))return;
+    setBusy(true);
+    const {data,error}=await supabase.rpc("admin_void_prediction_question",{p_template_key:row.template_key});
+    if(error)setNotice("Question was not voided: "+error.message);
+    else setNotice(`Question voided. ${data?.voided_pick_count||0} existing picks were cancelled.`);
+    await load();setBusy(false);
+  }
+
+  async function moveTemplate(row:Template,delta:number){
+    const current=[...templates].sort((a,b)=>a.sort_order-b.sort_order);
+    const index=current.findIndex(x=>x.template_key===row.template_key), next=index+delta;
+    if(index<0||next<0||next>=current.length)return;
+    [current[index],current[next]]=[current[next],current[index]];
+    setBusy(true);
+    for(let i=0;i<current.length;i++){
+      const item=current[i];
+      if(item.sort_order===i+1)continue;
+      const {error}=await supabase!.rpc("admin_save_prediction_template",{
+        p_template_key:item.template_key,p_title:item.title,p_description:item.description||"",p_category:item.category,
+        p_points_reward:item.points_reward,p_eligibility:item.eligibility,p_opens_rule:item.opens_rule,p_closes_rule:item.closes_rule,
+        p_data_condition:item.data_condition||"",p_minimum_matches:item.minimum_matches,p_points_ladder:item.points_ladder,
+        p_active:item.active,p_sort_order:i+1,p_apply_current:false
+      });
+      if(error){setNotice("Question order update failed: "+error.message);setBusy(false);return;}
+    }
+    setNotice("Question order updated.");await load();setBusy(false);
+  }
+
   const totalPicks=useMemo(()=>Object.values(pickCounts).reduce((a,b)=>a+b,0),[pickCounts]);
   const FormFields=({value,change}:{value:Template;change:(key:keyof Template,val:any)=>void})=><>
     <label>Question text<input value={value.title} maxLength={140} onChange={e=>change("title",e.target.value)}/></label>
@@ -122,7 +151,7 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
       .pq-head{display:flex;align-items:center;gap:12px;margin:4px 0 16px}.pq-back{width:38px;height:38px;border:1px solid #2B3A31;border-radius:10px;background:#101512;color:#dce4de;font-size:20px}.pq-kicker{font:11px 'JetBrains Mono',monospace;letter-spacing:2px;color:#C8F169}.pq-head h2{font-size:24px;letter-spacing:-.6px;margin:2px 0 0}
       .pq-summary{display:flex;align-items:center;gap:10px;padding:14px;background:#12201A;border:1px solid #24402F;border-radius:18px;margin-bottom:12px}.pq-dot{width:8px;height:8px;border-radius:50%;background:#C8F169}.pq-summary-copy{flex:1}.pq-summary-copy b{display:block;font-size:15px}.pq-summary-copy small{color:#9AA69F;font-size:12px}.pq-summary strong{color:#C8F169;font-size:12px;white-space:nowrap}
       .pq-add{width:100%;height:52px;border:0;border-radius:14px;background:#C8F169;color:#0A0E0C;font-weight:800;font-size:16px;margin:0 0 8px}.pq-note{color:#9AA69F;font-size:12px;line-height:1.5;margin:0 0 14px}
-      .pq-card{background:#101512;border:1px solid #1F2A24;border-radius:18px;padding:14px;margin:12px 0}.pq-card.is-expanded{border-color:#2F6B45}.pq-row{display:flex;align-items:center;gap:12px}.pq-icon{width:40px;height:40px;border-radius:10px;background:#12201A;color:#C8F169;display:grid;place-items:center;font-size:22px;flex:none}.pq-copy{flex:1;min-width:0}.pq-copy b{font-size:15px;line-height:1.3;display:block}.pq-copy small{font-size:12px;color:#9AA69F;display:block;margin-top:3px}.pq-switch{width:44px;height:26px;border:0;border-radius:99px;background:#38443c;position:relative;flex:none;padding:0}.pq-switch.on{background:#C8F169}.pq-switch:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#0A0E0C;transition:transform .15s}.pq-switch.on:after{transform:translateX(18px)}
+      .pq-card{background:#101512;border:1px solid #1F2A24;border-radius:18px;padding:14px;margin:12px 0}.pq-card.is-expanded{border-color:#2F6B45}.pq-row{display:flex;align-items:center;gap:12px}.pq-icon{width:40px;height:40px;border-radius:10px;background:#12201A;color:#C8F169;display:grid;place-items:center;font-size:22px;flex:none}.pq-copy{flex:1;min-width:0}.pq-copy b{font-size:15px;line-height:1.3;display:block}.pq-copy small{font-size:12px;color:#9AA69F;display:block;margin-top:3px}.pq-order{width:24px;height:26px;border:1px solid #2B3A31;border-radius:7px;background:#0B110D;color:#9AA69F;font-size:13px}.pq-order:disabled{opacity:.25}.pq-switch{width:44px;height:26px;border:0;border-radius:99px;background:#38443c;position:relative;flex:none;padding:0}.pq-switch.on{background:#C8F169}.pq-switch:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#0A0E0C;transition:transform .15s}.pq-switch.on:after{transform:translateX(18px)}
       .pq-editor{margin-top:12px;padding-top:12px;border-top:1px solid #1F2A24}.pq-editor label,.pq-add-form label{display:block;color:#9AA69F;font-size:12px;margin:12px 0 6px}.pq-editor input,.pq-editor select,.pq-editor textarea,.pq-add-form input,.pq-add-form select,.pq-add-form textarea{width:100%;min-width:0;height:44px;border:1px solid #2B3A31;border-radius:10px;background:#0B110D;color:#F4F5F2;padding:0 12px;font:14px Inter,system-ui,sans-serif}.pq-editor textarea,.pq-add-form textarea{height:auto;padding:10px;resize:vertical}.pq-two{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.pq-ladder-head{display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px;font-size:12px;color:#9AA69F}.pq-ladder-head button{background:none;border:0;color:#C8F169;font-weight:700}.pq-step{display:grid;grid-template-columns:1fr 1fr 1fr 32px;gap:6px;margin:7px 0}.pq-step input,.pq-step select{height:42px!important;padding:0 8px!important;text-align:center}.pq-remove{border:1px solid #3b2b2b;background:#1b1111;color:#F09595;border-radius:9px;font-size:18px}.pq-help{font-size:11px;color:#9AA69F;margin-top:8px;line-height:1.5}.pq-apply{margin-top:16px}.pq-apply-title{font-size:12px;color:#9AA69F;margin-bottom:7px}.pq-radio{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid #2B3A31;border-radius:12px;margin:6px 0;cursor:pointer}.pq-radio.selected{border-color:#C8F169;background:#14241A}.pq-radio input{width:auto;height:auto;accent-color:#C8F169}.pq-radio b{font-size:14px;font-weight:500;display:block}.pq-radio small{font-size:12px;color:#9AA69F;display:block}.pq-warning{border:1px solid #7d4d32;background:#25180f;color:#F4C28E;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.45;margin-top:9px}.pq-actions{display:flex;gap:10px;margin-top:14px}.pq-save{flex:1;height:48px;border:0;border-radius:12px;background:#C8F169;color:#0A0E0C;font-weight:800}.pq-cancel{height:48px;padding:0 18px;border:1px solid #2B3A31;border-radius:12px;background:transparent;color:#F4F5F2}.pq-void{background:none;border:0;color:#F09595;font-size:13px;padding:0}.pq-last{font-size:12px;color:#9AA69F}.pq-history{margin-top:22px;border-top:1px solid #1F2A24;padding-top:16px}.pq-history h3{font-size:16px;margin:0 0 10px}.pq-history-row{padding:10px 0;border-bottom:1px solid #1F2A24;font-size:12px}.pq-history-row small{display:block;color:#9AA69F;margin-top:3px}.pq-add-form{background:#101512;border:1px solid #2F6B45;border-radius:18px;padding:14px;margin:12px 0}.pq-add-form h3{font-size:16px;margin-bottom:8px}.pq-empty{color:#9AA69F;font-size:13px;padding:20px;text-align:center}
       @media(max-width:520px){.pq-root{padding-left:0;padding-right:0}.pq-head h2{font-size:22px}.pq-two{grid-template-columns:1fr 1fr}.pq-step{grid-template-columns:.8fr 1fr .8fr 28px;gap:4px}}
     `}</style>
@@ -131,7 +160,7 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
     <button className="pq-add" type="button" onClick={()=>{setShowAdd(v=>!v);setDraft(null);setExpanded(null);}}>＋ Add question</button>
     <p className="pq-note">Questions repeat automatically every week. Each saved change is recorded in the audit history.</p>
     {loading?<p className="pq-empty">Loading prediction questions…</p>:templates.map(row=><article className={"pq-card"+(expanded===row.template_key?" is-expanded":"")} key={row.template_key}>
-      <div className="pq-row"><div className="pq-icon">{icons[row.template_key]||"◎"}</div><div className="pq-copy"><b>{row.title}</b><small>{row.opens_rule} → {row.closes_rule} · {fmtLadder(row.points_ladder)} pts</small></div><button type="button" className={"pq-switch"+(row.active?" on":"")} aria-label={row.active?"Disable "+row.title:"Enable "+row.title} aria-pressed={row.active} onClick={()=>toggle(row)} /></div>
+      <div className="pq-row"><div className="pq-icon">{icons[row.template_key]||"◎"}</div><div className="pq-copy"><b>{row.title}</b><small>{row.opens_rule} → {row.closes_rule} · {fmtLadder(row.points_ladder)} pts</small></div><div style={{display:"flex",alignItems:"center",gap:4}}><button type="button" className="pq-order" disabled={busy||templates[0]?.template_key===row.template_key} onClick={()=>moveTemplate(row,-1)} aria-label="Move question up">↑</button><button type="button" className="pq-order" disabled={busy||templates[templates.length-1]?.template_key===row.template_key} onClick={()=>moveTemplate(row,1)} aria-label="Move question down">↓</button><button type="button" className={"pq-switch"+(row.active?" on":"")} aria-label={row.active?"Disable "+row.title:"Enable "+row.title} aria-pressed={row.active} onClick={()=>toggle(row)} /></div></div>
       {expanded===row.template_key&&draft&&<div className="pq-editor">
         <FormFields value={draft} change={(k,v)=>patch(k as keyof Template,v)}/>
         <div className="pq-apply"><div className="pq-apply-title">Apply this change</div>
@@ -140,7 +169,7 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
           {applyCurrent&&(pickCounts[row.template_key]||0)>0&&<div className="pq-warning">{pickCounts[row.template_key]} players have already predicted. Current-week changes are blocked to protect their picks.</div>}
         </div>
         <div className="pq-actions"><button className="pq-save" type="button" disabled={busy} onClick={save}>{busy?"Saving…":"Save changes"}</button><button className="pq-cancel" type="button" onClick={()=>{setDraft(null);setExpanded(null);}}>Cancel</button></div>
-        <div className="pq-last" style={{display:"flex",justifyContent:"space-between",marginTop:12}}><button type="button" className="pq-void" onClick={()=>setNotice("Voiding a live weekly question is not connected yet; use the existing question settlement controls until that action is implemented.")}>Void this week</button><span>Changes are audited</span></div>
+        <div className="pq-last" style={{display:"flex",justifyContent:"space-between",marginTop:12}}><button type="button" className="pq-void" onClick={()=>voidThisWeek(row)} disabled={busy}>Void this week</button><span>Changes are audited</span></div>
       </div>}
       {expanded!==row.template_key&&<button type="button" style={{marginTop:12,background:"none",border:0,color:"#C8F169",fontWeight:700}} onClick={()=>edit(row)}>Edit question →</button>}
     </article>)}
