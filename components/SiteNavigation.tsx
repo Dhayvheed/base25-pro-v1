@@ -124,11 +124,23 @@ export default function SiteNavigation() {
         <div className="menu-v2-section-label">MENU</div>
         <nav className="menu-v2-nav" aria-label="Menu">
           <Link className={pathname === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
-          <Link className={pathname.startsWith("/competition") || competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♜</span>Competition</Link>
+          <button className={"menu-v2-competition-toggle" + (pathname.startsWith("/competition") || competitionLinks.some(x => pathname === x.href) ? " active" : "")} type="button" aria-expanded={competitionOpen} onClick={() => setCompetitionOpen(value => !value)} tabIndex={open ? 0 : -1}>
+            <span>♜</span>Competition<i className={competitionOpen ? "is-open" : ""}>⌄</i>
+          </button>
+          {competitionOpen && <div className="menu-v2-subnav" aria-label="Competition pages">
+            <Link className={pathname === "/competition" ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♜</span>Competition Home</Link>
+            <Link className={pathname === "/leaderboard" ? "active" : ""} href="/leaderboard" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▥</span>Leaderboard</Link>
+            <Link className={pathname === "/matches" ? "active" : ""} href="/matches" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>⚒</span>Match History</Link>
+            <Link className={pathname === "/weekly-archive" ? "active" : ""} href="/weekly-archive" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▦</span>Weekly Archive</Link>
+            <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♛</span>Hall of Fame</Link>
+          </div>}
           <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♧</span>Players</Link>
-          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>◎</span>Predictions</Link>
-          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▤</span>How it works</Link>
-          <Link className={pathname.includes("rules") ? "active" : ""} href="/how-it-works#rules" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; format</Link>
+          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>◎</span>Predictions League</Link>
+        </nav>
+        <div className="menu-v2-section-label menu-v2-about-label">ABOUT</div>
+        <nav className="menu-v2-nav" aria-label="About BASE25">
+          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>ⓘ</span>How It Works</Link>
+          <Link className={pathname.includes("rules") ? "active" : ""} href="/how-it-works#rules" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▤</span>Rules &amp; Format</Link>
         </nav>
       </div>
       <div className="menu-v2-footer">
