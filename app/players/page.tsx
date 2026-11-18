@@ -127,7 +127,7 @@ export default function PlayersPage() {
                         : (player.username?.[0] || "?").toUpperCase()}
                     </span>
                     <span className="players-identity">
-                      <strong>{player.username}</strong>
+                      <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>}</strong>
                       <small>{player.player_code}</small>
                     </span>
                     <span className="players-record">{player.wins}W / {player.losses}L</span>
@@ -173,7 +173,7 @@ export default function PlayersPage() {
         .players-columns span:first-child{padding-left:76px}
         .players-columns span:nth-child(2),.players-columns span:nth-child(3){text-align:right}
         .players-list{display:grid}
-        .players-row{min-height:64px;display:grid;grid-template-columns:26px 34px minmax(0,1fr) 76px 62px;align-items:center;gap:9px;padding:4px 9px;border:1px solid transparent;border-bottom-color:#1f2a24;border-radius:14px;transition:background .18s,border-color .18s}
+        .players-row{min-height:64px;display:grid;grid-template-columns:26px 34px minmax(0,1fr) 76px 62px;align-items:center;gap:9px;padding:9px 9px;border:1px solid transparent;border-bottom-color:#1f2a24;border-radius:14px;transition:background .18s,border-color .18s}
         .players-row:last-child{border-bottom-color:transparent}
         .players-row:hover{background:#18251b;border-color:#3d5a35}
         .players-row.is-leader{border-color:#c8f1698c;background:linear-gradient(90deg,#c8f1692e,#c8f1690a);box-shadow:inset 0 0 22px #c8f1690a}
@@ -183,7 +183,7 @@ export default function PlayersPage() {
         .players-avatar{position:relative;width:34px;height:34px;display:grid;place-items:center;overflow:hidden;border:2px solid #c8f169;border-radius:50%;background:#101512;color:#c8f169;font-size:14px;font-weight:800}
         .players-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
         .players-identity{min-width:0;display:grid;gap:3px}
-        .players-identity strong{overflow:hidden;color:#f4f5f2;font-size:14px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+        .players-identity strong{display:block;min-width:0;color:#f4f5f2;font-size:14px;font-weight:700;white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.25}.players-crown{display:inline-block;margin-left:5px;color:#e8c547;font-size:13px;vertical-align:1px;white-space:nowrap}
         .players-identity small{color:#9aa69f;font:500 10px/1.3 'DM Mono',monospace;letter-spacing:.02em}
         .players-record{color:#d5dad6;text-align:right;font-size:11px;white-space:nowrap}
         .players-rating{color:#c8f169;text-align:right;font:800 16px/1 'DM Mono',monospace}
@@ -193,8 +193,8 @@ export default function PlayersPage() {
         .players-loading{display:grid;gap:8px;padding:8px 4px}
         .players-loading span{height:55px;border-radius:12px;background:linear-gradient(90deg,#18251b,#223127,#18251b);background-size:200% 100%;animation:players-shimmer 1.4s ease infinite}
         @keyframes players-shimmer{to{background-position:-200% 0}}
-        @media(max-width:700px){.players-content{padding:23px 0 50px}.players-heading{margin-bottom:20px}.players-heading h1{font-size:24px}.players-back{width:40px;height:40px}.players-search{height:48px;margin-bottom:15px}.players-ranking{padding:15px 9px 12px;border-radius:19px}.players-columns{grid-template-columns:minmax(0,1fr) 66px 55px;padding:4px 8px 8px;font-size:9px}.players-columns span:first-child{padding-left:69px}.players-row{grid-template-columns:24px 32px minmax(0,1fr) 66px 55px;gap:7px;min-height:58px;padding:4px 7px}.players-medal{width:24px;height:24px}.players-avatar{width:32px;height:32px}.players-identity strong{font-size:13px}.players-identity small{font-size:9px}.players-record{font-size:10px}.players-rating{font-size:14px}.players-list-footer{font-size:10px}}
-        @media(max-width:360px){.players-columns{grid-template-columns:minmax(0,1fr) 58px 49px;font-size:8px}.players-columns span:first-child{padding-left:61px}.players-row{grid-template-columns:22px 30px minmax(0,1fr) 58px 49px;gap:5px;padding:4px 5px}.players-medal{width:22px;height:22px}.players-avatar{width:30px;height:30px}.players-identity strong{font-size:12px}.players-record{font-size:9px}.players-rating{font-size:13px}}
+        @media(max-width:700px){.players-content{padding:23px 0 50px}.players-heading{margin-bottom:20px}.players-heading h1{font-size:24px}.players-back{width:40px;height:40px}.players-search{height:48px;margin-bottom:15px}.players-ranking{padding:15px 9px 12px;border-radius:19px}.players-columns{grid-template-columns:minmax(0,1fr) 66px 55px;padding:4px 8px 8px;font-size:9px}.players-columns span:first-child{padding-left:69px}.players-row{grid-template-columns:24px 32px minmax(0,1fr) 66px 55px;gap:7px;min-height:58px;padding:8px 7px}.players-medal{width:24px;height:24px}.players-avatar{width:32px;height:32px}.players-identity strong{font-size:13px;line-height:1.25}.players-identity small{font-size:9px}.players-record{font-size:10px}.players-rating{font-size:14px}.players-list-footer{font-size:10px}}
+        @media(max-width:360px){.players-columns{grid-template-columns:minmax(0,1fr) 58px 49px;font-size:8px}.players-columns span:first-child{padding-left:61px}.players-row{grid-template-columns:22px 30px minmax(0,1fr) 58px 49px;gap:5px;padding:8px 5px}.players-medal{width:22px;height:22px}.players-avatar{width:30px;height:30px}.players-identity strong{font-size:12px;line-height:1.25}.players-record{font-size:9px}.players-rating{font-size:13px}}
         @media(prefers-reduced-motion:reduce){.players-loading span{animation:none}}
       `}</style>
     </main>
