@@ -439,7 +439,7 @@ export default function Admin() {
             <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":"✓  Save match"}</button>
             <button type="button" className="record-cancel-button" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
-        </section>>
+        </section>
       </div>
 
       {playerPickerTarget && <div className="record-picker-backdrop" onClick={()=>{setPlayerPickerTarget(null);setPlayerOnePickerOpen(false);setPlayerTwoPickerOpen(false);}}>
