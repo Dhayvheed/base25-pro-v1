@@ -66,6 +66,7 @@ export default function SiteNavigation() {
       setAccountName(metadataName);
       setAuthReady(true);
       setPlayerSummary(null);
+      if (!supabase) return;
       const { data: profileData } = await supabase.rpc("get_my_base25_player_profile");
       if (!active) return;
       const profile = Array.isArray(profileData) ? profileData[0] : profileData;
