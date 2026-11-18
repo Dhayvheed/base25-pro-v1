@@ -36,10 +36,12 @@ export default function PublicPlayerProfile() {
   const [range, setRange] = useState("10");
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [showMatchup, setShowMatchup] = useState(false);
-  const [opponentId, setOpponentId] = useState("");
   const [viewer, setViewer] = useState<any>(null);
   const [matchupLoading, setMatchupLoading] = useState(false);
   const [matchupError, setMatchupError] = useState("");
+  const [viewerMatchCount, setViewerMatchCount] = useState(0);
+  const [targetMatchCount, setTargetMatchCount] = useState(0);
+  const [matchupReady, setMatchupReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -83,9 +85,28 @@ export default function PublicPlayerProfile() {
     return () => { active = false; };
   }, [id]);
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!supabase || !id) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active || !session) return;
+      await loadMutualMatchup(false);
+    })();
+    return () => { active = false; };
+  }, [id]);
+
   const elo = Number(player?.elo_rating) || 1000;
   const peak = Number(player?.highest_elo) || elo;
   const tournamentEarnings = champions.reduce((sum, row) => sum + Number(row.prize_amount || 0), 0);
+  const matchupK = viewerMatchCount >= 10 && targetMatchCount >= 10 ? 24 : 40;
+  const matchupExpected = viewer ? 1 / (1 + Math.pow(10, (elo - Number(viewer.elo_rating || 0)) / 400)) : 0;
+  const matchupWinChance = Math.round(matchupExpected * 100);
+  const matchupLossChance = 100 - matchupWinChance;
+  const matchupWinPoints = viewer ? Math.round(matchupK * (1 - matchupExpected)) : 0;
+  const targetWinExpected = viewer ? 1 - matchupExpected : 0;
+  const targetWinPoints = viewer ? Math.round(matchupK * (1 - targetWinExpected)) : 0;
+  const matchupRatingGap = viewer ? Number(viewer.elo_rating || 0) - elo : 0;
   const progression = useMemo(() => {
     const values = matches.map((m) => Number(m.player_one_id === id ? m.player_one_elo_after : m.player_two_elo_after)).filter(Number.isFinite);
     const selected = range === "all" ? values : values.slice(-Number(range));
@@ -101,20 +122,56 @@ export default function PublicPlayerProfile() {
   const line = points.map((point, index) => (index ? "L" : "M") + point.x + " " + point.y).join(" ");
   const area = line + ` L ${points[points.length - 1].x} 180 L ${points[0].x} 180 Z`;
 
-  const openMatchup = async () => {
-    setShowMatchup(true);
+  const loadMutualMatchup = async (showResult = true) => {
+    if (!supabase) return;
+    if (showResult) setShowMatchup(true);
     setMatchupError("");
-    if (!supabase) { setMatchupError("Please log in to see your mutual rating with this player."); return; }
     setMatchupLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setViewer(null); setMatchupLoading(false); setMatchupError("Log in to compare your rating with this player."); return; }
+    if (!session) {
+      setViewer(null);
+      setMatchupReady(false);
+      setMatchupLoading(false);
+      setMatchupError("Log in to see your odds and rating gap against this player.");
+      return;
+    }
     const { data: mine, error } = await supabase.rpc("get_my_base25_player_profile");
     const own = Array.isArray(mine) ? mine[0] : mine;
-    if (error || !own?.id) { setMatchupError("We couldn't find a player profile linked to your login."); setMatchupLoading(false); return; }
-    const { data: ownProfile } = await supabase.from("player_public_leaderboard").select("id,username,player_code,elo_rating").eq("id", own.id).single();
-    setViewer(ownProfile || own);
+    if (error || !own?.id) {
+      setViewer(null);
+      setMatchupReady(false);
+      setMatchupLoading(false);
+      setMatchupError("Your login is not linked to a BASE25 player profile yet.");
+      return;
+    }
+    if (own.id === id) {
+      setViewer(null);
+      setMatchupReady(false);
+      setMatchupLoading(false);
+      setMatchupError("This comparison is available when viewing another player's profile.");
+      return;
+    }
+    const [{ data: ownProfile, error: ownError }, { count: allMatches, error: countError }] = await Promise.all([
+      supabase.from("player_public_leaderboard").select("id,username,player_code,elo_rating").eq("id", own.id).single(),
+      supabase.from("matches").select("player_one_id,player_two_id", { count: "exact" })
+    ]);
+    if (ownError || countError || !ownProfile) {
+      setMatchupReady(false);
+      setMatchupLoading(false);
+      setMatchupError("We couldn't load the ratings needed for this comparison.");
+      return;
+    }
+    const rows = allMatches || [];
+    const ownCount = rows.filter((m: any) => m.player_one_id === own.id || m.player_two_id === own.id).length;
+    const targetCount = rows.filter((m: any) => m.player_one_id === id || m.player_two_id === id).length;
+    setViewer(ownProfile);
+    setViewerMatchCount(ownCount);
+    setTargetMatchCount(targetCount);
+    setMatchupReady(true);
     setMatchupLoading(false);
   };
+
+  const openMatchup = () => { void loadMutualMatchup(true); };
 
   const share = async () => {
     if (!player) return;
@@ -152,22 +209,22 @@ export default function PublicPlayerProfile() {
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
 
+        {viewer && matchupReady && <div className="public-rating-gap-strip">
+          <span>YOUR RATING GAP AGAINST {player.username?.toUpperCase()}</span><strong>{matchupRatingGap > 0 ? "+" : ""}{matchupRatingGap}</strong>
+        </div>}
+
         {showMatchup && <section className="public-matchup-card">
-          {matchupLoading ? <p className="public-chart-note">Checking your player account…</p> : matchupError ? <div className="public-login-prompt"><strong>Login to compare ratings</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer ? (() => {
-            const mutual = matches.filter((match) =>
-              (match.player_one_id === viewer.id && match.player_two_id === id) ||
-              (match.player_two_id === viewer.id && match.player_one_id === id)
-            );
-            const mutualWins = mutual.filter((match) => match.winner_id === viewer.id).length;
-            const mutualLosses = mutual.length - mutualWins;
-            const last = mutual.length ? mutual[mutual.length - 1] : null;
-            const gap = Number(viewer.elo_rating || 0) - elo;
-            return <div className="public-mutual-result">
-              <div className="public-section-heading"><div><small>YOUR MUTUAL MATCHUP</small><h2>You vs {player.username}</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
-              <div className="public-mutual-main"><div><small>HEAD-TO-HEAD</small><strong>{mutualWins} – {mutualLosses}</strong><span>{last ? "Last met " + new Date(last.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) : "No previous match"}</span></div><div className="public-gap-box"><small>RATING GAP</small><strong>{gap > 0 ? "+" : ""}{gap}</strong></div></div>
-              <div className="public-mutual-ratings"><span>Your rating <b>{Number(viewer.elo_rating || 0).toLocaleString()}</b></span><span>{player.username}'s rating <b>{elo.toLocaleString()}</b></span></div>
-            </div>;
-          })() : null}
+          {matchupLoading ? <p className="public-chart-note">Calculating your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer && matchupReady ? <div className="mc-result public-auto-odds">
+            <div className="public-section-heading"><div><small>YOUR MATCHUP</small><h2>{viewer.username} vs {player.username}</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
+            <div className="mc-result-label">Win chance</div>
+            <div className="mc-prob-head"><div><b>{viewer.username}</b><strong>{matchupWinChance}%</strong></div><div><b>{player.username}</b><strong>{matchupLossChance}%</strong></div></div>
+            <div className="mc-bar"><i style={{width: matchupWinChance + "%"}} /></div>
+            <p className="mc-fav">{matchupWinChance >= matchupLossChance ? viewer.username : player.username} is the slight favourite.</p>
+            <div className="mc-result-label mc-stake-title">Rating points at stake</div>
+            <div className="mc-stakes"><div><small>If {viewer.username} wins</small><b>+{matchupWinPoints} points</b><em>{player.username} −{matchupWinPoints}</em></div><div><small>If {player.username} wins</small><b>+{targetWinPoints} points</b><em>{viewer.username} −{targetWinPoints}</em></div></div>
+            <p className="mc-foot">Based on current ratings. Beating a higher-rated player earns more points, so upsets pay more.</p>
+            <p className="mc-disclaimer">Estimate uses BASE25's current K-factor ({matchupK}). Actual match ratings also include rack-margin bonuses, so the final change may differ. This calculator does not save a match or change ratings.</p>
+          </div> : null}
         </section>}
 
         <section className="public-rating-grid">
@@ -303,6 +360,19 @@ export default function PublicPlayerProfile() {
         .public-profile-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding:14px 3px;color:#72806e;font:700 9px monospace;letter-spacing:.1em}.public-profile-footer a{color:#c5f36a;text-decoration:none}
         .public-loading,.public-empty{max-width:780px;margin:60px auto;color:#dce5d6}.public-empty h1{margin-bottom:15px}
         @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr);gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{display:none}.public-back,.public-more{height:44px;width:44px}.public-page-title{font-size:16px}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
+
+        .public-rating-gap-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0 12px;padding:7px 12px;min-height:34px;border:1px solid #334a35;border-radius:11px;background:#0b160f}
+        .public-rating-gap-strip span{font:700 8px monospace;letter-spacing:.11em;color:#9eae9e}
+        .public-rating-gap-strip strong{font:800 15px monospace;color:#e8ca4c}
+        .public-matchup-card{margin:10px 0;padding:14px 15px;border:1px solid #355b3b;border-radius:16px;background:#0d1b12}
+        .public-matchup-card .mc-result{margin-top:0}
+        .public-matchup-card .public-section-heading{margin-bottom:13px}
+        .public-matchup-card .public-section-heading h2{font-size:17px}
+        .public-matchup-card .mc-prob-head strong{font-size:24px}
+        .public-matchup-card .mc-bar{height:9px}
+        .public-matchup-card .mc-stakes>div{padding:9px}
+        .public-matchup-card .mc-stakes b{font-size:14px}
+        .public-matchup-card .mc-disclaimer{font-size:9px;line-height:1.45}
         /* Screenshot-matched public profile refinements */
         .public-profile{max-width:430px;margin:12px auto 100px;padding:0 0 12px}
         .public-hero{padding:20px 18px 18px;border-radius:25px;background:radial-gradient(ellipse at 85% 8%,#126b3c 0%,#0d3826 34%,#09170f 76%);border-color:#244b36}
