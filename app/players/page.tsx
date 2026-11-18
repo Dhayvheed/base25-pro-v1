@@ -20,8 +20,13 @@ type Player = {
 const PAGE_SIZE = 5;
 
 function Medal({ rank }: { rank: number }) {
-  return <span className={`players-medal players-medal-${rank}`} aria-label={`Rank ${rank}`}>
-    <span>{rank}</span>
+  const medalColors: Record<number, string> = { 1: "#F2C230", 2: "#2F5FD0", 3: "#D9402F", 4: "#7B3FA0", 5: "#E8782A" };
+  return <span
+    className={`players-medal players-medal-${rank}`}
+    aria-label={`Rank ${rank}`}
+    style={{ width: 26, height: 26, flex: "0 0 26px", borderRadius: "50%", background: medalColors[rank] || "#53605A", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "inset -2px -2px 4px #0005" }}
+  >
+    <span style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", color: "#111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800 }}>{rank}</span>
   </span>;
 }
 
@@ -96,10 +101,10 @@ export default function PlayersPage() {
 
         <section className="players-ranking" aria-label="Players ranked by rating">
           <div className="players-ranking-title">RANKED BY RATING</div>
-          <div className="players-columns">
-            <span>PLAYER</span>
-            <span>RECORD</span>
-            <span>RATING</span>
+          <div className="players-columns" style={{ display: "flex", alignItems: "center", padding: "4px 10px 8px", gap: 10 }}>
+            <span style={{ flex: 1, minWidth: 0, paddingLeft: 80 }}>PLAYER</span>
+            <span style={{ width: 48, flex: "0 0 48px", textAlign: "right" }}>RECORD</span>
+            <span style={{ width: 46, flex: "0 0 46px", textAlign: "right" }}>RATING</span>
           </div>
 
           {loading ? (
@@ -119,19 +124,20 @@ export default function PlayersPage() {
                     href={`/players/${player.id}`}
                     className={`players-row ${rank === 1 ? "is-leader" : ""}`}
                     key={player.id}
+                    style={{ display: "flex", flexDirection: "row", flexWrap: "nowrap", alignItems: "center", gap: 10, width: "100%", minHeight: 56, padding: "0 10px", boxSizing: "border-box" }}
                   >
                     <Medal rank={rank} />
-                    <span className="players-avatar">
+                    <span className="players-avatar" style={{ flex: "0 0 34px" }}>
                       {player.photo_url
                         ? <img src={player.photo_url} alt="" />
                         : (player.username?.[0] || "?").toUpperCase()}
                     </span>
-                    <span className="players-identity">
+                    <span className="players-identity" style={{ flex: "1 1 0%", minWidth: 0, overflow: "hidden" }}>
                       <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>}</strong>
                       <small>{player.player_code}</small>
                     </span>
-                    <span className="players-record">{player.wins}W / {player.losses}L</span>
-                    <strong className="players-rating">{Number(player.elo_rating || 1000).toLocaleString("en-NG")}</strong>
+                    <span className="players-record" style={{ flex: "0 0 48px", width: 48, textAlign: "right", whiteSpace: "nowrap" }}>{player.wins}W / {player.losses}L</span>
+                    <strong className="players-rating" style={{ flex: "0 0 46px", width: 46, textAlign: "right", whiteSpace: "nowrap" }}>{Number(player.elo_rating || 1000).toLocaleString("en-NG")}</strong>
                   </Link>
                 );
               })}
