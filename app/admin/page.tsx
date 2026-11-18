@@ -37,10 +37,13 @@ export default function Admin() {
   const [playerPickerTarget, setPlayerPickerTarget] = useState<"one" | "two" | null>(null);
   const [venue, setVenue] = useState("BASE25");
   const [matchFormat, setMatchFormat] = useState<"single" | "best_of_3">("single");
+  const [wagerEnabled, setWagerEnabled] = useState(false);
+  const [wagerOneStake, setWagerOneStake] = useState("2000");
+  const [wagerTwoStake, setWagerTwoStake] = useState("2000");
   const [racks, setRacks] = useState<Rack[]>([
-    { winnerId: "", loserBalls: "3" },
-    { winnerId: "", loserBalls: "3" },
-    { winnerId: "", loserBalls: "3" },
+    { winnerId: "", loserBalls: "0" },
+    { winnerId: "", loserBalls: "0" },
+    { winnerId: "", loserBalls: "0" },
   ]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -293,19 +296,29 @@ export default function Admin() {
       setMessage("Check each rack winner and the losing player's balls remaining.");
       return;
     }
+    if (wagerEnabled) {
+      const stakeOne = Number(wagerOneStake), stakeTwo = Number(wagerTwoStake);
+      if (!Number.isInteger(stakeOne) || !Number.isInteger(stakeTwo) || stakeOne <= 0 || stakeTwo <= 0 || stakeOne > 1000000 || stakeTwo > 1000000) {
+        setMessage("Enter valid wager stakes between ₦1 and ₦1,000,000 for both players.");
+        return;
+      }
+    }
     setBusy(true);
-    const { data, error } = await supabase.rpc("record_match_with_racks", {
+    const { data, error } = await supabase.rpc("record_match_with_racks_and_wager", {
       p_player_one_id: one,
       p_player_two_id: two,
       p_racks: payload,
       p_venue: venue.trim() || "BASE25",
+      p_player_one_stake: wagerEnabled ? Number(wagerOneStake) : null,
+      p_player_two_stake: wagerEnabled ? Number(wagerTwoStake) : null,
     });
     if (error) {
       setMessage(`Match was not published: ${error.message}`);
     } else {
       setMatchConfirmation(null);
       setMessage("Match recorded successfully. ELO ratings recalculated. Ready for the next match.");
-      setRacks([{ winnerId: "", loserBalls: "3" }, { winnerId: "", loserBalls: "3" }, { winnerId: "", loserBalls: "3" }]);
+      setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
+      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000");
       setOne(""); setTwo("");
       setPlayerOneSearch(""); setPlayerTwoSearch("");
       setPlayerOnePickerOpen(false); setPlayerTwoPickerOpen(false); setPlayerPickerTarget(null);
@@ -458,8 +471,24 @@ export default function Admin() {
               </>}
             </div>
             {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-result-card"><small>Result</small><div className="record-result-heading"><b>{playerName(rackWins.one>rackWins.two?one:two)} beats {playerName(rackWins.one>rackWins.two?two:one)}</b><strong>{rackWins.one}–{rackWins.two}</strong></div><div className="record-estimates"><div><small>{playerName(one)}</small><b>{rackWins.one>rackWins.two?"+ rating":"− rating"}</b></div><div><small>{playerName(two)}</small><b>{rackWins.two>rackWins.one?"+ rating":"− rating"}</b></div></div><p>Estimated rating change. Final values are calculated when you save.</p></div>}
+            <section className={"record-wager-card"+(wagerEnabled?" expanded":"")}>
+              <button type="button" className="record-wager-toggle" aria-expanded={wagerEnabled} onClick={()=>setWagerEnabled(v=>!v)}>
+                <span><b>Wager on this match</b><small>Optional · winner takes the pot</small></span>
+                <i className={wagerEnabled?"on":""}><em/></i>
+              </button>
+              {wagerEnabled&&<div className="record-wager-content">
+                <div className="record-wager-fields">
+                  <label>{playerName(one)||"Player one"} stakes<input type="number" min="1" max="1000000" step="1" value={wagerOneStake} onChange={e=>setWagerOneStake(e.target.value)} disabled={!one}/></label>
+                  <label>{playerName(two)||"Player two"} stakes<input type="number" min="1" max="1000000" step="1" value={wagerTwoStake} onChange={e=>setWagerTwoStake(e.target.value)} disabled={!two}/></label>
+                </div>
+                <div className="record-wager-presets">{[500,1000,2000,5000].map(amount=><button type="button" key={amount} className={Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));}}>₦{amount.toLocaleString("en-NG")}</button>)}</div>
+                <div className="record-wager-custom">Custom stakes can be entered separately above.</div>
+                <div className="record-wager-pot"><span>Total pot · winner takes all</span><strong>₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</strong></div>
+                {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-wager-result"><span>{playerName(rackWins.one>rackWins.two?one:two)} wins</span><b>+₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</b></div>}
+              </div>}
+            </section>
             <div className="record-footer-venue"><span>Ranked · BASE25 table</span><button type="button" onClick={()=>setVenue(venue==="BASE25"?"BASE25 Table 2":"BASE25")}>Change</button></div>
-            <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":"✓  Save match"}</button>
+            <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":wagerEnabled?"✓  Save match & wager":"✓  Save match"}</button>
             <button type="button" className="record-cancel-button" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
         </section>
