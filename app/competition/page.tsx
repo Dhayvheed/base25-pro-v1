@@ -70,6 +70,12 @@ export default function CompetitionPage() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("leaderboard") === "full") {
+      setShowAllPlayers(true);
+    }
+  }, []);
+
+  useEffect(() => {
     let active = true;
 
     async function load() {
