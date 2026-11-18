@@ -18,8 +18,8 @@ type MatchRow = {
   player_two_elo_before: number | null;
   player_one_elo_after: number | null;
   player_two_elo_after: number | null;
-  one?: { username: string; player_code: string } | null;
-  two?: { username: string; player_code: string } | null;
+  one?: { username: string; player_code: string }[] | null;
+  two?: { username: string; player_code: string }[] | null;
 };
 
 type ChampionRow = { id: string; week_start: string; prize_amount: number };
@@ -111,7 +111,7 @@ export default function PublicPlayerProfile() {
   const weeklyChampions = champions.length;
   const opponents = Array.from(new Map(matches.map((match) => {
     const isOne = match.player_one_id === id;
-    return [isOne ? match.player_two_id : match.player_one_id, isOne ? match.two : match.one] as const;
+    return [isOne ? match.player_two_id : match.player_one_id, (isOne ? match.two : match.one)?.[0] || null] as const;
   }).filter((entry) => Boolean(entry[1])).map(([opponentKey, opponent]) => [opponentKey, opponent])).entries());
   const selectedOpponent = opponents.find(([opponentKey]) => opponentKey === opponentId) || opponents[0];
   const headToHead = selectedOpponent ? matches.filter((match) =>
@@ -232,7 +232,7 @@ export default function PublicPlayerProfile() {
           <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Recent matches</h2></div><Link href="/matches">View all →</Link></div>
           {matches.length ? <div className="public-match-list">{[...matches].reverse().slice(0, 8).map((match) => {
             const isOne = match.player_one_id === id;
-            const opponent = isOne ? match.two : match.one;
+            const opponent = (isOne ? match.two : match.one)?.[0];
             const won = match.winner_id === id;
             const before = Number(isOne ? match.player_one_elo_before : match.player_two_elo_before);
             const after = Number(isOne ? match.player_one_elo_after : match.player_two_elo_after);
