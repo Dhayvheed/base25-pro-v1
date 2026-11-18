@@ -11,6 +11,7 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
+ const [publicPreview,setPublicPreview]=useState(false),[searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
   const {data:{session}}=await supabase.auth.getSession();
@@ -26,7 +27,7 @@ export default function PlayerProfile(){
    supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("weekly_leaderboard_archive_entries").select("rank,weekly_elo,matches_played,wins,losses,win_percentage,archive:weekly_leaderboard_archives(week_start,week_end)").eq("player_id",playerId).order("rank",{ascending:true}),
-   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount").eq("player_id",playerId).order("week_start",{ascending:false})
+   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount,payout_confirmed_at").eq("player_id",playerId).order("week_start",{ascending:false})
   ]);
   if(!active)return;
   setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
@@ -51,38 +52,67 @@ export default function PlayerProfile(){
  if(loading)return <main className="shell">Loading player...</main>;
  if(!player)return <main className="shell redesign-shell"><Link href="/">← Leaderboard</Link><h1>Player not found</h1></main>;
  const elo=Number(player.elo_rating)||1000;
+ const readyToCollect=championHistory.filter((w:any)=>!w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
+ const paidEarnings=championHistory.filter((w:any)=>w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
+ const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.origin+`/players/${player.id}`});else if(navigator.clipboard)await navigator.clipboard.writeText(text+"\\n"+location.origin+`/players/${player.id}`);};
  if(false){
   const sharePublic=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
-  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/><section className="auth-wrap account-wrap"><div className="eyebrow">BASE25 PRO / PLAYER CARD</div><div className="auth-card account-card"><div className="account-head"><div><div className="eyebrow">PUBLIC PLAYER PROFILE</div><h2>{player.full_name||player.username}</h2><p className="muted">@{player.username} · {player.player_code}</p></div><strong>{elo.toLocaleString()}<small>ELO</small></strong></div><div className="account-stats"><div><small>MATCHES</small><b>{player.matches_played??0}</b></div><div><small>WINS</small><b>{player.wins??0}</b></div><div><small>LOSSES</small><b>{player.losses??0}</b></div><div><small>WIN RATE</small><b>{Number(player.win_percentage||0).toFixed(1)}%</b></div><div><small>GLOBAL RANK</small><b>#{rank||"—"}</b></div></div><div className="two-fields"><button type="button" className="secondary" onClick={sharePublic}>Share profile</button><Link className="account-action" href="/login">Player login</Link></div></div></section></main>;
- }
- 
-
- return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
- <section className="pro-profile">
-  <div className="profile-hero">
-   <div className="profile-hero-top"><span className="profile-kicker">PRIVATE PLAYER DASHBOARD</span><Link className="profile-kicker" href={`/players/${player.id}`}>VIEW PUBLIC PROFILE →</Link></div>
-   <div className="profile-hero-bottom">
-    <div className="pro-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
-    <div className="pro-identity-copy"><div className="profile-code-line"><small>{player.player_code}</small><b>COMPETITIVE PLAYER</b></div><h1>{player.username}<span className="verified-mark">✓</span></h1><p>“Play smart. Clear tables.”</p></div>
-    <div className="pro-rank-badge"><span>♛</span><b>#{rank||"—"}</b><small>GLOBAL RANK</small></div>
+  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
+ <section className="private-profile">
+  <header className="private-topbar">
+   <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
+  </header>
+  <div className="private-view-switch"><button className={!publicPreview?"active":""} onClick={()=>setPublicPreview(false)}>My view</button><Link className={publicPreview?"active":""} href={`/players/${player.id}`}>Preview as public</Link></div>
+  {publicPreview ? <div className="private-preview-note">This is the public profile other players see. <Link href={`/players/${player.id}`}>Open public profile →</Link></div> : null}
+  <section className="private-identity-card">
+   <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}<span>✎</span></div>
+    <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
    </div>
-  </div>
-  <div className="pro-elo-card">
-   <div className="career-elo"><small>▥ &nbsp; CAREER ELO RATING</small><strong>{elo.toLocaleString()}</strong><span>PEAK {Number(player.highest_elo??elo).toLocaleString()}</span></div>
-   <div className="elo-spark" aria-hidden="true"><svg viewBox="0 0 220 90" preserveAspectRatio="none"><path d="M4 78 L45 70 L82 58 L119 48 L158 29 L216 8 L216 90 L4 90 Z" fill="url(#sparkFill)"/><path d="M4 78 L45 70 L82 58 L119 48 L158 29 L216 8" fill="none" stroke="#b9f52d" strokeWidth="3"/><defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#b9f52d" stopOpacity=".35"/><stop offset="1" stopColor="#b9f52d" stopOpacity="0"/></linearGradient></defs></svg></div>
-   <div className="pro-week-rank"><small>▦ &nbsp; THIS WEEK</small><b>#{currentWeekRank||"—"}</b><span>{Number(currentWeek?.elo_rating??1000).toLocaleString()} ELO</span></div>
-  </div>
-  <div className="pro-earnings-card"><div><small>₦ &nbsp; ALL-TIME TOURNAMENT EARNINGS</small><strong>₦{totalEarnings.toLocaleString("en-NG")}</strong><span>{championHistory.length} championship win{championHistory.length===1?"":"s"}</span></div><div className="pro-earnings-history">{championHistory.slice(0,4).map((win:any)=><div key={win.id}><span>{new Date(win.week_start+"T00:00:00").toLocaleDateString("en-NG",{day:"numeric",month:"short",year:"numeric"})}</span><b>₦{Number(win.prize_amount||0).toLocaleString("en-NG")}</b></div>)}</div></div>
-  <div className="pro-stat-row"><div><small>🏆 &nbsp; WINS</small><b>{player.wins??0}</b></div><div><small>⚔ &nbsp; LOSSES</small><b>{player.losses??0}</b></div><div><small>◎ &nbsp; WIN RATE</small><b>{player.win_percentage??0}%</b></div><div><small>▱ &nbsp; MATCHES</small><b>{player.matches_played??0}</b></div></div>
-  <section className="pro-section achievements-section"><div className="pro-section-head"><div><small>CAREER MILESTONES</small><h2>Achievements</h2></div><span className="section-arrow">CAREER MILESTONES →</span></div><div className="pro-achievements">
-   <div className="achievement gold"><i>♛</i><b>{championHistory.length}</b><span>Saturday<br/>Champion</span></div>
-   <div className="achievement silver"><i>♜</i><b>{weeklyHistory.filter((r:any)=>r.rank===1).length}</b><span>Weekly<br/>Leader</span></div>
-   <div className="achievement gold"><i>★</i><b>{weeklyHistory.filter((r:any)=>r.rank<=5).length}</b><span>Top 5<br/>Finishes</span></div>
-   <div className="achievement green"><i>▥</i><b>{Number(player.highest_elo??elo).toLocaleString()}</b><span>Peak<br/>ELO</span></div>
-  </div></section>
-  <section className="pro-section"><div className="pro-section-head"><div><small>RATING HISTORY</small><h2>ELO PROGRESSION</h2></div><select value={range} onChange={e=>setRange(e.target.value)}><option value="10">Last 10 Matches</option><option value="5">Last 5 Matches</option><option value="all">All Matches</option></select></div><div className="pro-chart"><div className="chart-labels"><span>{Math.ceil(max).toLocaleString()}</span><span>{Math.round((max+min)/2).toLocaleString()}</span><span>{elo.toLocaleString()}</span><span>{Math.floor(min).toLocaleString()}</span></div><svg viewBox="0 0 1000 190" preserveAspectRatio="none"><defs><linearGradient id="eloFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#b9f52d" stopOpacity=".38"/><stop offset="100%" stopColor="#b9f52d" stopOpacity="0"/></linearGradient></defs>{[25,72,119,166].map(y=><line key={y} x1="30" x2="980" y1={y} y2={y} stroke="#27302a"/>)}<path d={area} fill="url(#eloFill)"/><path d={line} fill="none" stroke="#b9f52d" strokeWidth="4"/>{points.map((pt,i)=><g key={i} onClick={()=>setActivePoint(activePoint===i?null:i)} style={{cursor:"pointer"}}><circle cx={pt.x} cy={pt.y} r="20" fill="transparent"/><circle cx={pt.x} cy={pt.y} r={activePoint===i?9:6} fill="#c5f36a"/></g>)}</svg></div>{activePoint!==null&&<div className="pro-chart-value">Match {activePoint+1}: <b>{progression[activePoint].toLocaleString()} ELO</b><button onClick={()=>setActivePoint(null)}>×</button></div>}</section>
-  <section className="pro-section"><div className="pro-section-head"><div><small>HEAD-TO-HEAD HISTORY</small><h2>RECENT MATCHES</h2></div><Link href="/matches">VIEW ALL →</Link></div>{matches.length===0?<p className="muted">No recorded matches yet.</p>:<div className="pro-recent">{matches.slice(0,5).map((match:any)=>{const opponent=match.player_one_id===id?match.two:match.one,didWin=match.winner_id===id,isOne=match.player_one_id===id,after=Number(isOne?match.player_one_elo_after:match.player_two_elo_after),before=Number(isOne?match.player_one_elo_before:match.player_two_elo_before),net=after-before;return <Link href={"/matches/"+match.id} key={match.id}><b className={didWin?"pro-win":"pro-loss"}>{didWin?"W":"L"}</b><span>vs <strong>{opponent?.username||"Opponent"}</strong><small>({opponent?.player_code||"—"})</small></span><strong>{match.player_one_score} — {match.player_two_score}</strong><em className={net>=0?"pro-win":"pro-loss"}>{net>0?"+":""}{net} ELO</em><small className="match-age">{new Date(match.played_at).toLocaleDateString("en-NG",{day:"numeric",month:"short"})}</small></Link>})}</div>}</section>
-  <section className="pro-section"><div className="pro-section-head"><div><small>COMPETITION HISTORY</small><h2>WEEKLY FINISHES</h2></div><Link href="/weekly-archive">SNAPSHOTS →</Link></div>{weeklyHistory.length===0?<p className="muted">No archived weeks yet.</p>:<div className="pro-recent weekly-finishes">{weeklyHistory.slice(0,6).map((r:any,i:number)=><div key={i}><b className="pro-medal">#{r.rank}</b><span><strong>Week of {new Date(r.archive.week_start+"T00:00:00").toLocaleDateString()}</strong><small>{r.matches_played} matches · {r.wins}W / {r.losses}L</small></span><em>{r.weekly_elo} ELO</em></div>)}</div>}</section>
+   <div className="private-identity-actions"><Link href="/account/edit">Edit profile</Link><button onClick={shareProfile}>Share</button></div>
+  </section>
+
+  <section className="private-prediction-card">
+   <div className="private-card-top"><small>NEXT UP · THIS WEEK</small><span>BASE25 PRO</span></div>
+   <h3>Prediction questions are open</h3><p>Make your picks before the first rack.</p>
+   <Link href="/predictions">Make predictions</Link>
+  </section>
+
+  <section className="private-rating-grid">
+   <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{elo.toLocaleString()}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
+   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{Number(currentWeek?.elo_rating??elo).toLocaleString()}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Monday.</p></div>
+  </section>
+
+  <section className="private-earnings-card">
+   <div className="private-card-top"><small>ALL-TIME TOURNAMENT EARNINGS</small><span>Public</span></div>
+   <strong>₦{totalEarnings.toLocaleString("en-NG")}</strong><p>{championHistory.length} championship win{championHistory.length===1?"":"s"}</p>
+   <div className="private-cashout-box"><div><small>READY TO COLLECT AT THE BASE</small><b>₦{readyToCollect.toLocaleString("en-NG")}</b></div><span>Show ID<br/>{player.player_code}</span></div>
+   <button className="private-cashout-button" onClick={()=>setCashoutNotice(true)}>Request cashout at base</button>
+   <small className="private-cashout-help">Paid in person by an admin. No bank details needed.</small>
+   {cashoutNotice&&<div className="private-inline-notice">Please show your player ID to the BASE25 admin at the venue to collect confirmed winnings. <button onClick={()=>setCashoutNotice(false)}>×</button></div>}
+  </section>
+
+  <section className="private-wager-card">
+   <div className="private-card-top"><small>WAGER EARNINGS</small><span>Public</span></div>
+   <strong>Wager tracking not active yet</strong><p>Confirmed player-versus-player winnings will appear here.</p>
+   <div className="private-wager-stats"><div><b>—</b><span>Won</span></div><div><b>Private</b><span>Lost</span></div><div><b>—</b><span>Wager record</span></div></div>
+   <div className="private-wager-foot">Money lost is private by default. <button onClick={()=>setShowLosses(v=>!v)}>{showLosses?"Public":"Keep private"}</button></div>
+  </section>
+
+  <section className="private-section">
+   <small>PRIVACY</small><h2>Who sees what</h2><p>Always public: ratings, rank, tournament earnings, confirmed wager winnings, achievements, rating chart and match history.</p>
+   <div className="private-setting-row"><div><b>Appear in player search</b><span>Others can find you by name or ID</span></div><button className={searchVisible?"toggle on":"toggle"} onClick={()=>setSearchVisible(v=>!v)} aria-pressed={searchVisible}><i/></button></div>
+   <div className="private-setting-row"><div><b>Show money lost</b><span>Private by default. Turn on only if you want losses public.</span></div><button className={showLosses?"toggle on":"toggle"} onClick={()=>setShowLosses(v=>!v)} aria-pressed={showLosses}><i/></button></div>
+  </section>
+
+  <section className="private-section private-account-section">
+   <small>ACCOUNT</small><h2>Only visible to you</h2>
+   <Link href="/account/phone"><div><b>Phone</b><span>Manage your contact details</span></div><i>›</i></Link>
+   <Link href="/account/cashouts"><div><b>Cashout history</b><span>Collected at the base</span></div><i>›</i></Link>
+   <Link href="/matches"><div><b>Match history & disputes</b><span>{matches.length} matches</span></div><i>›</i></Link>
+   <Link href="/notifications"><div><b>Notifications</b><span>Match results, predictions, payouts</span></div><i>›</i></Link>
+  </section>
+
+  <div className="private-stat-row"><div><b>{player.wins??0}</b><span>Wins</span></div><div><b>{player.losses??0}</b><span>Losses</span></div><div><b>{Number(player.win_percentage??0).toFixed(1)}%</b><span>Win rate</span></div><div><b>{player.matches_played??matches.length}</b><span>Matches</span></div></div>
  </section>
  <style jsx>{`
  .pro-profile{width:100%;max-width:920px;margin:22px auto 110px;min-width:0}
@@ -101,5 +131,49 @@ export default function PlayerProfile(){
  .pro-recent{display:grid;min-width:0}.pro-recent>a,.pro-recent>div{display:grid;grid-template-columns:36px minmax(0,1fr) 90px 100px 58px;align-items:center;gap:10px;padding:12px 3px;border-bottom:1px solid #293b2e;color:#f1f4ed;min-width:0}.pro-recent>a:last-child,.pro-recent>div:last-child{border:0}.pro-recent>a>span{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;font-size:14px;min-width:0}.pro-recent small{font:9px monospace;color:#9eaa9b}.pro-recent>a>strong{font-size:14px;text-align:center;white-space:nowrap}.pro-recent em{font:800 13px monospace;font-style:normal;white-space:nowrap}.pro-recent>a>.match-age{text-align:right}.pro-win{color:#9cf35b}.pro-loss{color:#ff7770}.pro-recent>a>b,.pro-medal{display:grid;place-items:center;width:34px;height:28px;border-radius:30px;background:#286d1c;color:#c7ff73;font:900 13px monospace;box-shadow:0 0 12px #64f52a66}.pro-recent>a>b.pro-loss{background:#70251e;color:#ff9387;box-shadow:0 0 12px #f43b2d55}.pro-recent>div>span{display:grid;gap:4px;font-size:12px}.pro-recent>div>em{font:11px monospace;color:#c5f36a;font-style:normal}.weekly-finishes>div{grid-template-columns:38px minmax(0,1fr) auto}
  @media(max-width:650px){.pro-profile{margin:15px auto 100px}.profile-hero{padding:15px 14px 18px;min-height:0;border-radius:15px}.profile-hero-top button{padding:9px 12px;font-size:10px}.profile-kicker{font-size:9px}.profile-hero-bottom{grid-template-columns:92px minmax(0,1fr) 75px;gap:10px;margin-top:30px}.pro-avatar{width:88px;height:88px;border-width:4px;font-size:32px}.profile-code-line{gap:5px}.profile-code-line small{font-size:8px}.profile-code-line b{font-size:7px;padding:5px 7px}.pro-identity-copy h1{font-size:25px;margin:8px 0 5px}.verified-mark{width:17px;height:17px;font-size:11px;margin-left:4px}.pro-identity-copy p{font-size:10px}.pro-rank-badge{height:88px}.pro-rank-badge span{font-size:25px}.pro-rank-badge b{font-size:25px}.pro-rank-badge small{font-size:7px;letter-spacing:.05em}.pro-elo-card{grid-template-columns:minmax(0,1fr) .7fr;gap:8px;padding:15px}.elo-spark{display:none}.career-elo strong{font-size:39px}.career-elo small,.pro-week-rank small{font-size:8px}.pro-week-rank{padding-left:12px}.pro-week-rank b{font-size:27px}.pro-week-rank span{font-size:9px}.pro-earnings-card{padding:14px}.pro-earnings-card small{font-size:8px}.pro-earnings-history{min-width:112px}.pro-earnings-history div{font-size:8px}.pro-stat-row{padding:12px 2px}.pro-stat-row small{font-size:7px;letter-spacing:0}.pro-stat-row b{font-size:20px}.pro-section{padding:13px;border-radius:14px;margin-top:15px}.pro-section-head{align-items:center;margin-bottom:12px}.pro-section-head h2{font-size:20px}.pro-section-head small{font-size:8px}.section-arrow{display:none}.pro-achievements{gap:6px}.achievement{min-height:112px;padding:9px 3px;border-radius:11px}.achievement i{font-size:24px}.achievement b{font-size:17px}.achievement span{font-size:9px}.pro-section-head select{font-size:10px;padding:8px 7px;max-width:132px}.pro-chart{height:180px;padding-left:42px}.pro-chart .chart-labels{font-size:8px}.pro-recent>a{grid-template-columns:29px minmax(0,1fr) 65px 74px;gap:6px;padding:11px 0}.pro-recent>a>b{width:27px;height:24px;font-size:11px}.pro-recent>a>span{font-size:11px;gap:3px}.pro-recent>a>strong{font-size:11px}.pro-recent em{font-size:10px}.pro-recent>a>.match-age{display:none}.weekly-finishes>div{grid-template-columns:32px minmax(0,1fr) auto}.pro-recent>div>span{font-size:10px}}
  @media(max-width:370px){.profile-hero-bottom{grid-template-columns:76px minmax(0,1fr) 62px;gap:7px}.pro-avatar{width:74px;height:74px}.pro-identity-copy h1{font-size:22px}.profile-code-line b{font-size:6px}.pro-rank-badge b{font-size:22px}.pro-stat-row small{font-size:6px}.pro-stat-row b{font-size:17px}.pro-recent>a{grid-template-columns:26px minmax(0,1fr) 58px 67px;gap:4px}.pro-recent>a>span{font-size:10px}}
+
+ .private-profile{width:100%;max-width:430px;margin:8px auto 100px;color:#f2f5ef}
+ .private-topbar{height:42px;display:grid;grid-template-columns:50px 1fr 50px;align-items:center;margin-bottom:12px}
+ .private-topbar>a,.private-topbar>button{width:42px;height:42px;border:1px solid #24392c;border-radius:13px;background:#09130d;color:#f2f5ef;display:grid;place-items:center;text-decoration:none;font-size:23px}
+ .private-topbar>button{justify-self:end;color:#c5f36a}.private-topbar h1{text-align:center;font-size:19px;margin:0}
+ .private-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-bottom:13px;border:1px solid #293b2e;border-radius:14px;background:#080f0b}
+ .private-view-switch button,.private-view-switch a{height:45px;border:0;border-radius:10px;background:transparent;color:#c5cec5;text-decoration:none;display:grid;place-items:center;font-size:13px;font-weight:700}
+ .private-view-switch .active{background:#c5f36a;color:#10170e}
+ .private-preview-note{margin:0 0 12px;padding:10px;border:1px solid #3a573b;border-radius:10px;font-size:11px;color:#b5c2b3}.private-preview-note a{color:#c5f36a}
+ .private-identity-card{padding:18px 16px;border:1px solid #31533b;border-radius:22px;background:radial-gradient(ellipse at 85% 0%,#115332 0%,#0c2b1d 35%,#09120d 80%)}
+ .private-identity-main{display:flex;align-items:center;gap:14px}
+ .private-avatar{position:relative;flex:none;width:104px;height:104px;border:4px solid #c5f36a;border-radius:50%;background:#101a12;display:grid;place-items:center;color:#c5f36a;font-size:36px;font-weight:900}
+ .private-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}.private-avatar span{position:absolute;right:-3px;bottom:0;width:31px;height:31px;border:2px solid #0c1a11;border-radius:50%;background:#c5f36a;color:#10170e;display:grid;place-items:center;font-size:14px}
+ .private-identity-copy{min-width:0}.private-identity-copy h2{font-size:28px;line-height:1;margin:0 0 10px;white-space:nowrap}.private-identity-copy h2 b{display:inline-grid;place-items:center;margin-left:7px;width:19px;height:19px;border-radius:50%;background:#c5f36a;color:#10170e;font-size:12px}
+ .private-identity-copy>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.private-identity-copy small{font:11px monospace;color:#b3c0b4}.private-identity-copy em{font:700 9px monospace;font-style:normal;letter-spacing:.1em;color:#c5f36a;border:1px solid #476a38;border-radius:20px;padding:5px 8px}
+ .private-identity-copy p{margin:10px 0 0;font-size:12px;color:#d5ded4}
+ .private-identity-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}.private-identity-actions a,.private-identity-actions button{height:54px;border:1px solid #c5f36a;border-radius:14px;background:#c5f36a;color:#11180e;display:grid;place-items:center;text-decoration:none;font-size:14px;font-weight:800}.private-identity-actions button{background:#0b150e;color:#c5f36a}
+ .private-prediction-card{margin-top:13px;padding:16px;border:1px solid #35563c;border-radius:20px;background:#0d1a12}
+ .private-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.private-card-top>small,.private-section>small{font:700 9px monospace;letter-spacing:.17em;color:#c5f36a}.private-card-top>span{font:9px monospace;color:#c5f36a;border:1px solid #365b3b;border-radius:20px;padding:5px 8px}
+ .private-prediction-card h3{font-size:17px;margin:13px 0 4px}.private-prediction-card p{margin:0 0 13px;color:#aab7a4;font-size:12px}.private-prediction-card>a{height:52px;border-radius:13px;background:#c5f36a;color:#11180e;text-decoration:none;display:grid;place-items:center;font-size:14px;font-weight:850}
+ .private-rating-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}
+ .private-rating-card{min-width:0;padding:16px 13px;border:1px solid #89ae3d;border-radius:19px;background:linear-gradient(145deg,#17291a,#0b140e);display:flex;flex-direction:column;align-items:flex-start}
+ .private-rating-card.weekly{border-color:#26382d;background:#0d1510}.private-rating-card small{font:700 9px monospace;letter-spacing:.15em;color:#c5f36a}.private-rating-card.weekly small{color:#89968c}
+ .private-rating-card strong{font:900 39px monospace;letter-spacing:-.07em;color:#c5f36a;line-height:1.15;margin:5px 0}.private-rating-card.weekly strong{color:#f0f2ed}
+ .private-rating-card span{font-size:12px;color:#c2ccc0}.private-rating-card.weekly span b{color:#c5f36a}.private-rating-card p{font-size:11px;line-height:1.35;color:#8f9b90;margin:5px 0 0}
+ .private-earnings-card{margin:13px 0;padding:16px;border:1px solid #715b2b;border-radius:19px;background:linear-gradient(145deg,#211d0d,#10140d)}
+ .private-earnings-card>.private-card-top>small{color:#e8c75b}.private-earnings-card>.private-card-top>span{color:#d2d8ca;border-color:#4c4b31}
+ .private-earnings-card>strong{display:block;margin:9px 0 2px;font:900 37px monospace;letter-spacing:-.06em;color:#f0d34d}.private-earnings-card>p{margin:0;color:#aeb6a8;font-size:12px}
+ .private-cashout-box{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:13px;border:1px dashed #66552c;border-radius:14px;background:#15170e}
+ .private-cashout-box>div{display:grid;gap:7px}.private-cashout-box small{font:700 9px monospace;letter-spacing:.15em;color:#e2c65a}.private-cashout-box b{font:900 25px monospace;color:#f0d34d}.private-cashout-box>span{text-align:right;font:10px monospace;color:#aeb6a8;line-height:1.6}
+ .private-cashout-button{width:100%;height:52px;margin-top:12px;border:1px solid #b69a45;border-radius:13px;background:transparent;color:#e9cb5a;font-size:13px;font-weight:800}
+ .private-cashout-help{display:block;margin-top:9px;color:#8f998b;font-size:10px}
+ .private-inline-notice{position:relative;margin-top:10px;padding:10px 32px 10px 10px;border-radius:9px;background:#172318;color:#bdcbb8;font-size:11px;line-height:1.5}.private-inline-notice button{position:absolute;right:7px;top:5px;border:0;background:none;color:#c5f36a;font-size:18px}
+ .private-wager-card{margin:13px 0;padding:16px;border:1px solid #315b3e;border-radius:19px;background:linear-gradient(145deg,#10291a,#0b150f)}
+ .private-wager-card .private-card-top>small{color:#c5f36a}.private-wager-card .private-card-top>span{color:#d2d8ca;border-color:#31543b}
+ .private-wager-card>strong{display:block;margin:12px 0 4px;color:#c5f36a;font-size:20px}.private-wager-card>p{margin:0;color:#aab7a4;font-size:11px}
+ .private-wager-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px}.private-wager-stats>div{display:grid;justify-items:center;gap:4px;border-right:1px solid #2d4433}.private-wager-stats>div:last-child{border:0}.private-wager-stats b{font:800 17px monospace;color:#d0f77b}.private-wager-stats span{font-size:10px;color:#9eaa9b}
+ .private-wager-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff16;color:#9eaa9b;font-size:10px}.private-wager-foot button{border:1px solid #47633d;border-radius:20px;background:#0b150e;color:#c5f36a;padding:6px 9px;font-size:10px}
+ .private-section{margin-top:13px;padding:16px;border:1px solid #252f29;border-radius:19px;background:#0d1510}.private-section>small{color:#929f94}.private-section h2{font-size:21px;margin:7px 0 10px}.private-section>p{margin:0 0 12px;color:#aab5aa;font-size:11px;line-height:1.5}
+ .private-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #25332a}.private-setting-row>div{display:grid;gap:4px}.private-setting-row b{font-size:13px}.private-setting-row span{font-size:10px;color:#8e9b90}
+ .toggle{width:48px;height:27px;flex:none;border:0;border-radius:20px;background:#39443b;padding:3px;display:flex;justify-content:flex-start}.toggle i{width:21px;height:21px;border-radius:50%;background:#e3e8df;transition:transform .15s}.toggle.on{background:#c5f36a;justify-content:flex-end}.toggle.on i{background:#13200f}
+ .private-account-section>a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #25332a;text-decoration:none;color:#f0f4ed}.private-account-section>a>div{display:grid;gap:4px}.private-account-section>a b{font-size:13px}.private-account-section>a span{font-size:10px;color:#8e9b90}.private-account-section>a>i{font-size:23px;color:#8e9b90;font-style:normal}
+ .private-stat-row{display:grid;grid-template-columns:repeat(4,1fr);margin-top:13px;padding:14px 3px;border:1px solid #252f29;border-radius:18px;background:#0d1510}.private-stat-row>div{display:grid;justify-items:center;gap:5px;border-right:1px solid #2c3a30}.private-stat-row>div:last-child{border:0}.private-stat-row b{font:900 25px monospace;color:#c5f36a}.private-stat-row span{font-size:11px;color:#9ba79c}
+ @media(max-width:480px){.private-profile{margin:6px auto 90px}.private-identity-card{padding:17px 14px}.private-avatar{width:100px;height:100px}.private-identity-copy h2{font-size:26px}.private-rating-card{padding:14px 11px}.private-rating-card strong{font-size:35px}.private-earnings-card>strong{font-size:34px}.private-stat-row b{font-size:22px}}
  `}</style></main>;
 }
