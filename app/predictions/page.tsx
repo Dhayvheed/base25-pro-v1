@@ -13,15 +13,15 @@ type Entry={id:string;question_id:string;option_id:string;is_correct:boolean|nul
 type Leader={prediction_id:string;nickname:string;points:number};
 const DAY=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const LADDERS:Record<string,{day_index:number;minute_of_day:number;points:number;label:string}[]> = {
- saturday_champion:[{day_index:6,minute_of_day:0,points:100,label:"Sat"},{day_index:6,minute_of_day:180,points:90,label:"Sat"},{day_index:6,minute_of_day:360,points:80,label:"Sat"},{day_index:6,minute_of_day:540,points:70,label:"Sat"}],
- weekly_leaderboard:[{day_index:0,minute_of_day:0,points:50,label:"Sun"},{day_index:1,minute_of_day:0,points:45,label:"Mon"},{day_index:2,minute_of_day:0,points:40,label:"Tue"},{day_index:3,minute_of_day:0,points:35,label:"Wed"},{day_index:4,minute_of_day:0,points:30,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
- top5_qualifier:[{day_index:0,minute_of_day:0,points:50,label:"Sun"},{day_index:1,minute_of_day:0,points:45,label:"Mon"},{day_index:2,minute_of_day:0,points:40,label:"Tue"},{day_index:3,minute_of_day:0,points:35,label:"Wed"},{day_index:4,minute_of_day:0,points:30,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
- most_wins:[{day_index:1,minute_of_day:0,points:50,label:"Mon"},{day_index:2,minute_of_day:0,points:45,label:"Tue"},{day_index:3,minute_of_day:0,points:40,label:"Wed"},{day_index:4,minute_of_day:0,points:35,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
- elo_improvement:[{day_index:2,minute_of_day:0,points:50,label:"Tue"},{day_index:3,minute_of_day:0,points:40,label:"Wed"},{day_index:4,minute_of_day:0,points:30,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}]
+ saturday_champion:[{day_index:6,minute_of_day:0,points:200,label:"Sat"}],
+ weekly_leaderboard:[{day_index:0,minute_of_day:0,points:100,label:"Sun"},{day_index:1,minute_of_day:0,points:90,label:"Mon"},{day_index:2,minute_of_day:0,points:80,label:"Tue"},{day_index:3,minute_of_day:0,points:70,label:"Wed"},{day_index:4,minute_of_day:0,points:60,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
+ top5_qualifier:[{day_index:0,minute_of_day:0,points:100,label:"Sun"},{day_index:1,minute_of_day:0,points:90,label:"Mon"},{day_index:2,minute_of_day:0,points:80,label:"Tue"},{day_index:3,minute_of_day:0,points:70,label:"Wed"},{day_index:4,minute_of_day:0,points:60,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
+ most_wins:[{day_index:1,minute_of_day:0,points:100,label:"Mon"},{day_index:2,minute_of_day:0,points:90,label:"Tue"},{day_index:3,minute_of_day:0,points:80,label:"Wed"},{day_index:4,minute_of_day:0,points:70,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}],
+ elo_improvement:[{day_index:2,minute_of_day:0,points:100,label:"Tue"},{day_index:3,minute_of_day:0,points:80,label:"Wed"},{day_index:4,minute_of_day:0,points:60,label:"Thu"},{day_index:5,minute_of_day:0,points:5,label:"Fri"}]
 };
 const TITLES:Record<string,string>={saturday_champion:"Who will win Saturday's final?",weekly_leaderboard:"Who will finish #1 on the weekly leaderboard?",top5_qualifier:"Which player will qualify for the Top 5?",most_wins:"Which player will record the most wins this week?",elo_improvement:"Which player will achieve the biggest ELO improvement?"};
 const ICONS:Record<string,string>={saturday_champion:"♜",weekly_leaderboard:"♛",top5_qualifier:"♧",most_wins:"▥",elo_improvement:"↗"};
-function weekStart(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=Object.fromEntries(p.map(x=>[x.type,x.value]));const d=new Date(Date.UTC(+v.year,+v.month-1,+v.day));d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.toISOString().slice(0,10);}
+function weekStart(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=Object.fromEntries(p.map(x=>[x.type,x.value]));const d=new Date(Date.UTC(+v.year,+v.month-1,+v.day));d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+1)%7));return d.toISOString().slice(0,10);}
 function lagosParts(date=new Date()){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date);return Object.fromEntries(p.map(x=>[x.type,x.value]));}
 function currentStep(key:string,ladder:any[],now=new Date()){const p=lagosParts(now);const day=DAY.indexOf(p.weekday);const mins=Number(p.hour)*60+Number(p.minute);let step=ladder[0];for(const s of ladder){if(s.day_index<day||(s.day_index===day&&s.minute_of_day<=mins))step=s;}return step;}
 function timeLeft(v:string){const n=new Date(v).getTime()-Date.now();if(n<=0)return "Closed";const d=Math.floor(n/86400000),h=Math.floor(n%86400000/3600000),m=Math.floor(n%3600000/60000);return d?d+"d "+h+"h":h?h+"h "+m+"m":m+"m";}
@@ -42,7 +42,7 @@ export default function PredictionsPage(){
   setLoading(true);setError("");
   const [{data:{session}},{data:q,error:qe}]=await Promise.all([
    supabase.auth.getSession(),
-   supabase.from("prediction_questions").select("id,week_start,template_key,title,description,category,status,opens_at,locks_at,points_reward,points_ladder,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order,player_id)").eq("week_start",weekStart()).neq("status","draft").order("opens_at",{ascending:true})
+   supabase.from("prediction_questions").select("id,week_start,template_key,title,description,category,status,opens_at,locks_at,points_reward,points_ladder,correct_option_id,options:prediction_options!prediction_options_question_id_fkey(id,label,sort_order,player_id)").eq("week_start",weekStart()).not("status","in","(draft,voided)").order("opens_at",{ascending:true})
   ]);
   if(qe)setError(qe.message);
   const qs=((q||[]) as any[]).map(normalize);setQuestions(qs);
@@ -78,7 +78,7 @@ export default function PredictionsPage(){
   <header className="pr-header"><div className="pr-brand"><span className="pr-brand-mark">8</span><b>BASE25 <em>PRO</em></b></div><div className="pr-header-right"><span className="pr-bell">♧</span><span className="pr-user">{profile?.nickname?.slice(0,1).toUpperCase()||"?"}</span></div></header>
   {!loading&&!userId&&<div className="pr-notice">Sign in with your BASE25 account to make predictions. Everyone can view this week's questions.</div>}
   {!loading&&userId&&!linked&&<div className="pr-notice">Your account isn't linked to a player yet. Ask BASE25 staff to link the email on your login to your player profile, then sign in again.</div>}
-  <section className="pr-hero"><div className="pr-eyebrow">WEEKLY PREDICTIONS</div><h1>Predict and win a <strong>BASE25 game credit</strong></h1><p>Five calls a week. Pick early, because points fall every day a question stays open.</p><div className="pr-chips"><span>Free to play</span><span>Points for correct calls</span></div></section>
+  <section className="pr-hero"><div className="pr-eyebrow">WEEKLY PREDICTIONS</div><h1>Predict and win a <strong>BASE25 game credit</strong></h1><p>Five calls a week. Q1 stays at 200 points; the other questions reward earlier picks.</p><div className="pr-chips"><span>Free to play</span><span>Points for correct calls</span></div></section>
   {linked&&profile&&<section className="pr-profile"><div><small>YOUR PREDICTION ID</small><b>{profile.prediction_id}</b></div><div><small>POINTS BALANCE</small><strong>{profile.points.toLocaleString()}</strong></div><form onSubmit={saveNickname}><input aria-label="Prediction nickname" value={nickname} onChange={e=>setNickname(e.target.value)} minLength={2} maxLength={24}/><button disabled={busy}>Save</button></form></section>}
   <section className="pr-stats"><div><b>{totalPicks} of 5</b><span>Picks made</span></div><div><b>{weekPoints}</b><span>Points scored</span></div></section>
   <MatchupCalculator/>
