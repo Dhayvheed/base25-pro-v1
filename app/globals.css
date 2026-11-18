@@ -897,3 +897,85 @@
 .admin-v2-manage>button>i{font-family:Manrope,Arial,sans-serif;font-size:27px;font-weight:400}
 .admin-v2-manage>button>.admin-v2-manage-icon{width:48px;height:48px;display:grid;place-items:center;flex:none;border-radius:14px;background:#102019;color:#c8f169}
 .admin-v2-manage-icon svg{width:23px;height:23px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Record match — screenshot-matched one-rack and best-of-three screens */
+.record-match-shell{padding:16px!important;border:0!important;border-radius:0!important;background:radial-gradient(ellipse at 82% 8%,#12683a 0,#092719 34%,#080e0a 72%)!important;box-shadow:none!important}
+.record-match-form{display:flex;flex-direction:column;gap:0;font-family:Inter,Arial,sans-serif}
+.record-match-header{height:42px;display:grid;grid-template-columns:36px 1fr 36px;align-items:center;margin-bottom:14px}
+.record-match-header h2{margin:0;text-align:center;color:#f4f5f2;font-size:17px;font-weight:800}
+.record-back{width:34px;height:34px;border:1px solid #2b3a31;border-radius:10px;background:#101512;color:#f4f5f2;font-size:20px}
+.record-format-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid #1f2a24;border-radius:15px;background:#101512}
+.record-format-switch button{height:38px;border:0;border-radius:11px;background:transparent;color:#c0c8c2;font-size:13px;font-weight:700}
+.record-format-switch button.selected{background:#c8f169;color:#080e0a}
+.record-format-note{margin:7px 0 18px;text-align:center;color:#89968e;font-size:11px}
+.record-step-label{margin:0 0 10px;color:#9aa69f;font-size:12px;font-weight:500}
+.record-player-pair{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);align-items:center;gap:6px}
+.record-player-slot-wrap{display:contents}
+.record-player-slot{min-width:0;min-height:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;border:1px solid #26352c;border-radius:15px;background:#101512;color:#f4f5f2}
+.record-player-slot:not(.filled){border:1.5px dashed #405f4c}
+.record-player-slot.active,.record-player-slot-wrap:first-child .record-player-slot:not(.filled){border-color:#c8f169}
+.record-add-circle,.record-player-avatar{width:42px;height:42px;display:grid;place-items:center;border:2px solid #c8f169;border-radius:50%;color:#c8f169;font-size:22px;font-weight:700}
+.record-player-avatar{background-position:center;background-size:cover;font-size:18px}
+.record-player-slot b{max-width:100%;overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
+.record-player-slot small{color:#9aa69f;font-size:11px}
+.record-player-slot em{color:#c8f169;font-size:11px;font-style:normal}
+.record-versus{color:#9aa69f;text-align:center;font-size:11px}
+.record-player-hint{margin:13px 0 24px;text-align:center;color:#9aa69f;font-size:12px}
+.record-step-section.is-dimmed{opacity:.55}
+.record-winner-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.record-winner-pair button{min-width:0;min-height:44px;padding:8px;border:1px solid #26352c;border-radius:12px;background:#101512;color:#f4f5f2;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.record-winner-pair button.selected{border-color:#a8d64f;background:#c8f169;color:#091009}
+.record-winner-pair button:disabled{opacity:.5}
+.record-balls-label{margin-top:20px}
+.record-stepper{display:flex;align-items:center;justify-content:center;gap:16px}
+.record-stepper button{width:40px;height:40px;border:1px solid #2b3a31;border-radius:11px;background:#101512;color:#f4f5f2;font-size:22px}
+.record-stepper button:disabled{opacity:.35}
+.record-stepper strong{min-width:22px;color:#f4f5f2;text-align:center;font-size:24px}
+.record-scoreboard{display:grid;grid-template-columns:1fr 18px 1fr;align-items:center;margin:0 0 8px;padding:12px;border:1px solid #25402f;border-radius:14px;background:#101512;text-align:center}
+.record-scoreboard>div{display:grid;gap:2px}
+.record-scoreboard small{color:#9aa69f;font-size:11px}
+.record-scoreboard strong{color:#f4f5f2;font-size:25px}
+.record-scoreboard>span{color:#9aa69f}
+.record-rack-card{margin-top:8px;padding:10px;border:1px solid #1f2a24;border-radius:14px;background:#101512}
+.record-rack-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#f4f5f2;font-size:13px}
+.record-rack-title small{color:#87948c;font:700 8px monospace;letter-spacing:1px}
+.record-rack-card .record-winner-pair button{min-height:38px;font-size:12px}
+.record-rack-balls{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.record-rack-balls>span{color:#9aa69f;font-size:10px}
+.record-rack-balls .record-stepper{gap:10px}
+.record-rack-balls .record-stepper button{width:34px;height:34px}
+.record-rack-balls .record-stepper strong{font-size:19px}
+.record-rack-hint{margin:9px 0;color:#89968e;font-size:10px;line-height:1.45}
+.record-result-card{margin-top:18px;padding:13px;border:1px solid #25402f;border-radius:15px;background:#101512}
+.record-result-card>small,.record-estimates small{color:#9aa69f;font-size:10px}
+.record-result-heading{display:flex;justify-content:space-between;gap:8px;margin:6px 0 10px}
+.record-result-heading b{font-size:14px}
+.record-result-heading strong{color:#c8f169;font-size:18px}
+.record-estimates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.record-estimates>div{display:grid;gap:3px;padding:8px;border-radius:9px;background:#0b110d}
+.record-estimates b{color:#c8f169;font-size:12px}
+.record-result-card p{margin:8px 0 0;color:#9aa69f;font-size:10px;line-height:1.4}
+.record-footer-venue{display:flex;justify-content:space-between;align-items:center;margin:13px 0;color:#9aa69f;font-size:11px}
+.record-footer-venue button,.record-picker-heading button{border:0;background:transparent;color:#c8f169;font-size:12px;font-weight:700}
+.record-save-button{width:100%;min-height:48px;border:0;border-radius:13px;background:#c8f169;color:#080e0a;font-size:15px;font-weight:850}
+.record-save-button:disabled{opacity:.4}
+.record-cancel-button{min-height:38px;margin-top:4px;border:0;background:transparent;color:#9aa69f;font-size:12px}
+.record-picker-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
+.record-picker-sheet{width:min(100%,520px);max-height:82dvh;overflow:auto;padding:12px 18px 24px;border:1px solid #25402f;border-bottom:0;border-radius:28px 28px 0 0;background:#101713;color:#f4f5f2;box-shadow:0 -15px 50px rgba(0,0,0,.35)}
+.record-picker-handle{width:54px;height:5px;margin:0 auto 18px;border-radius:9px;background:#33463a}
+.record-picker-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.record-picker-heading h3{margin:0;font-size:19px}
+.record-picker-search{width:100%;height:52px;padding:0 16px;border:2px solid #c8f169;border-radius:14px;outline:0;background:#0b120d;color:#f4f5f2;font-size:15px}
+.record-picker-recent{display:flex;align-items:center;gap:8px;overflow:auto;padding:14px 0;border-bottom:1px solid #29372f}
+.record-picker-recent>span{color:#9aa69f;font-size:12px}
+.record-picker-recent button{padding:7px 12px;border:1px solid #314238;border-radius:20px;background:transparent;color:#f4f5f2;white-space:nowrap;font-size:12px}
+.record-picker-recent button:disabled{opacity:.3}
+.record-picker-list{display:grid}
+.record-picker-list>button{min-height:76px;display:flex;align-items:center;gap:13px;border:0;border-bottom:1px solid #29372f;background:transparent;color:#f4f5f2;text-align:left}
+.record-picker-avatar{width:46px;height:46px;display:grid;place-items:center;flex:none;border:2px solid #c8f169;border-radius:50%;color:#c8f169;font-size:20px}
+.record-picker-list>button>span:nth-child(2){display:grid;gap:4px;flex:1}
+.record-picker-list b{font-size:16px;font-weight:600}
+.record-picker-list small{color:#9aa69f;font-size:12px}
+.record-picker-list strong{color:#c8f169}
+.record-picker-empty{padding:18px 0;color:#9aa69f}
+@media(max-width:560px){.record-match-shell{padding:14px!important}.record-player-slot{min-height:112px}.record-picker-sheet{max-height:86dvh}}
