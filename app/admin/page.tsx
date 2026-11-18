@@ -105,6 +105,24 @@ export default function Admin() {
     setBusy(false);
   }
 
+  async function resetPlayerPassword(player: Player) {
+    if (!supabase || staffRole !== "owner") return;
+    const passwordValue = playerPasswordDrafts[player.id] || "";
+    if (passwordValue.length < 8) { setMessage("Choose a password with at least 8 characters."); return; }
+    setBusy(true);
+    const { data: resetResult, error } = await supabase.functions.invoke("owner-reset-player-password", {
+      body: { player_id: player.id, password: passwordValue },
+    });
+    if (error || resetResult?.error) {
+      setMessage(`Password update failed: ${resetResult?.error || error?.message || "Unknown error"}`);
+    } else {
+      setMessage(`Password updated for @${player.username}. Share the new password with the player.`);
+      setPlayerPasswordDrafts(current => ({ ...current, [player.id]: "" }));
+      setShowPlayerPasswords(current => ({ ...current, [player.id]: false }));
+    }
+    setBusy(false);
+  }
+
   async function refreshMatches() {
     if (!supabase) return;
     const { data, error } = await supabase
@@ -484,7 +502,7 @@ export default function Admin() {
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
-          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" /></label><label>Choose password<div style={{display:"flex",width:"100%",minWidth:0,alignItems:"stretch",gap:8}}><input style={{flex:"1 1 0%",width:0,minWidth:0,boxSizing:"border-box"}} type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /><button type="button" className="secondary" style={{flex:"0 0 76px",width:76,minWidth:76,paddingLeft:8,paddingRight:8}} aria-label={showPlayerPasswords[player.id]?"Hide password":"Show password"} onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div><button type="button" className="secondary" disabled={busy || account?.account_status === "Verified" || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>{account?.account_status === "Verified" ? "Login already created" : "Create player login"}</button></div>
+          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={account?.account_status === "Verified"} /></label><label>{account?.account_status === "Verified" ? "Set new password" : "Choose password"}<div style={{display:"flex",width:"100%",minWidth:0,alignItems:"stretch",gap:8}}><input style={{flex:"1 1 0%",width:0,minWidth:0,boxSizing:"border-box"}} type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /><button type="button" className="secondary" style={{flex:"0 0 76px",width:76,minWidth:76,paddingLeft:8,paddingRight:8}} aria-label={showPlayerPasswords[player.id]?"Hide password":"Show password"} onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div>{account?.account_status === "Verified" ? <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8} onClick={()=>resetPlayerPassword(player)}>Update player password</button> : <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}</div>
         </div>})}
       </section>
       <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
