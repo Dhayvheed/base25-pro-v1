@@ -37,6 +37,9 @@ export default function PublicPlayerProfile() {
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [showMatchup, setShowMatchup] = useState(false);
   const [opponentId, setOpponentId] = useState("");
+  const [viewer, setViewer] = useState<any>(null);
+  const [matchupLoading, setMatchupLoading] = useState(false);
+  const [matchupError, setMatchupError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -98,6 +101,21 @@ export default function PublicPlayerProfile() {
   const line = points.map((point, index) => (index ? "L" : "M") + point.x + " " + point.y).join(" ");
   const area = line + ` L ${points[points.length - 1].x} 180 L ${points[0].x} 180 Z`;
 
+  const openMatchup = async () => {
+    setShowMatchup(true);
+    setMatchupError("");
+    if (!supabase) { setMatchupError("Please log in to see your mutual rating with this player."); return; }
+    setMatchupLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setViewer(null); setMatchupLoading(false); setMatchupError("Log in to compare your rating with this player."); return; }
+    const { data: mine, error } = await supabase.rpc("get_my_base25_player_profile");
+    const own = Array.isArray(mine) ? mine[0] : mine;
+    if (error || !own?.id) { setMatchupError("We couldn't find a player profile linked to your login."); setMatchupLoading(false); return; }
+    const { data: ownProfile } = await supabase.from("player_public_leaderboard").select("id,username,player_code,elo_rating").eq("id", own.id).single();
+    setViewer(ownProfile || own);
+    setMatchupLoading(false);
+  };
+
   const share = async () => {
     if (!player) return;
     const text = `BASE25 PRO PLAYER CARD\n@${player.username} · ${player.player_code}\nGlobal rank: #${rank || "—"}\nELO: ${elo.toLocaleString()}\nTournament earnings: ₦${tournamentEarnings.toLocaleString("en-NG")}`;
@@ -125,35 +143,17 @@ export default function PublicPlayerProfile() {
       <SiteNavigation />
       <div className="public-profile">
         <header className="public-hero">
-          <div className="public-hero-top">
-            <span className="public-eyebrow">BASE25 PRO <i /> PLAYER PROFILE</span>
-            <button type="button" className="public-share" onClick={share}>↗ <span>Share profile</span></button>
-          </div>
+          <div className="public-hero-top"><Link href="/players" className="public-back" aria-label="Back to players">←</Link><span className="public-page-title">Player profile</span><button type="button" className="public-more" aria-label="More options">•••</button></div><div className="public-view-label">◉ &nbsp; Public view · what other players see</div>
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
-              <div className="public-player-meta"><span>{player.player_code}</span><b>ACTIVE PLAYER</b></div>
-              <h1>{player.username}</h1>
-              <p>BASE25 PRO competitor</p>
-            </div>
-            <div className="public-global-rank"><span>♛</span><strong>#{rank || "—"}</strong><small>GLOBAL RANK</small></div>
+              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1><p>“Play smart. Clear tables.”</p></div>
           </div>
-          <div className="public-hero-bottom"><span>PUBLIC VIEW · WHAT OTHER PLAYERS SEE</span><span>BASE25 PRO</span></div>
-          <div className="public-profile-actions">
-            <div className="public-rank-pill"><span>♛</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div>
-            <button type="button" className="public-share-button" onClick={share}>Share</button>
-          </div>
-          <button type="button" className="public-matchup-toggle" onClick={() => setShowMatchup((value) => !value)}>⌁ &nbsp; Matchup calculator</button>
+          <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
 
         {showMatchup && <section className="public-matchup-card">
-          <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Matchup calculator</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
-          {opponents.length ? <>
-            <select aria-label="Choose opponent" value={selectedOpponent?.[0] || ""} onChange={(event) => setOpponentId(event.target.value)}>
-              {opponents.map(([opponentKey, opponent]) => <option key={opponentKey} value={opponentKey}>@{opponent?.username}</option>)}
-            </select>
-            <div className="public-matchup-score"><div><small>YOU VS {selectedOpponent?.[1]?.username?.toUpperCase()}</small><strong>{headToHeadWins} – {headToHeadLosses}</strong><span>{latestMeeting ? "Last met " + new Date(latestMeeting.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (selectedOpponent?.[1]?.player_code || "") : "No previous meeting"}</span></div><div><small>MEETINGS</small><strong>{headToHead.length}</strong></div></div>
-          </> : <p className="public-chart-note">No recorded opponents yet.</p>}
+          {matchupLoading ? <p>Loading your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in to view matchup →</Link></div> : viewer ? <div className="public-matchup-score"><div><small>YOU VS {player.username?.toUpperCase()}</small><strong>{Number(viewer.elo_rating || 0).toLocaleString()} – {elo.toLocaleString()}</strong><span>Your rating compared with this player</span></div><div><small>RATING GAP</small><strong className="public-gap">{Number(viewer.elo_rating || 0) - elo > 0 ? "+" : ""}{Number(viewer.elo_rating || 0) - elo}</strong></div></div> : null}
         </section>}
 
         <section className="public-rating-grid">
@@ -248,6 +248,11 @@ export default function PublicPlayerProfile() {
       </div>
       <style jsx>{`
         .public-profile{width:100%;max-width:780px;margin:22px auto 110px;min-width:0;color:#f3f5ef}
+        .public-hero-top{display:grid;grid-template-columns:50px 1fr 50px;align-items:center}.public-back,.public-more{height:48px;width:50px;display:grid;place-items:center;border:1px solid #273b2b;border-radius:14px;background:#09110d;color:#f2f6ef;text-decoration:none;font-size:24px}.public-more{font-size:16px;letter-spacing:2px}.public-page-title{text-align:center;font-size:17px;font-weight:800}.public-view-label{text-align:center;margin-top:14px;color:#9da99a;font-size:12px}.public-hero-main{grid-template-columns:108px minmax(0,1fr);margin:22px 0 18px}.public-identity h1{font-size:clamp(25px,5vw,34px)}.public-identity p{font-style:italic}.public-verified{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#c5f36a;color:#0b150d;font-style:normal;font-size:13px;vertical-align:middle}.public-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;margin-top:8px}
+        .public-rank-pill{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #354a32;border-radius:13px;background:#0b150e}.public-rank-pill span{font-size:19px;color:#e8cb36}.public-rank-pill b{font:900 18px monospace;color:#e8cb36}.public-rank-pill small{font:700 8px monospace;letter-spacing:.1em;color:#8f9c88}
+        .public-share-button{border:1px solid #b9f52d;border-radius:13px;background:#0b150e;color:#c5f36a;font-weight:800;font-size:13px;cursor:pointer}
+        .public-matchup-toggle{position:relative;z-index:1;width:100%;margin-top:10px;padding:14px;border:1px solid #b9f52d;border-radius:13px;background:#c5f36a;color:#10180d;font-weight:900;font-size:14px;cursor:pointer}
+        .public-matchup-card{margin:14px 0;padding:17px;border:1px solid #355b3b;border-radius:16px;background:#0d1b12}.public-login-prompt{display:grid;gap:7px}.public-login-prompt strong{color:#c5f36a}.public-login-prompt p{margin:0;color:#aab7a4;font-size:12px}.public-login-prompt a{color:#c5f36a;font-weight:800;text-decoration:none;font-size:12px}.public-gap{color:#e9c84b}
         .public-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;margin-top:8px}
         .public-rank-pill{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #354a32;border-radius:13px;background:#0b150e}.public-rank-pill span{font-size:19px;color:#e8cb36}.public-rank-pill b{font:900 18px monospace;color:#e8cb36}.public-rank-pill small{font:700 8px monospace;letter-spacing:.1em;color:#8f9c88}
         .public-share-button{border:1px solid #b9f52d;border-radius:13px;background:#0b150e;color:#c5f36a;font-weight:800;font-size:13px;cursor:pointer}
@@ -283,7 +288,7 @@ export default function PublicPlayerProfile() {
         .public-chart{position:relative;display:grid;grid-template-columns:42px 1fr;gap:5px;min-height:170px}.public-chart-labels{display:flex;flex-direction:column;justify-content:space-between;padding:0 0 8px;font:9px monospace;color:#839080}.public-chart svg{width:100%;height:170px;overflow:visible}.public-chart-detail{display:flex;justify-content:space-between;padding:10px 12px;border:1px solid #3b5631;border-radius:9px;background:#101d13;color:#aab7a4;font-size:11px}.public-chart-detail b{color:#c5f36a;font-family:monospace}.public-chart-note{margin-top:8px;color:#778574;font-size:10px}
         .public-profile-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding:14px 3px;color:#72806e;font:700 9px monospace;letter-spacing:.1em}.public-profile-footer a{color:#c5f36a;text-decoration:none}
         .public-loading,.public-empty{max-width:780px;margin:60px auto;color:#dce5d6}.public-empty h1{margin-bottom:15px}
-        @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr) 72px;gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{min-height:78px}.public-global-rank span{font-size:20px}.public-global-rank strong{font-size:25px}.public-global-rank small{font-size:7px}.public-hero-bottom{font-size:7px}.public-share{padding:8px 10px}.public-share span{display:none}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
+        @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr);gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{display:none}.public-back,.public-more{height:44px;width:44px}.public-page-title{font-size:16px}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
       `}</style>
     </main>
   );
