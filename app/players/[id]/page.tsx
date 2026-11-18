@@ -1,18 +1,29 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 
 type Rack={id:string;match_id:string;rack_number:number;winner_id:string;loser_id:string;loser_balls_remaining:number;black_ball_finish:boolean};
 export default function PlayerProfile(){
  const {id}=useParams<{id:string}>();
+ const searchParams=useSearchParams();
+ const privateView=searchParams.get("view")==="private";
+ const [accessChecked,setAccessChecked]=useState(false);
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
  useEffect(()=>{async function load(){
   if(!supabase){setLoading(false);return;}
+  if(privateView){
+   const {data:{session}}=await supabase.auth.getSession();
+   if(!session){window.location.replace("/login");return;}
+   const {data:ownProfile,error:ownProfileError}=await supabase.rpc("get_my_base25_player_profile");
+   const own=Array.isArray(ownProfile)?ownProfile[0]:ownProfile;
+   if(ownProfileError||!own?.id||own.id!==id){setPlayer(null);setAccessChecked(true);setLoading(false);return;}
+   setAccessChecked(true);
+  }
   const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",id).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${id},player_two_id.eq.${id}`).order("played_at",{ascending:false}),
@@ -43,6 +54,10 @@ export default function PlayerProfile(){
  if(loading)return <main className="shell">Loading player...</main>;
  if(!player)return <main className="shell redesign-shell"><Link href="/">← Leaderboard</Link><h1>Player not found</h1></main>;
  const elo=Number(player.elo_rating)||1000;
+ if(!privateView){
+  const sharePublic=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
+  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/><section className="auth-wrap account-wrap"><div className="eyebrow">BASE25 PRO / PLAYER CARD</div><div className="auth-card account-card"><div className="account-head"><div><div className="eyebrow">PUBLIC PLAYER PROFILE</div><h2>{player.full_name||player.username}</h2><p className="muted">@{player.username} · {player.player_code}</p></div><strong>{elo.toLocaleString()}<small>ELO</small></strong></div><div className="account-stats"><div><small>MATCHES</small><b>{player.matches_played??0}</b></div><div><small>WINS</small><b>{player.wins??0}</b></div><div><small>LOSSES</small><b>{player.losses??0}</b></div><div><small>WIN RATE</small><b>{Number(player.win_percentage||0).toFixed(1)}%</b></div><div><small>GLOBAL RANK</small><b>#{rank||"—"}</b></div></div><div className="two-fields"><button type="button" className="secondary" onClick={sharePublic}>Share profile</button><Link className="account-action" href="/login">Player login</Link></div></div></section></main>;
+ }
  const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
 
  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
