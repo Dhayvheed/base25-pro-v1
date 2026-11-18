@@ -37,6 +37,7 @@ export default function SiteNavigation() {
   const [authReady, setAuthReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [accountName, setAccountName] = useState("");
+  const [playerSummary, setPlayerSummary] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -56,6 +57,7 @@ export default function SiteNavigation() {
       if (!user) {
         setSignedIn(false);
         setAccountName("");
+        setPlayerSummary(null);
         setAuthReady(true);
         return;
       }
@@ -63,6 +65,21 @@ export default function SiteNavigation() {
       const metadataName = user.user_metadata?.username || user.user_metadata?.prediction_nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
       setAccountName(metadataName);
       setAuthReady(true);
+      setPlayerSummary(null);
+      const { data: profileData } = await supabase.rpc("get_my_base25_player_profile");
+      if (!active) return;
+      const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+      if (!profile?.id) return;
+      const [{ data: allTimeBoard }, { data: weeklyBoard }] = await Promise.all([
+        supabase.from("player_public_leaderboard").select("id,photo_url,elo_rating").order("elo_rating", { ascending: false }),
+        supabase.rpc("get_period_leaderboard", { p_period: "this_week" })
+      ]);
+      if (!active) return;
+      const allRows = allTimeBoard || [];
+      const weekRows = weeklyBoard || [];
+      const allRank = allRows.findIndex((row: any) => row.id === profile.id) + 1;
+      const weeklyPlayer = weekRows.find((row: any) => row.id === profile.id);
+      setPlayerSummary({ ...profile, photo_url: allRows.find((row: any) => row.id === profile.id)?.photo_url || null, globalRank: allRank || null, weeklyElo: weeklyPlayer?.elo_rating ?? null });
     };
     supabase.auth.getSession().then(({ data }) => loadAccount(data.session?.user ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -125,10 +142,16 @@ export default function SiteNavigation() {
       </div>
       <div className="menu-v2-scroll">
         {!authReady ? <section className="menu-v2-account"><span className="menu-v2-avatar">…</span><div><strong>Loading account</strong><p>Checking your player profile.</p></div></section> : signedIn ? (
-          <section className="menu-v2-account menu-v2-account-in">
-            <span className="menu-v2-avatar">{(accountName || "P").charAt(0).toUpperCase()}</span>
-            <div className="menu-v2-account-copy"><span className="menu-v2-kicker">PLAYER ACCOUNT</span><strong>{accountName || "Player"}</strong><p>Your BASE25 PRO player profile.</p></div>
-            <Link className="menu-v2-profile-link" href="/account" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>View profile <span>↗</span></Link>
+          <section className="menu-v2-account menu-v2-account-in menu-v2-account-ranked">
+            <div className="menu-v2-player-top">
+              <span className="menu-v2-avatar">{playerSummary?.photo_url ? <img src={playerSummary.photo_url} alt="" /> : (playerSummary?.username || accountName || "P").charAt(0).toUpperCase()}</span>
+              <div className="menu-v2-account-copy">
+                <strong>{playerSummary?.username || playerSummary?.full_name || accountName || "Player"} {playerSummary && <span className="menu-v2-verified" aria-label="Competitive player">✓</span>}</strong>
+                <p>{playerSummary?.player_code || "BASE25 PRO member"}{playerSummary?.globalRank ? " · Global rank #" + playerSummary.globalRank : ""}</p>
+              </div>
+            </div>
+            {playerSummary ? <div className="menu-v2-rating-grid"><div><strong>{Number(playerSummary.elo_rating || 1000).toLocaleString("en-NG")}</strong><span>All-time</span></div><div><strong>{playerSummary.weeklyElo === null ? "—" : Number(playerSummary.weeklyElo).toLocaleString("en-NG")}</strong><span>Weekly</span></div></div> : <p className="menu-v2-no-player">Your BASE25 PRO player profile.</p>}
+            <Link className="menu-v2-profile-link" href="/account" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>View my profile <span>→</span></Link>
           </section>
         ) : (
           <section className="menu-v2-account">
