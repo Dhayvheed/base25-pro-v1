@@ -219,10 +219,16 @@ export default function PublicPlayerProfile() {
           </div>
         </section>}
 
-        {showMatchup && <div className="public-calculator-overlay" role="dialog" aria-modal="true" aria-label="Matchup calculator">
+        {showMatchup && matchupError && <section className="public-login-inline">
+          <div className="public-login-inline-head"><strong>Login required</strong><button type="button" onClick={() => setShowMatchup(false)} aria-label="Close login notice">×</button></div>
+          <p>Log in to see your odds and rating gap against this player.</p>
+          <Link href="/login">Log in first →</Link>
+        </section>}
+
+        {showMatchup && !matchupError && <div className="public-calculator-overlay" role="dialog" aria-modal="true" aria-label="Matchup calculator">
           <section className="public-calculator-modal">
             <div className="public-calculator-header"><button type="button" onClick={() => setShowMatchup(false)} aria-label="Close calculator">←</button><div><h2>Matchup calculator</h2><p>See the odds before you play</p></div></div>
-            {matchupLoading ? <p className="public-chart-note">Loading your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer && matchupReady ? <>
+            {matchupLoading ? <p className="public-chart-note">Loading your matchup…</p> : viewer && matchupReady ? <>
               <div className="public-calc-step">1. Choose two players</div>
               <div className="public-calc-players">
                 <div className="public-calc-player"><div className="public-calc-avatar">{viewer.username?.[0]?.toUpperCase()}</div><strong>{viewer.username}</strong><small>{Number(viewer.elo_rating).toLocaleString()} rating</small><span>YOU</span></div>
@@ -233,8 +239,7 @@ export default function PublicPlayerProfile() {
               <div className="public-calc-formats"><button type="button" className={matchupFormat === "One rack" ? "selected" : ""} onClick={() => {setMatchupFormat("One rack");setMatchupCalculated(false);}}>One rack</button><button type="button" className={matchupFormat === "Best of 3" ? "selected" : ""} onClick={() => {setMatchupFormat("Best of 3");setMatchupCalculated(false);}}>Best of 3</button></div>
               <button type="button" className="public-calc-button" onClick={() => setMatchupCalculated(true)}>▦ &nbsp; Calculate</button>
               {matchupCalculated && <div className="public-calc-results">
-                <div className="public-calc-divider" />
-                <div className="public-calc-label">Win chance</div>
+                <div className="public-calc-divider" /><div className="public-calc-label">Win chance</div>
                 <div className="public-calc-probs"><div><b>{viewer.username}</b><strong>{matchupWinChance}%</strong></div><div><b>{player.username}</b><strong>{matchupLossChance}%</strong></div></div>
                 <div className="public-calc-bar"><i style={{width: matchupWinChance + "%"}} /></div>
                 <p className="public-calc-favourite">{matchupWinChance >= matchupLossChance ? viewer.username : player.username} is the slight favourite.</p>
@@ -382,6 +387,13 @@ export default function PublicPlayerProfile() {
         @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr);gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{display:none}.public-back,.public-more{height:44px;width:44px}.public-page-title{font-size:16px}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
 
 
+
+        .public-login-inline{margin:10px 0 13px;padding:13px 15px;border:1px solid #315a3d;border-radius:15px;background:#0d1a12;color:#f2f5ed}
+        .public-login-inline-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+        .public-login-inline-head strong{font-size:14px;color:#c5f36a}
+        .public-login-inline-head button{width:27px;height:27px;border:1px solid #304237;border-radius:8px;background:#111914;color:#dce7dc;font-size:18px}
+        .public-login-inline p{margin:6px 0 8px;color:#aab5a9;font-size:12px}
+        .public-login-inline a{color:#c5f36a;font-size:12px;font-weight:750;text-decoration:none}
         .public-mutual-card{margin:13px 0;padding:18px 17px 17px;border:1px solid #315a3d;border-radius:21px;background:#0d1a12;color:#f2f5ed;min-height:122px}
         .public-mutual-title{font:700 10px monospace;letter-spacing:.16em;color:#b9ed6a;margin-bottom:10px}
         .public-mutual-body{display:flex;justify-content:space-between;align-items:center;gap:12px}
