@@ -819,3 +819,71 @@
  .menu-v2-account-ranked .menu-v2-account-copy strong{font-size:17px}
  .menu-v2-rating-grid strong{font-size:18px}
 }
+
+
+/* Admin desk — exact visual direction from the supplied Admin desk reference */
+.admin-shell{max-width:520px!important;width:100%;min-height:100vh;margin:0 auto;padding:18px 22px 42px;background:#080d0a;color:#f2f5ef;border:1px solid #1f2b23}
+.admin-v2-topbar{display:flex;align-items:center;gap:12px;min-height:54px;margin-bottom:30px;border:0!important;padding:0!important}
+.admin-v2-topbar .brand{display:flex;align-items:center;gap:10px;color:#f4f5f2;text-decoration:none}
+.admin-v2-ball{width:48px;height:48px;display:grid;place-items:center;border:2px solid #c8f169;border-radius:50%;box-shadow:inset 0 0 0 5px #101512;font-size:19px;font-weight:900}
+.admin-v2-wordmark{font-size:22px;font-weight:900;font-style:italic;letter-spacing:-.8px}
+.admin-v2-wordmark b{padding:2px 6px;border-radius:6px;background:#c8f169;color:#091009}
+.admin-v2-owner{margin-left:auto;padding:6px 12px;border:1px solid #725318;border-radius:999px;color:#f3c84c;font-size:12px;font-weight:750}
+.admin-v2-signout{width:46px;height:46px;display:grid;place-items:center;border:1px solid #25352b;border-radius:13px;background:#101713;color:#f1f5ef}
+.admin-v2-signout svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.admin-v2-overview{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.admin-v2-heading{margin:0 0 20px}
+.admin-v2-heading .eyebrow{margin-bottom:8px;color:#9baa9f;font:700 11px 'DM Mono',monospace;letter-spacing:2.4px}
+.admin-v2-heading h1{margin:0;color:#f4f6f2;font-size:36px;line-height:1.05;font-weight:900;letter-spacing:-1.3px}
+.admin-v2-heading h1 span{color:#c8f169}
+.admin-v2-heading p{margin-top:7px;color:#aab6ad;font-size:14px}
+.admin-v2-primary{width:100%;min-height:68px;display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 14px;border:0;border-radius:19px;background:#c8f169;color:#080d08;font-size:21px;font-weight:900}
+.admin-v2-primary span{font-size:29px;font-weight:400}
+.admin-v2-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.admin-v2-quick-actions button{min-height:72px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px;border:1px solid #2b4032;border-radius:19px;background:#101713;color:#e9eee8;font-size:15px;line-height:1.25}
+.admin-v2-quick-actions .admin-v2-champion-action{border-color:#624d18;background:#17140b;color:#f3e7bb}
+.admin-v2-action-icon{color:#c8f169;font-size:22px}
+.admin-v2-champion-action .admin-v2-action-icon{color:#f3c84c}
+.admin-v2-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin:0 0 30px;padding:18px 8px;border:1px solid #1f3026;border-radius:19px;background:#101713;text-align:center}
+.admin-v2-stats>div{display:grid;gap:3px;align-content:center;border-right:1px solid #2a3b30}
+.admin-v2-stats>div:last-child{border:0}
+.admin-v2-stats strong{color:#f4f6f2;font-size:29px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.admin-v2-stats>div:last-child strong{color:#f3c84c;font-size:23px}
+.admin-v2-stats span{color:#aab5ad;font-size:13px}
+.admin-v2-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #26332b}
+.admin-v2-section-head h2,.admin-v2-manage-title{margin:0;color:#f4f6f2;font-size:23px;font-weight:850;letter-spacing:-.5px}
+.admin-v2-section-head button{padding:6px 0;border:0;background:transparent;color:#c8f169;font-size:14px;font-weight:800}
+.admin-v2-recent{display:grid}
+.admin-v2-match{min-height:77px;display:flex;align-items:center;gap:13px;border-bottom:1px solid #1f2b23}
+.admin-v2-win{width:37px;height:37px;display:grid;place-items:center;flex:none;border-radius:10px;background:#c8f169;color:#0b100b;font-size:17px;font-weight:900}
+.admin-v2-match-copy{min-width:0;flex:1;display:grid;gap:4px}
+.admin-v2-match-copy strong{overflow:hidden;color:#f0f3ef;font-size:16px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.admin-v2-match-copy small{color:#9ba79f;font-size:13px}
+.admin-v2-match>button{width:45px;height:45px;flex:none;border:1px solid #304137;border-radius:12px;background:#0c130f;color:#e9eee8;font-size:22px}
+.admin-v2-empty{padding:18px 0;color:#aab5ad}
+.admin-v2-hint{margin:12px 0 30px;color:#8e9b92;font-size:13px}
+.admin-v2-manage-title{padding-bottom:10px;border-bottom:1px solid #26332b}
+.admin-v2-manage{display:grid}
+.admin-v2-manage>button{min-height:78px;display:flex;align-items:center;gap:14px;padding:10px 0;border:0;border-bottom:1px solid #26332b;background:transparent;color:#f0f3ef;text-align:left}
+.admin-v2-manage>button>span{width:48px;height:48px;display:grid;place-items:center;flex:none;border-radius:14px;background:#102019;color:#c8f169;font-size:24px}
+.admin-v2-manage>button>div{display:grid;gap:3px;flex:1}
+.admin-v2-manage>button b{font-size:17px;font-weight:750}
+.admin-v2-manage>button small{color:#9ba79f;font-size:13px}
+.admin-v2-manage>button i{color:#9ba79f;font-size:26px;font-style:normal}
+.admin-v2-back{display:inline-flex;align-items:center;min-height:42px;margin:0 0 18px;padding:0 13px;border:1px solid #304137;border-radius:12px;background:#101713;color:#c8f169;font-weight:750}
+.admin-shell>.admin-grid,.admin-shell>section:not(.admin-v2-overview){margin-top:14px}
+.admin-shell .admin-card{border:1px solid #26372c;border-radius:18px;background:#0d1510;color:#f1f5ef}
+.admin-shell .admin-card h2,.admin-shell .admin-card h3{color:#f1f5ef}
+.admin-shell .muted{color:#9ba79f}
+.admin-shell .form input,.admin-shell .form select{border-color:#304137;background:#080e0a;color:#f1f5ef}
+.admin-shell .secondary{border-color:#304137;background:#101713;color:#e9eee8}
+@media(max-width:560px){
+ .admin-shell{padding:16px 18px 36px;border:0}
+ .admin-v2-topbar{margin-bottom:27px}
+ .admin-v2-heading h1{font-size:34px}
+ .admin-v2-primary{min-height:64px;font-size:19px}
+ .admin-v2-quick-actions button{font-size:13px}
+ .admin-v2-stats{padding:15px 5px}
+ .admin-v2-stats strong{font-size:26px}
+ .admin-v2-stats>div:last-child strong{font-size:20px}
+}
