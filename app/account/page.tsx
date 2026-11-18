@@ -55,9 +55,7 @@ export default function PlayerProfile(){
  const readyToCollect=championHistory.filter((w:any)=>!w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
  const paidEarnings=championHistory.filter((w:any)=>w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
  const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.origin+`/players/${player.id}`});else if(navigator.clipboard)await navigator.clipboard.writeText(text+"\\n"+location.origin+`/players/${player.id}`);};
- if(false){
-  const sharePublic=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
-  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
+ return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
  <section className="private-profile">
   <header className="private-topbar">
    <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
