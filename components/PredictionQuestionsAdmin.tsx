@@ -8,7 +8,7 @@ type Template = {
   template_key: string; title: string; description: string | null; category: string;
   points_reward: number; points_ladder: LadderStep[]; eligibility: string;
   opens_rule: string; closes_rule: string; data_condition: string | null;
-  active: boolean; sort_order: number; minimum_matches: number;
+  active: boolean; sort_order: number; minimum_matches: number; current_pick_count?: number;
 };
 type Audit = { id: string; actor_id: string; action: string; template_key: string; before_values: any; after_values: any; created_at: string; actor_email: string | null };
 
