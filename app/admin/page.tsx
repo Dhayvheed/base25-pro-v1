@@ -320,9 +320,13 @@ export default function Admin() {
   const playerTwoOptions = players.filter((player) => player.id !== one && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerTwoSearch.trim().toLowerCase()));
   const winnerOptions = players.filter((player) => player.id === one || player.id === two);
 
+  const today = new Date();
+  const daysToSaturday = (6 - today.getDay() + 7) % 7 || 7;
+  const saturdayCountdown = daysToSaturday === 1 ? "1 day" : `${daysToSaturday} days`;
+
   return (
     <main className="shell admin-shell">
-      <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
+      <header className="topbar admin-v2-topbar"><Link className="brand" href="/"><span className="admin-v2-ball">8</span><span className="admin-v2-wordmark">BASE25 <b>PRO</b></span></Link><span className="admin-v2-owner">{staffRole==="owner"?"Owner":staffRole}</span><button className="admin-v2-signout" aria-label="Sign out" onClick={() => supabase!.auth.signOut()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg></button></header>
       {playerConfirmation && (
         <div className="confirmation-backdrop" role="presentation">
           <section className="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="player-confirmation-title">
@@ -362,14 +366,29 @@ export default function Admin() {
         {staffRole==="owner"&&<button type="button" className={activeSection==="matches"?"active":""} onClick={()=>setActiveSection("matches")}><span>◷</span>Manage matches</button>}
         <button type="button" className={activeSection==="directory"?"active":""} onClick={()=>setActiveSection("directory")}><span>☷</span>Player directory</button>
       </nav>
-      {activeSection==="overview"&&<section className="admin-card admin-overview">
-        <div className="eyebrow">YOUR WORKSPACE</div><h2>What would you like to do?</h2>
-        <p className="muted">Choose an action from the navigation. Each workspace is kept separate so the desk stays tidy.</p>
-        <div className="admin-overview-actions">
-          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}>＋ <span><b>Register a player</b><small>Add a new BASE25 competitor</small></span></button>}
-          <button type="button" onClick={()=>setActiveSection("match")}>▣ <span><b>Record a match</b><small>Publish a result and update ELO</small></span></button>
-          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("champion")}>♛ <span><b>Record Saturday Champion</b><small>Update the Hall of Fame and archive</small></span></button>}
-          <button type="button" onClick={()=>setActiveSection("directory")}>☷ <span><b>Player directory</b><small>View all registered players</small></span></button>
+      {activeSection==="overview"&&<section className="admin-v2-overview">
+        <div className="admin-v2-heading"><div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1><p>Signed in as {session?.user?.email?.split("@")[0] || "staff"}</p></div>
+        <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
+        <div className="admin-v2-quick-actions">
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon">♙</span><b>Register player</b></button>}
+          {staffRole==="owner"&&<button type="button" className="admin-v2-champion-action" onClick={()=>setActiveSection("champion")}><span className="admin-v2-action-icon">♛</span><b>Crown Saturday champion</b></button>}
+          {staffRole!=="owner"&&<button type="button" onClick={()=>setActiveSection("directory")}><span className="admin-v2-action-icon">♙</span><b>Player directory</b></button>}
+        </div>
+        <div className="admin-v2-stats"><div><strong>{players.length}</strong><span>Players</span></div><div><strong>{matches.length}</strong><span>Matches</span></div><div><strong>{saturdayCountdown}</strong><span>To Saturday final</span></div></div>
+        <div className="admin-v2-section-head"><h2>Recent matches</h2><button type="button" onClick={()=>setActiveSection("matches")}>Manage all →</button></div>
+        <div className="admin-v2-recent">
+          {matches.length===0?<p className="admin-v2-empty">No matches recorded yet.</p>:matches.slice(0,3).map(match=><div className="admin-v2-match" key={match.id}>
+            <span className="admin-v2-win">W</span><div className="admin-v2-match-copy"><strong>{playerName(match.winner_id)} beat {playerName(match.winner_id===match.player_one_id?match.player_two_id:match.player_one_id)}</strong><small>{new Date(match.played_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · {match.player_one_score} – {match.player_two_score}</small></div>
+            <button type="button" aria-label="Edit match result" onClick={()=>startEditMatch(match)}>✎</button>
+          </div>)}
+        </div>
+        <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
+        <h2 className="admin-v2-manage-title">Manage</h2>
+        <div className="admin-v2-manage">
+          <button type="button" onClick={()=>setActiveSection("matches")}><span>☷</span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span>▣</span><div><b>Manage profiles</b><small>Photos, names and bios</small></div><i>›</i></button>}
+          <button type="button" onClick={()=>setActiveSection("directory")}><span>♧</span><div><b>Player directory</b><small>All {players.length} registered players</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("staff")}><span>♙</span><div><b>Staff management</b><small>Owner only</small></div><i>›</i></button>}
         </div>
       </section>}
 
