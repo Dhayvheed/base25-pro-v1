@@ -768,3 +768,17 @@
  .menu-v2-nav>a,.menu-v2-nav .menu-v2-competition-toggle{min-height:54px;font-size:16px}
  .menu-v2-nav .menu-v2-subnav a{min-height:48px;font-size:15px}
 }
+
+
+/* Final menu reference alignment: outlined icon set and consistent icon sizing */
+.menu-v2-nav a>span,.menu-v2-nav .menu-v2-competition-toggle>span{display:inline-flex;align-items:center;justify-content:center}
+.menu-v2-nav a>span svg,.menu-v2-nav .menu-v2-competition-toggle>span svg{display:block;width:24px;height:24px;flex:none}
+.menu-v2-nav .menu-v2-subnav a>span svg{width:22px;height:22px}
+.menu-v2-avatar svg{width:32px;height:32px;display:block}
+.menu-v2-nav .menu-v2-competition-toggle{font:inherit;font-family:Manrope,Arial,sans-serif;font-size:20px;font-weight:700}
+@media(max-width:760px){
+ .menu-v2-nav .menu-v2-competition-toggle{font-size:18px}
+}
+@media(max-width:390px){
+ .menu-v2-nav .menu-v2-competition-toggle{font-size:16px}
+}
