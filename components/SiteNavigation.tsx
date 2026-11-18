@@ -99,35 +99,42 @@ export default function SiteNavigation() {
     </header>
     <div className={"site-drawer-backdrop" + (open ? " is-open" : "")} onClick={() => setOpen(false)} aria-hidden="true"></div>
     <aside className={"site-drawer" + (open ? " is-open" : "")} aria-hidden={!open} aria-label="Site navigation">
-      <div className="site-drawer-head">
-        {brand(true)}
-        <button type="button" className="site-drawer-close" aria-label="Close menu" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>×</button>
+      <div className="menu-v2-head">
+        <Link className="menu-v2-brand" href="/" tabIndex={open ? 0 : -1} aria-label="BASE25 PRO home">
+          <span className="menu-v2-mark">8</span>
+          <span>BASE25 <b>PRO</b></span>
+        </Link>
+        <button type="button" className="menu-v2-close" aria-label="Close menu" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>×</button>
       </div>
-      <div className="site-drawer-scroll">
-        <nav className="site-drawer-nav">
-          <Link className={"site-drawer-home" + (pathname === "/" ? " active" : "")} href="/" tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
-          <button className="site-drawer-section" type="button" onClick={() => setCompetitionOpen(v => !v)} aria-expanded={competitionOpen} tabIndex={open ? 0 : -1}><span>♜</span>Competition<i className={competitionOpen ? "rotated" : ""}>⌄</i></button>
-          {competitionOpen && <div className="site-drawer-subnav">{competitionLinks.map(item => <Link key={item.href} href={item.href} tabIndex={open ? 0 : -1}><span>{item.icon}</span>{item.label}<i>→</i></Link>)}</div>}
-          <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" tabIndex={open ? 0 : -1}><span>♧</span>Players<i>›</i></Link>
-          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" tabIndex={open ? 0 : -1}><span>◎</span>Predictions League<i>›</i></Link>
-          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" tabIndex={open ? 0 : -1}><span>▤</span>How It Works<i>›</i></Link>
-          <Link href="/how-it-works#rules" tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; Format<i>›</i></Link>
+      <div className="menu-v2-scroll">
+        {!authReady ? <section className="menu-v2-account"><span className="menu-v2-avatar">…</span><div><strong>Loading account</strong><p>Checking your player profile.</p></div></section> : signedIn ? (
+          <section className="menu-v2-account menu-v2-account-in">
+            <span className="menu-v2-avatar">{(accountName || "P").charAt(0).toUpperCase()}</span>
+            <div className="menu-v2-account-copy"><span className="menu-v2-kicker">PLAYER ACCOUNT</span><strong>{accountName || "Player"}</strong><p>Your BASE25 PRO player profile.</p></div>
+            <Link className="menu-v2-profile-link" href="/account" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>View profile <span>↗</span></Link>
+          </section>
+        ) : (
+          <section className="menu-v2-account">
+            <span className="menu-v2-avatar">♙</span>
+            <div className="menu-v2-account-copy"><strong>Welcome, player</strong><p>Log in to see your rank and rating.</p></div>
+            <Link className="menu-v2-login" href="/login" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>Player Login <span>→</span></Link>
+            <Link className="menu-v2-register" href="/register" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>New here? <b>Create account</b></Link>
+          </section>
+        )}
+        <div className="menu-v2-section-label">MENU</div>
+        <nav className="menu-v2-nav" aria-label="Menu">
+          <Link className={pathname === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
+          <Link className={pathname.startsWith("/competition") || competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♜</span>Competition</Link>
+          <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♧</span>Players</Link>
+          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>◎</span>Predictions</Link>
+          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▤</span>How it works</Link>
+          <Link className={pathname.includes("rules") ? "active" : ""} href="/how-it-works#rules" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>ⓘ</span>Rules &amp; format</Link>
         </nav>
-        <div className="site-drawer-brand-card">
-          <span className="site-drawer-brand-ball">8</span>
-          <span><b>BASE25 <em>PRO</em></b><small>Competition. Performance. Legacy.</small></span>
-        </div>
-        <Link className="site-drawer-admin" href="/admin" tabIndex={open ? 0 : -1}>♙ &nbsp; Admin / Staff Access <span>→</span></Link>
       </div>
-      <div className="site-drawer-account-fixed">
-        <span className="site-drawer-account-label">ACCOUNT</span>
-        {!authReady ? <span className="site-drawer-account-loading">Checking account…</span> : signedIn ? <>
-          <Link className="site-drawer-login-cta" href="/account" tabIndex={open ? 0 : -1}>♙ &nbsp; My Account <span>→</span></Link>
-          <button className="site-drawer-signout" type="button" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>{signingOut ? "Signing out…" : "Sign Out"}</button>
-        </> : <>
-          <Link className="site-drawer-login-cta" href="/login" tabIndex={open ? 0 : -1}>♙ &nbsp; Player Login <span>→</span></Link>
-          <Link className="site-drawer-register" href="/register" tabIndex={open ? 0 : -1}>Create Account <span>→</span></Link>
-        </>}
+      <div className="menu-v2-footer">
+        {signedIn && authReady && <button type="button" className="menu-v2-logout" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>{signingOut ? "Signing out…" : "↪  Log out"}</button>}
+        <Link className="menu-v2-admin" href="/admin" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>Admin / staff access <span>→</span></Link>
+        <div className="menu-v2-tagline">COMPETITION · PERFORMANCE · LEGACY</div>
       </div>
     </aside>
     <nav className="site-mobile-bottom" aria-label="Mobile navigation">
