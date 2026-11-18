@@ -887,3 +887,13 @@
  .admin-v2-stats strong{font-size:26px}
  .admin-v2-stats>div:last-child strong{font-size:20px}
 }
+
+
+/* Match the supplied admin reference typography and outlined manage icons */
+.admin-v2-overview,.admin-v2-overview button,.admin-v2-manage,.admin-v2-manage button{font-family:Manrope,Arial,sans-serif}
+.admin-v2-manage>button{font-family:Manrope,Arial,sans-serif}
+.admin-v2-manage>button b{font-family:Manrope,Arial,sans-serif;font-size:17px;font-weight:750;letter-spacing:-.25px;line-height:1.25}
+.admin-v2-manage>button small{font-family:Manrope,Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:0;line-height:1.35}
+.admin-v2-manage>button>i{font-family:Manrope,Arial,sans-serif;font-size:27px;font-weight:400}
+.admin-v2-manage>button>.admin-v2-manage-icon{width:48px;height:48px;display:grid;place-items:center;flex:none;border-radius:14px;background:#102019;color:#c8f169}
+.admin-v2-manage-icon svg{width:23px;height:23px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
