@@ -153,7 +153,21 @@ export default function PublicPlayerProfile() {
         </header>
 
         {showMatchup && <section className="public-matchup-card">
-          {matchupLoading ? <p>Loading your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in to view matchup →</Link></div> : viewer ? <div className="public-matchup-score"><div><small>YOU VS {player.username?.toUpperCase()}</small><strong>{Number(viewer.elo_rating || 0).toLocaleString()} – {elo.toLocaleString()}</strong><span>Your rating compared with this player</span></div><div><small>RATING GAP</small><strong className="public-gap">{Number(viewer.elo_rating || 0) - elo > 0 ? "+" : ""}{Number(viewer.elo_rating || 0) - elo}</strong></div></div> : null}
+          {matchupLoading ? <p className="public-chart-note">Checking your player account…</p> : matchupError ? <div className="public-login-prompt"><strong>Login to compare ratings</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer ? (() => {
+            const mutual = matches.filter((match) =>
+              (match.player_one_id === viewer.id && match.player_two_id === id) ||
+              (match.player_two_id === viewer.id && match.player_one_id === id)
+            );
+            const mutualWins = mutual.filter((match) => match.winner_id === viewer.id).length;
+            const mutualLosses = mutual.length - mutualWins;
+            const last = mutual.length ? mutual[mutual.length - 1] : null;
+            const gap = Number(viewer.elo_rating || 0) - elo;
+            return <div className="public-mutual-result">
+              <div className="public-section-heading"><div><small>YOUR MUTUAL MATCHUP</small><h2>You vs {player.username}</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
+              <div className="public-mutual-main"><div><small>HEAD-TO-HEAD</small><strong>{mutualWins} – {mutualLosses}</strong><span>{last ? "Last met " + new Date(last.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) : "No previous match"}</span></div><div className="public-gap-box"><small>RATING GAP</small><strong>{gap > 0 ? "+" : ""}{gap}</strong></div></div>
+              <div className="public-mutual-ratings"><span>Your rating <b>{Number(viewer.elo_rating || 0).toLocaleString()}</b></span><span>{player.username}'s rating <b>{elo.toLocaleString()}</b></span></div>
+            </div>;
+          })() : null}
         </section>}
 
         <section className="public-rating-grid">
@@ -186,9 +200,9 @@ export default function PublicPlayerProfile() {
         </section>
 
         <section className="public-wager-card">
-          <div className="public-wager-head"><div className="public-card-label">WAGER EARNINGS</div><span>AT BASE25</span></div>
-          <strong>Wager records</strong>
-          <p>Player-versus-player wager winnings and losses will appear here when wager tracking is enabled.</p>
+          <div className="public-wager-head"><div className="public-card-label">WAGER WINNINGS</div><span>AT BASE25</span></div>
+          <strong>Winnings will appear here</strong>
+          <p>Only confirmed wager winnings are public. Money lost stays private unless the player chooses to share it.</p>
         </section>
 
         <section className="public-record-grid">
@@ -289,6 +303,64 @@ export default function PublicPlayerProfile() {
         .public-profile-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding:14px 3px;color:#72806e;font:700 9px monospace;letter-spacing:.1em}.public-profile-footer a{color:#c5f36a;text-decoration:none}
         .public-loading,.public-empty{max-width:780px;margin:60px auto;color:#dce5d6}.public-empty h1{margin-bottom:15px}
         @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr);gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{display:none}.public-back,.public-more{height:44px;width:44px}.public-page-title{font-size:16px}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
+        /* Screenshot-matched public profile refinements */
+        .public-profile{max-width:430px;margin:12px auto 100px;padding:0 0 12px}
+        .public-hero{padding:20px 18px 18px;border-radius:25px;background:radial-gradient(ellipse at 85% 8%,#126b3c 0%,#0d3826 34%,#09170f 76%);border-color:#244b36}
+        .public-hero-top{grid-template-columns:50px 1fr 50px}
+        .public-back,.public-more{height:50px;width:50px;border-radius:15px;background:#080f0b}
+        .public-view-label{margin:14px 0 18px;font-size:12px}
+        .public-hero-main{grid-template-columns:108px minmax(0,1fr);gap:14px;margin:0 0 20px}
+        .public-avatar{width:104px;height:104px}
+        .public-identity h1{font-size:30px;margin:0 0 10px;line-height:1.05}
+        .public-identity p{font-size:12px;margin-top:10px}
+        .public-player-meta b{font-size:9px;letter-spacing:.12em}
+        .public-profile-actions{grid-template-columns:1fr 1fr;gap:10px;margin-top:0}
+        .public-rank-pill{min-height:54px;border-radius:15px}
+        .public-share-button{min-height:54px;border-radius:15px}
+        .public-matchup-toggle{height:55px;border-radius:15px;margin-top:10px;font-size:15px}
+        .public-matchup-card{padding:17px;border-radius:19px;background:#0d1a12;border-color:#31583c}
+        .public-mutual-main{display:flex;justify-content:space-between;align-items:center;gap:12px}
+        .public-mutual-main>div{display:grid;gap:5px}
+        .public-mutual-main small,.public-gap-box small{font:700 10px monospace;letter-spacing:.14em;color:#b8ee68}
+        .public-mutual-main strong{font-size:32px;letter-spacing:-.04em}
+        .public-mutual-main span{font-size:12px;color:#9ba99a}
+        .public-gap-box{text-align:right;min-width:90px}
+        .public-gap-box strong{color:#e8ca4c;font:900 25px monospace}
+        .public-mutual-ratings{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff16;color:#9eaa9b;font-size:10px}
+        .public-mutual-ratings b{display:block;color:#f1f4ec;font-size:14px;margin-top:4px}
+        .public-rating-grid{grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}
+        .public-rating-card,.public-week-card{min-height:165px;padding:17px 15px;border-radius:20px}
+        .public-rating-card strong,.public-week-card>strong{font-size:43px;margin:10px 0}
+        .public-rating-card .public-card-label,.public-week-card .public-card-label{font-size:10px;letter-spacing:.14em}
+        .public-earnings-card{grid-template-columns:minmax(0,1fr) 36px minmax(90px,.7fr);gap:8px;padding:17px 16px;border-radius:20px;margin:13px 0}
+        .public-earnings-copy strong{font-size:35px}
+        .public-win-history div{font-size:9px}
+        .public-wager-card{margin:13px 0;padding:17px 18px;border-radius:20px}
+        .public-wager-card>strong{font-size:25px;margin:14px 0 5px}
+        .public-record-grid{grid-template-columns:repeat(4,minmax(0,1fr));padding:15px 3px;border-radius:19px}
+        .public-record-grid>div{display:grid;justify-items:center;gap:5px;border-right:1px solid #344537}
+        .public-record-grid>div:last-child{border:0}
+        .public-record-grid strong{font-size:25px}
+        .public-record-grid small{font:11px Arial,sans-serif;letter-spacing:0;color:#a9b2a6}
+        .public-section{margin-top:13px;padding:17px;border-radius:20px}
+        .public-section-heading{margin-bottom:15px}
+        .public-section-heading h2{font-size:23px}
+        .public-achievements{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+        .public-achievement{min-height:100px;grid-template-columns:32px 28px 1fr;justify-items:start;align-content:center;text-align:left;padding:12px 11px;gap:6px}
+        .public-achievement i{font-size:22px;align-self:center}
+        .public-achievement strong{font-size:24px}
+        .public-achievement span{font-size:12px;align-self:center}
+        .public-chart{min-height:145px;grid-template-columns:1fr}
+        .public-chart-labels{display:none}
+        .public-chart svg{height:145px}
+        .public-chart-note{font-size:11px}
+        .public-recent-section .public-section-heading{margin-bottom:12px}
+        .public-match-row{grid-template-columns:34px minmax(0,1fr) 56px;gap:10px;padding:14px 0}
+        .public-match-opponent strong{font-size:14px}
+        .public-match-opponent small{font-size:9px}
+        .public-match-score{font-size:16px}
+        .public-profile-footer{font-size:8px}
+        @media(max-width:480px){.public-profile{width:100%;max-width:430px;margin:8px auto 90px;padding:0 1px}.public-hero{padding:18px 16px 17px}.public-hero-main{grid-template-columns:94px minmax(0,1fr);gap:12px}.public-avatar{width:94px;height:94px}.public-identity h1{font-size:27px}.public-rating-card,.public-week-card{padding:15px 12px;min-height:158px}.public-rating-card strong,.public-week-card>strong{font-size:39px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 30px minmax(85px,.65fr);padding:15px 13px}.public-earnings-copy strong{font-size:30px}.public-achievement{grid-template-columns:26px 25px 1fr;padding:10px 8px}.public-achievement span{font-size:11px}.public-achievement strong{font-size:21px}}
       `}</style>
     </main>
   );
