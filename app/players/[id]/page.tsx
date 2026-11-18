@@ -184,17 +184,7 @@ export default function PublicPlayerProfile() {
   if (!player) return <main className="shell redesign-shell"><SiteNavigation /><div className="public-empty"><h1>Player not found</h1><Link href="/players">← All players</Link></div></main>;
 
   const weeklyChampions = champions.length;
-  const opponents = Array.from(new Map(matches.map((match) => {
-    const isOne = match.player_one_id === id;
-    return [isOne ? match.player_two_id : match.player_one_id, (isOne ? match.two : match.one)?.[0] || null] as const;
-  }).filter((entry) => Boolean(entry[1])).map(([opponentKey, opponent]) => [opponentKey, opponent])).entries());
-  const selectedOpponent = opponents.find(([opponentKey]) => opponentKey === opponentId) || opponents[0];
-  const headToHead = selectedOpponent ? matches.filter((match) =>
-    (match.player_one_id === id ? match.player_two_id : match.player_one_id) === selectedOpponent[0]
-  ) : [];
-  const headToHeadWins = headToHead.filter((match) => match.winner_id === id).length;
-  const headToHeadLosses = headToHead.length - headToHeadWins;
-  const latestMeeting = headToHead.length ? headToHead[headToHead.length - 1] : null;
+
   return (
     <main className="shell redesign-shell public-player-page">
       <SiteNavigation />
