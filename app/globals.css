@@ -979,3 +979,24 @@
 .record-picker-list strong{color:#c8f169}
 .record-picker-empty{padding:18px 0;color:#9aa69f}
 @media(max-width:560px){.record-match-shell{padding:14px!important}.record-player-slot{min-height:112px}.record-picker-sheet{max-height:86dvh}}
+
+
+/* Match record wager panel — screenshot-matched expandable card */
+.record-wager-card{margin:18px 0 16px;border:1px solid #c5ed68;border-radius:20px;background:linear-gradient(145deg,#11291a,#0c1710);overflow:hidden;color:#f0f4ed}
+.record-wager-toggle{width:100%;min-height:72px;padding:14px 16px;border:0;background:transparent;color:inherit;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left}
+.record-wager-toggle>span{display:grid;gap:5px}.record-wager-toggle b{font-size:15px}.record-wager-toggle small{font-size:11px;color:#aab7aa}
+.record-wager-toggle i{width:58px;height:34px;flex:none;padding:4px;border-radius:30px;background:#354238;display:flex;align-items:center;justify-content:flex-start;transition:background .15s}
+.record-wager-toggle i em{width:26px;height:26px;border-radius:50%;background:#f1f3eb;display:block;transition:transform .15s}
+.record-wager-toggle i.on{background:#c5f36a;justify-content:flex-end}.record-wager-toggle i.on em{background:#11190f}
+.record-wager-content{padding:0 16px 16px;border-top:1px solid #ffffff16}
+.record-wager-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0 12px}
+.record-wager-fields label{display:grid;gap:7px;color:#9eada0;font-size:11px}
+.record-wager-fields input{width:100%;min-width:0;height:54px;padding:0 12px;border:1px solid #c5f36a;border-radius:13px;background:#080f0b;color:#f4f6ee;font-size:21px;font-weight:850}
+.record-wager-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.record-wager-presets button{min-height:43px;border:1px solid #334638;border-radius:30px;background:#111b14;color:#dfe6dc;font-size:11px}
+.record-wager-presets button.selected{border-color:#c5f36a;background:#c5f36a;color:#10170e;font-weight:850}
+.record-wager-custom{margin:10px 0;color:#89988d;font-size:10px}
+.record-wager-pot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:13px;border-radius:12px;background:#080f0b}
+.record-wager-pot span{font-size:12px;color:#aeb9ae}.record-wager-pot strong{font:900 23px monospace;color:#f0d34d}
+.record-wager-result{display:flex;justify-content:space-between;gap:10px;padding:12px 0 0;color:#c5f36a;font-size:12px}.record-wager-result b{font:850 15px monospace}
+@media(max-width:420px){.record-wager-fields{gap:7px}.record-wager-fields input{font-size:18px;padding:0 9px}.record-wager-presets{grid-template-columns:repeat(2,1fr)}}
