@@ -48,8 +48,10 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
     setTemplates(rows);
     setAudit((auditRows||[]) as Audit[]);
     setPickCounts(Object.fromEntries(rows.map(row=>[row.template_key,Number(row.current_pick_count||0)])));
+    const initiallyExpanded=rows.find(row=>row.template_key==="most_wins")||rows[0];
+    if(initiallyExpanded&&!expanded){setExpanded(initiallyExpanded.template_key);setDraft({...initiallyExpanded,points_ladder:[...(initiallyExpanded.points_ladder||[])]});}
     setLoading(false);
-  },[setNotice]);
+  },[setNotice,expanded]);
 
   useEffect(()=>{load();},[load]);
 
@@ -153,7 +155,7 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
       @media(max-width:520px){.pq-root{padding-left:0;padding-right:0}.pq-head h2{font-size:22px}.pq-two{grid-template-columns:1fr 1fr}.pq-step{grid-template-columns:.8fr 1fr .8fr 28px;gap:4px}}
     `}</style>
     <div className="pq-head"><button className="pq-back" type="button" onClick={onBack}>←</button><div><div className="pq-kicker">ADMIN DESK</div><h2>Prediction questions</h2></div></div>
-    <div className="pq-summary"><span className="pq-dot"/><div className="pq-summary-copy"><b>Weekly prediction templates</b><small>Changes apply from next week unless you choose otherwise.</small></div><strong>{totalPicks} picks this week</strong></div>
+    <div className="pq-summary"><span className="pq-dot"/><div className="pq-summary-copy"><b>Weekly prediction templates</b><small>Changes apply from next week unless you choose otherwise.</small></div><strong>{totalPicks} picks recorded</strong></div>
     <button className="pq-add" type="button" onClick={()=>{setShowAdd(v=>!v);setDraft(null);setExpanded(null);}}>＋ Add question</button>
     <p className="pq-note">Questions repeat automatically every week. Each saved change is recorded in the audit history.</p>
     {loading?<p className="pq-empty">Loading prediction questions…</p>:templates.map(row=><article className={"pq-card"+(expanded===row.template_key?" is-expanded":"")} key={row.template_key}>
