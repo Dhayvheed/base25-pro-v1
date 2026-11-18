@@ -369,7 +369,7 @@ export default function Admin() {
         <div className="admin-v2-recent">
           {matches.length===0?<p className="admin-v2-empty">No matches recorded yet.</p>:matches.slice(0,3).map(match=><div className="admin-v2-match" key={match.id}>
             <span className="admin-v2-win">W</span><div className="admin-v2-match-copy"><strong>{playerName(match.winner_id)} beat {playerName(match.winner_id===match.player_one_id?match.player_two_id:match.player_one_id)}</strong><small>{new Date(match.played_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · {match.player_one_score} – {match.player_two_score}</small></div>
-            <button type="button" aria-label="Edit match result" onClick={()=>startEditMatch(match)}>✎</button>
+            <button type="button" aria-label="Edit match result" onClick={()=>{startEditMatch(match);setActiveSection("matches");}}>✎</button>
           </div>)}
         </div>
         <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
