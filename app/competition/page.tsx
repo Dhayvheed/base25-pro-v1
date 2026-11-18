@@ -240,7 +240,7 @@ export default function CompetitionPage() {
                     <span className={"competition-ref-rank rank-" + rank} style={{width:34,height:34,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#3264cf":rank===3?"#d84838":rank===4?"#354b3e":"#354b3e",color:"#fff",fontSize:16,fontWeight:900,lineHeight:1,flexShrink:0}}><b>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
                     <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
-                      <strong style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:17,fontWeight:800,color:"#f4f5f2"}}>{player.username}</strong>
+                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"anywhere",lineHeight:1.2,fontSize:17,fontWeight:800,color:"#f4f5f2"}}>{player.username}</strong>
                       <small style={{display:"block",font:"12px 'DM Mono',monospace",letterSpacing:".08em",color:"#9aa69f"}}>{player.player_code}</small>
                     </span>
                     <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:14,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
