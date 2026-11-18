@@ -16,7 +16,8 @@ function MenuIcon({ name }: { name: string }) {
     target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="1" /></>,
     help: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.7c-1.1 1.1-1.9 1.4-1.9 3M12 17h.01" /></>,
     file: <><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h7M9 16h7" /></>,
-    user: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></>
+    user: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></>,
+    logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" /></>
   };
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">{paths[name] || paths.target}</svg>;
 }
@@ -79,8 +80,8 @@ export default function SiteNavigation() {
       const allRows = allTimeBoard || [];
       const weekRows = weeklyBoard || [];
       const allRank = allRows.findIndex((row: any) => row.id === profile.id) + 1;
-      const weeklyPlayer = weekRows.find((row: any) => row.id === profile.id);
-      setPlayerSummary({ ...profile, photo_url: allRows.find((row: any) => row.id === profile.id)?.photo_url || null, globalRank: allRank || null, weeklyElo: weeklyPlayer?.elo_rating ?? null });
+      const weeklyRank = weekRows.findIndex((row: any) => row.id === profile.id) + 1;\n      const weeklyPlayer = weekRows.find((row: any) => row.id === profile.id);
+      setPlayerSummary({ ...profile, photo_url: allRows.find((row: any) => row.id === profile.id)?.photo_url || null, globalRank: allRank || null, weeklyRank: weeklyRank || null, weeklyElo: weeklyPlayer?.elo_rating ?? null });
     };
     supabase.auth.getSession().then(({ data }) => loadAccount(data.session?.user ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -148,7 +149,7 @@ export default function SiteNavigation() {
               <span className="menu-v2-avatar">{playerSummary?.photo_url ? <img src={playerSummary.photo_url} alt="" /> : (playerSummary?.username || accountName || "P").charAt(0).toUpperCase()}</span>
               <div className="menu-v2-account-copy">
                 <strong>{playerSummary?.username || playerSummary?.full_name || accountName || "Player"} {playerSummary && <span className="menu-v2-verified" aria-label="Competitive player">✓</span>}</strong>
-                <p>{playerSummary?.player_code || "BASE25 PRO member"}{playerSummary?.globalRank ? " · Global rank #" + playerSummary.globalRank : ""}</p>
+                <p>{playerSummary?.player_code || "BASE25 PRO member"}{playerSummary?.globalRank ? " · Global rank #" + playerSummary.globalRank : ""}{playerSummary?.weeklyRank ? " · Weekly rank #" + playerSummary.weeklyRank : ""}</p>
               </div>
             </div>
             {playerSummary ? <div className="menu-v2-rating-grid"><div><strong>{Number(playerSummary.elo_rating || 1000).toLocaleString("en-NG")}</strong><span>All-time</span></div><div><strong>{playerSummary.weeklyElo === null ? "—" : Number(playerSummary.weeklyElo).toLocaleString("en-NG")}</strong><span>Weekly</span></div></div> : <p className="menu-v2-no-player">Your BASE25 PRO player profile.</p>}
@@ -185,7 +186,7 @@ export default function SiteNavigation() {
         </nav>
       </div>
       <div className="menu-v2-footer">
-        {signedIn && authReady && <button type="button" className="menu-v2-logout" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>{signingOut ? "Signing out…" : "↪  Log out"}</button>}
+        {signedIn && authReady && <button type="button" className="menu-v2-logout" onClick={handleSignOut} disabled={signingOut} tabIndex={open ? 0 : -1}>{signingOut ? "Signing out…" : <><MenuIcon name="logout" /> <span>Log out</span></>}</button>}
         <Link className="menu-v2-admin" href="/admin" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>Admin / staff access <span>→</span></Link>
         <div className="menu-v2-tagline">COMPETITION · PERFORMANCE · LEGACY</div>
       </div>
