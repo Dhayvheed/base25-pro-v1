@@ -27,7 +27,7 @@ export default function PredictionsPage(){
  const [userId,setUserId]=useState<string|null>(null),[profile,setProfile]=useState<PredictionProfile|null>(null);
  const [questions,setQuestions]=useState<Question[]>([]),[entries,setEntries]=useState<Entry[]>([]),[leaders,setLeaders]=useState<Leader[]>([]),[confirmedTop5,setConfirmedTop5]=useState<string[]>([]),[top5Ready,setTop5Ready]=useState(false);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[isAdmin,setIsAdmin]=useState(false),[eligible,setEligible]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
- const [nickname,setNickname]=useState(""),[selected,setSelected]=useState<Record<string,string>>({});
+ const [nickname,setNickname]=useState(""),[redeemPoints,setRedeemPoints]=useState("1000"),[selected,setSelected]=useState<Record<string,string>>({});
  const [adminTitle,setAdminTitle]=useState(""),[adminDescription,setAdminDescription]=useState(""),[adminCategory,setAdminCategory]=useState("Weekly"),[adminOptions,setAdminOptions]=useState("Yes\nNo"),[adminLock,setAdminLock]=useState(""),[adminPoints,setAdminPoints]=useState("100");
  const [settleChoices,setSettleChoices]=useState<Record<string,string>>({});
 
