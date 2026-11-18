@@ -2,6 +2,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
@@ -53,7 +54,7 @@ export default function Admin() {
   const [championWeek, setChampionWeek] = useState("");
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory">("overview");
+  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions">("overview");
 
   async function refreshStaff() {
     if (!supabase) return;
@@ -373,6 +374,7 @@ export default function Admin() {
         </div>
         <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
         <h2 className="admin-v2-manage-title">Manage</h2>
+        {staffRole==="owner"&&<button type="button" className="admin-v2-manage" style={{width:"100%",marginTop:10}} onClick={()=>setActiveSection("predictions")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3"/><path d="m17 15 2 2 3-4"/></svg></span><div><b>Prediction questions</b><small>Manage weekly questions, points and schedules</small></div><i>›</i></button>
         <div className="admin-v2-manage">
           <button type="button" onClick={()=>setActiveSection("matches")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg></span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2.2"/><path d="M5.8 16c.7-1.8 2-2.7 3.2-2.7s2.5.9 3.2 2.7M15 9h3M15 13h3"/></svg></span><div><b>Manage profiles</b><small>Photos, names and bios</small></div><i>›</i></button>}
@@ -380,6 +382,8 @@ export default function Admin() {
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("staff")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5.5c0 4.6-3.2 7.7-8 9.5-4.8-1.8-8-4.9-8-9.5V6l8-3Z"/><rect x="9" y="10.5" width="6" height="5" rx="1"/><path d="M10.5 10.5V9a1.5 1.5 0 0 1 3 0v1.5"/></svg></span><div><b>Staff management</b><small>Owner only</small></div><i>›</i></button>}
         </div>
       </section>}
+
+      {activeSection==="predictions"&&staffRole==="owner"&&<PredictionQuestionsAdmin onBack={()=>setActiveSection("overview")} setNotice={setMessage}/>}
 
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
