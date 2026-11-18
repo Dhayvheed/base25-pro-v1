@@ -300,9 +300,10 @@ export default function CompetitionPage() {
         .competition-ref-winner-note>span{color:#e8c547;font-size:23px}
         .competition-ref-winner-note p{margin:0;color:#d5dad6;font-size:11px;line-height:1.5}
         .competition-ref-winner-note strong{color:#e8c547}
-        .competition-ref-tabs{display:flex;gap:3px;margin-top:15px;padding:4px;border:1px solid #1f2a24;border-radius:14px;background:#101512}
-        .competition-ref-tabs a{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;color:#d5dad6;font-size:14px;font-weight:800;text-align:center}
-        .competition-ref-tabs a svg{flex:none}
+        .competition-ref-tabs{display:flex;gap:4px;margin:16px 20px 0;padding:4px;height:52px;box-sizing:border-box;border:1px solid #1f2a24;border-radius:16px;background:#101512}
+        .competition-ref-tabs a{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;color:#d5dad6;font-size:14px;font-weight:600;text-align:center;line-height:1.15}
+        .competition-ref-tabs a:first-child{flex:1.2;font-weight:700}
+        .competition-ref-tabs a svg{width:18px;height:18px;flex:none}
         .competition-ref-tabs a.active{background:#c8f169;color:#0a0e0c}
         .competition-ref-leaderboard{margin-top:12px;padding:14px 11px 13px;border:1px solid #24402f;border-radius:19px;background:linear-gradient(180deg,#112018,#0e1511)}
         .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 8px}
