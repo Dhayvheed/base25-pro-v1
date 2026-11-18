@@ -355,17 +355,7 @@ export default function Admin() {
           </section>
         </div>
       )}
-      <div className="eyebrow">CONTROL ROOM · {staffRole.toUpperCase()}</div><h1>Admin desk<span>.</span></h1>
-      <nav className="admin-workspace-nav" aria-label="Admin sections">
-        <button type="button" className={activeSection==="overview"?"active":""} onClick={()=>setActiveSection("overview")}><span>⌂</span>Overview</button>
-        {staffRole==="owner"&&<button type="button" className={activeSection==="register"?"active":""} onClick={()=>setActiveSection("register")}><span>＋</span>Register player</button>}
-        <button type="button" className={activeSection==="match"?"active":""} onClick={()=>setActiveSection("match")}><span>▣</span>Record match</button>
-        {staffRole==="owner"&&<button type="button" className={activeSection==="champion"?"active":""} onClick={()=>setActiveSection("champion")}><span>♛</span>Saturday Champion</button>}
-        {staffRole==="owner"&&<button type="button" className={activeSection==="staff"?"active":""} onClick={()=>setActiveSection("staff")}><span>♙</span>Staff management</button>}
-        {staffRole==="owner"&&<button type="button" className={activeSection==="players"?"active":""} onClick={()=>setActiveSection("players")}><span>◎</span>Manage profiles</button>}
-        {staffRole==="owner"&&<button type="button" className={activeSection==="matches"?"active":""} onClick={()=>setActiveSection("matches")}><span>◷</span>Manage matches</button>}
-        <button type="button" className={activeSection==="directory"?"active":""} onClick={()=>setActiveSection("directory")}><span>☷</span>Player directory</button>
-      </nav>
+      {activeSection!=="overview"&&<button type="button" className="admin-v2-back" onClick={()=>setActiveSection("overview")}>← Admin desk</button>}
       {activeSection==="overview"&&<section className="admin-v2-overview">
         <div className="admin-v2-heading"><div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1><p>Signed in as {session?.user?.email?.split("@")[0] || "staff"}</p></div>
         <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
