@@ -171,7 +171,7 @@ export default function SiteNavigation() {
               </div>
             </div>
             {playerSummary ? <div className="menu-v2-rating-grid"><div><strong>{Number(playerSummary.elo_rating || 1000).toLocaleString("en-NG")}</strong><span>All-time</span></div><div><strong>{playerSummary.weeklyElo === null ? "—" : Number(playerSummary.weeklyElo).toLocaleString("en-NG")}</strong><span>Weekly</span></div></div> : <p className="menu-v2-no-player">No BASE25 player profile is linked to this login yet.</p>}
-            <Link className="menu-v2-profile-link" href="/account" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>Public profile <span>→</span></Link>
+            <Link className="menu-v2-profile-link" href="/account" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>View profile <span>→</span></Link>
           </section>
         ) : (
           <section className="menu-v2-account">
