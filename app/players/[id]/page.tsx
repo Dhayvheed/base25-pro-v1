@@ -12,8 +12,14 @@ type MatchRow = {
   player_one_id: string;
   player_two_id: string;
   winner_id: string;
+  player_one_score: number;
+  player_two_score: number;
+  player_one_elo_before: number | null;
+  player_two_elo_before: number | null;
   player_one_elo_after: number | null;
   player_two_elo_after: number | null;
+  one?: { username: string; player_code: string } | null;
+  two?: { username: string; player_code: string } | null;
 };
 
 type ChampionRow = { id: string; week_start: string; prize_amount: number };
@@ -29,6 +35,8 @@ export default function PublicPlayerProfile() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("10");
   const [activePoint, setActivePoint] = useState<number | null>(null);
+  const [showMatchup, setShowMatchup] = useState(false);
+  const [opponentId, setOpponentId] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -48,7 +56,7 @@ export default function PublicPlayerProfile() {
         supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating", { ascending: false }),
         supabase.rpc("get_period_leaderboard", { p_period: "this_week" }),
         supabase.from("matches")
-          .select("id,played_at,player_one_id,player_two_id,winner_id,player_one_elo_after,player_two_elo_after")
+          .select("id,played_at,player_one_id,player_two_id,winner_id,player_one_score,player_two_score,player_one_elo_before,player_two_elo_before,player_one_elo_after,player_two_elo_after,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)")
           .or(`player_one_id.eq.${id},player_two_id.eq.${id}`)
           .order("played_at", { ascending: true }),
         supabase.from("weekly_champions").select("id,week_start,prize_amount")
@@ -101,6 +109,17 @@ export default function PublicPlayerProfile() {
   if (!player) return <main className="shell redesign-shell"><SiteNavigation /><div className="public-empty"><h1>Player not found</h1><Link href="/players">← All players</Link></div></main>;
 
   const weeklyChampions = champions.length;
+  const opponents = Array.from(new Map(matches.map((match) => {
+    const isOne = match.player_one_id === id;
+    return [isOne ? match.player_two_id : match.player_one_id, isOne ? match.two : match.one] as const;
+  }).filter((entry) => Boolean(entry[1])).map(([opponentKey, opponent]) => [opponentKey, opponent])).entries());
+  const selectedOpponent = opponents.find(([opponentKey]) => opponentKey === opponentId) || opponents[0];
+  const headToHead = selectedOpponent ? matches.filter((match) =>
+    (match.player_one_id === id ? match.player_two_id : match.player_one_id) === selectedOpponent[0]
+  ) : [];
+  const headToHeadWins = headToHead.filter((match) => match.winner_id === id).length;
+  const headToHeadLosses = headToHead.length - headToHeadWins;
+  const latestMeeting = headToHead.length ? headToHead[headToHead.length - 1] : null;
   return (
     <main className="shell redesign-shell public-player-page">
       <SiteNavigation />
@@ -119,8 +138,23 @@ export default function PublicPlayerProfile() {
             </div>
             <div className="public-global-rank"><span>♛</span><strong>#{rank || "—"}</strong><small>GLOBAL RANK</small></div>
           </div>
-          <div className="public-hero-bottom"><span>COMPETE. IMPROVE. CLIMB.</span><span>PLAYER SINCE {new Date(player.created_at || Date.now()).getFullYear()}</span></div>
+          <div className="public-hero-bottom"><span>PUBLIC VIEW · WHAT OTHER PLAYERS SEE</span><span>BASE25 PRO</span></div>
+          <div className="public-profile-actions">
+            <div className="public-rank-pill"><span>♛</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div>
+            <button type="button" className="public-share-button" onClick={share}>Share</button>
+          </div>
+          <button type="button" className="public-matchup-toggle" onClick={() => setShowMatchup((value) => !value)}>⌁ &nbsp; Matchup calculator</button>
         </header>
+
+        {showMatchup && <section className="public-matchup-card">
+          <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Matchup calculator</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
+          {opponents.length ? <>
+            <select aria-label="Choose opponent" value={selectedOpponent?.[0] || ""} onChange={(event) => setOpponentId(event.target.value)}>
+              {opponents.map(([opponentKey, opponent]) => <option key={opponentKey} value={opponentKey}>@{opponent?.username}</option>)}
+            </select>
+            <div className="public-matchup-score"><div><small>YOU VS {selectedOpponent?.[1]?.username?.toUpperCase()}</small><strong>{headToHeadWins} – {headToHeadLosses}</strong><span>{latestMeeting ? "Last met " + new Date(latestMeeting.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (selectedOpponent?.[1]?.player_code || "") : "No previous meeting"}</span></div><div><small>MEETINGS</small><strong>{headToHead.length}</strong></div></div>
+          </> : <p className="public-chart-note">No recorded opponents yet.</p>}
+        </section>}
 
         <section className="public-rating-grid">
           <div className="public-rating-card">
@@ -151,10 +185,17 @@ export default function PublicPlayerProfile() {
           </div>
         </section>
 
+        <section className="public-wager-card">
+          <div className="public-wager-head"><div className="public-card-label">WAGER EARNINGS</div><span>AT BASE25</span></div>
+          <strong>Wager records</strong>
+          <p>Player-versus-player wager winnings and losses will appear here when wager tracking is enabled.</p>
+        </section>
+
         <section className="public-record-grid">
-          <div><small>MATCHES PLAYED</small><strong>{player.matches_played ?? 0}</strong></div>
-          <div><small>WINS</small><strong>{player.wins ?? 0}</strong></div>
-          <div><small>WIN RATE</small><strong>{Number(player.win_percentage ?? 0).toFixed(1)}%</strong></div>
+          <div><strong>{player.wins ?? 0}</strong><small>Wins</small></div>
+          <div><strong>{player.losses ?? 0}</strong><small>Losses</small></div>
+          <div><strong>{Number(player.win_percentage ?? 0).toFixed(1)}%</strong><small>Win rate</small></div>
+          <div><strong>{player.matches_played ?? matches.length}</strong><small>Matches</small></div>
         </section>
 
         <section className="public-section">
@@ -187,10 +228,33 @@ export default function PublicPlayerProfile() {
           <div className="public-chart-note">Your rating changes as recorded matches are completed.</div>
         </section>
 
+        <section className="public-section public-recent-section">
+          <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Recent matches</h2></div><Link href="/matches">View all →</Link></div>
+          {matches.length ? <div className="public-match-list">{[...matches].reverse().slice(0, 8).map((match) => {
+            const isOne = match.player_one_id === id;
+            const opponent = isOne ? match.two : match.one;
+            const won = match.winner_id === id;
+            const before = Number(isOne ? match.player_one_elo_before : match.player_two_elo_before);
+            const after = Number(isOne ? match.player_one_elo_after : match.player_two_elo_after);
+            const delta = Number.isFinite(before) && Number.isFinite(after) ? after - before : 0;
+            return <Link href={"/matches/" + match.id} key={match.id} className="public-match-row">
+              <b className={won ? "public-result-win" : "public-result-loss"}>{won ? "W" : "L"}</b>
+              <span className="public-match-opponent"><strong>vs {opponent?.username || "Opponent"}</strong><small>{opponent?.player_code || "BASE25"} · {new Date(match.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</small></span>
+              <span className="public-match-score">{isOne ? match.player_one_score : match.player_two_score} – {isOne ? match.player_two_score : match.player_one_score}<small className={delta >= 0 ? "public-delta-up" : "public-delta-down"}>{delta > 0 ? "+" : ""}{delta} ELO</small></span>
+            </Link>;
+          })}</div> : <p className="public-chart-note">No recorded matches yet.</p>}
+        </section>
         <footer className="public-profile-footer"><span>BASE25 PRO</span><span>THE TABLE REMEMBERS.</span><Link href="/players">Explore players →</Link></footer>
       </div>
       <style jsx>{`
         .public-profile{width:100%;max-width:780px;margin:22px auto 110px;min-width:0;color:#f3f5ef}
+        .public-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;margin-top:8px}
+        .public-rank-pill{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #354a32;border-radius:13px;background:#0b150e}.public-rank-pill span{font-size:19px;color:#e8cb36}.public-rank-pill b{font:900 18px monospace;color:#e8cb36}.public-rank-pill small{font:700 8px monospace;letter-spacing:.1em;color:#8f9c88}
+        .public-share-button{border:1px solid #b9f52d;border-radius:13px;background:#0b150e;color:#c5f36a;font-weight:800;font-size:13px;cursor:pointer}
+        .public-matchup-toggle{position:relative;z-index:1;width:100%;margin-top:10px;padding:14px;border:1px solid #b9f52d;border-radius:13px;background:#c5f36a;color:#10180d;font-weight:900;font-size:14px;cursor:pointer}
+        .public-matchup-card{margin:14px 0;padding:17px;border:1px solid #355b3b;border-radius:16px;background:#0d1b12}.public-matchup-card select{width:100%;padding:10px;border-radius:9px;background:#101b13;color:#f2f6ed;border:1px solid #435b43}.public-matchup-score{display:flex;justify-content:space-between;gap:14px;margin-top:16px}.public-matchup-score>div{display:grid;gap:5px}.public-matchup-score small{font:700 9px monospace;letter-spacing:.12em;color:#b9f36b}.public-matchup-score strong{font:900 28px monospace}.public-matchup-score span{font-size:11px;color:#9aa796}.public-close{border:0;background:transparent;color:#c5f36a;font-size:22px}
+        .public-wager-card{margin:14px 0;padding:17px 19px;border:1px solid #355d3e;border-radius:16px;background:linear-gradient(120deg,#11291a,#0b160f)}.public-wager-head{display:flex;align-items:center;justify-content:space-between}.public-wager-head>span{font:700 9px monospace;color:#c5f36a;border:1px solid #386542;border-radius:20px;padding:5px 9px}.public-wager-card>strong{display:block;margin:14px 0 5px;font-size:22px;color:#d0f77b}.public-wager-card p{margin:0;color:#a7b4a1;font-size:11px;line-height:1.5}
+        .public-recent-section{margin-top:15px}.public-recent-section .public-section-heading>a{color:#c5f36a;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}.public-match-list{display:grid}.public-match-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:11px;padding:13px 0;border-top:1px solid #ffffff14;text-decoration:none;color:#f3f5ef}.public-result-win,.public-result-loss{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;font:900 13px monospace}.public-result-win{background:#c5f36a;color:#14200f}.public-result-loss{background:#552d31;color:#ffb2b2}.public-match-opponent{display:grid;gap:4px;min-width:0}.public-match-opponent strong{font-size:13px}.public-match-opponent small{font:9px monospace;color:#82907f}.public-match-score{text-align:right;font:800 15px monospace}.public-match-score small{display:block;font:700 10px monospace;margin-top:4px}.public-delta-up{color:#c5f36a}.public-delta-down{color:#f29a9a}
         .public-hero{position:relative;overflow:hidden;padding:22px 24px 17px;border:1px solid #3c5934;border-radius:20px;background:radial-gradient(ellipse at 78% 5%,#526b2b 0%,#1a321e 27%,transparent 62%),linear-gradient(145deg,#102117,#07100b 75%);box-shadow:inset 0 0 55px #a9e83b0b}
         .public-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#050a0740,transparent 45%,#050a0780);pointer-events:none}
         .public-hero-top,.public-hero-main,.public-hero-bottom{position:relative;z-index:1}
@@ -219,7 +283,7 @@ export default function PublicPlayerProfile() {
         .public-chart{position:relative;display:grid;grid-template-columns:42px 1fr;gap:5px;min-height:170px}.public-chart-labels{display:flex;flex-direction:column;justify-content:space-between;padding:0 0 8px;font:9px monospace;color:#839080}.public-chart svg{width:100%;height:170px;overflow:visible}.public-chart-detail{display:flex;justify-content:space-between;padding:10px 12px;border:1px solid #3b5631;border-radius:9px;background:#101d13;color:#aab7a4;font-size:11px}.public-chart-detail b{color:#c5f36a;font-family:monospace}.public-chart-note{margin-top:8px;color:#778574;font-size:10px}
         .public-profile-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding:14px 3px;color:#72806e;font:700 9px monospace;letter-spacing:.1em}.public-profile-footer a{color:#c5f36a;text-decoration:none}
         .public-loading,.public-empty{max-width:780px;margin:60px auto;color:#dce5d6}.public-empty h1{margin-bottom:15px}
-        @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr) 72px;gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{min-height:78px}.public-global-rank span{font-size:20px}.public-global-rank strong{font-size:25px}.public-global-rank small{font-size:7px}.public-hero-bottom{font-size:7px}.public-share{padding:8px 10px}.public-share span{display:none}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-chart{grid-template-columns:32px 1fr}}
+        @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr) 72px;gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{min-height:78px}.public-global-rank span{font-size:20px}.public-global-rank strong{font-size:25px}.public-global-rank small{font-size:7px}.public-hero-bottom{font-size:7px}.public-share{padding:8px 10px}.public-share span{display:none}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
       `}</style>
     </main>
   );
