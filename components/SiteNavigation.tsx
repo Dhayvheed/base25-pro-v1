@@ -4,12 +4,29 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+function MenuIcon({ name }: { name: string }) {
+  const paths: Record<string, React.ReactNode> = {
+    home: <><path d="m3 10 9-7 9 7v10H3z" /></>,
+    trophy: <><path d="M8 21h8M12 17v4M7 4h10v7a5 5 0 0 1-10 0V4Z" /><path d="M7 6H3v3a4 4 0 0 0 4 4M17 6h4v3a4 4 0 0 1-4 4" /></>,
+    chart: <><path d="M5 20V11M12 20V4M19 20v-7" /></>,
+    history: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
+    crown: <><path d="m2 7 5 4 5-7 5 7 5-4-2 13H4L2 7Z" /></>,
+    players: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8a4 4 0 0 1-3 3.87M20 21v-2a4 4 0 0 0-3-3.87" /></>,
+    target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="1" /></>,
+    help: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.7c-1.1 1.1-1.9 1.4-1.9 3M12 17h.01" /></>,
+    file: <><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h7M9 16h7" /></>,
+    user: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></>
+  };
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">{paths[name] || paths.target}</svg>;
+}
+
 const competitionLinks = [
-  { href: "/competition", label: "Competition Home", icon: "♜" },
-  { href: "/leaderboard", label: "Leaderboard", icon: "▥" },
-  { href: "/matches", label: "Match History", icon: "⚒" },
-  { href: "/weekly-archive", label: "Weekly Archive", icon: "▦" },
-  { href: "/hall-of-fame", label: "Hall of Fame", icon: "♛" },
+  { href: "/competition", label: "Competition home", icon: "trophy" },
+  { href: "/leaderboard", label: "Leaderboard", icon: "chart" },
+  { href: "/matches", label: "Match history", icon: "history" },
+  { href: "/weekly-archive", label: "Weekly archive", icon: "calendar" },
+  { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
 ];
 
 export default function SiteNavigation() {
@@ -115,7 +132,7 @@ export default function SiteNavigation() {
           </section>
         ) : (
           <section className="menu-v2-account">
-            <span className="menu-v2-avatar">♙</span>
+            <span className="menu-v2-avatar"><MenuIcon name="user" /></span>
             <div className="menu-v2-account-copy"><strong>Welcome, player</strong><p>Log in to see your rank and rating.</p></div>
             <Link className="menu-v2-login" href="/login" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>Player Login <span>→</span></Link>
             <Link className="menu-v2-register" href="/register" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>New here? <b>Create account</b></Link>
@@ -123,24 +140,24 @@ export default function SiteNavigation() {
         )}
         <div className="menu-v2-section-label">MENU</div>
         <nav className="menu-v2-nav" aria-label="Menu">
-          <Link className={pathname === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>⌂</span>Home</Link>
+          <Link className={pathname === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="home" /></span>Home</Link>
           <button className={"menu-v2-competition-toggle" + (pathname.startsWith("/competition") || competitionLinks.some(x => pathname === x.href) ? " active" : "")} type="button" aria-expanded={competitionOpen} onClick={() => setCompetitionOpen(value => !value)} tabIndex={open ? 0 : -1}>
-            <span>♜</span>Competition<i className={competitionOpen ? "is-open" : ""}>⌄</i>
+            <span><MenuIcon name="trophy" /></span>Competition<i className={competitionOpen ? "is-open" : ""}>⌄</i>
           </button>
           {competitionOpen && <div className="menu-v2-subnav" aria-label="Competition pages">
-            <Link className={pathname === "/competition" ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♜</span>Competition Home</Link>
-            <Link className={pathname === "/leaderboard" ? "active" : ""} href="/leaderboard" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▥</span>Leaderboard</Link>
-            <Link className={pathname === "/matches" ? "active" : ""} href="/matches" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>⚒</span>Match History</Link>
-            <Link className={pathname === "/weekly-archive" ? "active" : ""} href="/weekly-archive" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▦</span>Weekly Archive</Link>
-            <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♛</span>Hall of Fame</Link>
+            <Link className={pathname === "/competition" ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="trophy" /></span>Competition home</Link>
+            <Link className={pathname === "/leaderboard" ? "active" : ""} href="/leaderboard" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="chart" /></span>Leaderboard</Link>
+            <Link className={pathname === "/matches" ? "active" : ""} href="/matches" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="history" /></span>Match history</Link>
+            <Link className={pathname === "/weekly-archive" ? "active" : ""} href="/weekly-archive" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="calendar" /></span>Weekly archive</Link>
+            <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="crown" /></span>Hall of Fame</Link>
           </div>}
-          <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>♧</span>Players</Link>
-          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>◎</span>Predictions League</Link>
+          <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="players" /></span>Players</Link>
+          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Predictions League</Link>
         </nav>
         <div className="menu-v2-section-label menu-v2-about-label">ABOUT</div>
         <nav className="menu-v2-nav" aria-label="About BASE25">
-          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>ⓘ</span>How It Works</Link>
-          <Link className={pathname.includes("rules") ? "active" : ""} href="/how-it-works#rules" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span>▤</span>Rules &amp; Format</Link>
+          <Link className={pathname === "/how-it-works" ? "active" : ""} href="/how-it-works" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="help" /></span>How It Works</Link>
+          <Link className={pathname.includes("rules") ? "active" : ""} href="/how-it-works#rules" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="file" /></span>Rules &amp; Format</Link>
         </nav>
       </div>
       <div className="menu-v2-footer">
