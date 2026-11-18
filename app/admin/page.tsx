@@ -478,12 +478,15 @@ export default function Admin() {
                 <i className={wagerEnabled?"on":""}><em/></i>
               </button>
               {wagerEnabled&&<div className="record-wager-content">
-                <div className="record-wager-fields">
-                  <label>{playerName(one)||"Player one"} stakes<input type="number" min="2000" max="1000000" step="500" value={wagerOneStake} onChange={e=>{setWagerOneStake(e.target.value);setWagerCustom(true);}} disabled={!one}/></label>
-                  <label>{playerName(two)||"Player two"} stakes<input type="number" min="2000" max="1000000" step="500" value={wagerTwoStake} onChange={e=>{setWagerTwoStake(e.target.value);setWagerCustom(true);}} disabled={!two}/></label>
-                </div>
-                <div className="record-wager-presets">{[2000,5000].map(amount=><button type="button" key={amount} className={!wagerCustom&&Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));setWagerCustom(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={wagerCustom?"selected":""} onClick={()=>setWagerCustom(true)}>Custom</button></div>
-                <div className="record-wager-custom">Enter a custom amount in either stake field. Minimum ₦2,000 per player.</div>
+                {!wagerCustom ? <div className="record-wager-selected-stakes">
+                  <div><span>{playerName(one)||"Player one"} stake</span><b>₦{Number(wagerOneStake||0).toLocaleString("en-NG")}</b></div>
+                  <div><span>{playerName(two)||"Player two"} stake</span><b>₦{Number(wagerTwoStake||0).toLocaleString("en-NG")}</b></div>
+                </div> : <div className="record-wager-fields">
+                  <label>{playerName(one)||"Player one"} custom stake<input type="number" inputMode="numeric" min="2000" max="1000000" step="1" placeholder="Enter amount (₦)" value={wagerOneStake} onChange={e=>setWagerOneStake(e.target.value)} /></label>
+                  <label>{playerName(two)||"Player two"} custom stake<input type="number" inputMode="numeric" min="2000" max="1000000" step="1" placeholder="Enter amount (₦)" value={wagerTwoStake} onChange={e=>setWagerTwoStake(e.target.value)} /></label>
+                </div>}
+                <div className="record-wager-presets">{[2000,5000].map(amount=><button type="button" key={amount} className={!wagerCustom&&Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));setWagerCustom(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={wagerCustom?"selected":""} onClick={()=>{setWagerCustom(true);setWagerOneStake("");setWagerTwoStake("");}}>Custom amount</button></div>
+                {wagerCustom&&<div className="record-wager-custom">Enter each player's stake above. Minimum ₦2,000 per player.</div>}
                 <div className="record-wager-pot"><span>Total pot · winner takes all</span><strong>₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</strong></div>
                 {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-wager-result"><span>{playerName(rackWins.one>rackWins.two?one:two)} wins</span><b>+₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</b></div>}
               </div>}
