@@ -32,6 +32,7 @@ export default function PublicPlayerProfile() {
   const [weeklyElo, setWeeklyElo] = useState<number | null>(null);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [champions, setChampions] = useState<ChampionRow[]>([]);
+  const [wagerWinnings, setWagerWinnings] = useState(0);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("10");
   const [activePoint, setActivePoint] = useState<number | null>(null);
@@ -55,7 +56,8 @@ export default function PublicPlayerProfile() {
         { data: weekBoard },
         { data: games },
         { data: wins },
-        { data: archiveRows }
+        { data: archiveRows },
+        { data: wagerTotal }
       ] = await Promise.all([
         supabase.from("player_public_leaderboard")
           .select("id,username,player_code,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage")
@@ -69,7 +71,8 @@ export default function PublicPlayerProfile() {
         supabase.from("weekly_champions").select("id,week_start,prize_amount")
           .eq("player_id", id).order("week_start", { ascending: false }),
         supabase.from("weekly_leaderboard_archive_entries")
-          .select("rank,weekly_elo").eq("player_id", id)
+          .select("rank,weekly_elo").eq("player_id", id),
+        supabase.rpc("get_player_wager_winnings", { p_player_id: id })
       ]);
       if (!active) return;
       setPlayer(profile || null);
@@ -79,6 +82,7 @@ export default function PublicPlayerProfile() {
       setWeeklyElo(weekly.find((p: any) => p.id === id)?.elo_rating ?? null);
       setMatches((games || []) as MatchRow[]);
       setChampions((wins || []) as ChampionRow[]);
+      setWagerWinnings(Number(wagerTotal || 0));
       setLoading(false);
       if (!profile) return;
       void archiveRows;
@@ -283,8 +287,8 @@ export default function PublicPlayerProfile() {
 
         <section className="public-wager-card">
           <div className="public-wager-head"><div className="public-card-label">WAGER WINNINGS</div><span>AT BASE25</span></div>
-          <strong>Winnings will appear here</strong>
-          <p>Only confirmed wager winnings are public. Money lost stays private unless the player chooses to share it.</p>
+          <strong>+₦{wagerWinnings.toLocaleString("en-NG")}</strong>
+          <p>Confirmed player-versus-player wager winnings. Lost stakes are private by default.</p>
         </section>
 
         <section className="public-record-grid">
