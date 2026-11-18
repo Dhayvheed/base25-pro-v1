@@ -40,18 +40,15 @@ export default function PredictionQuestionsAdmin({ onBack, setNotice }: { onBack
     if(!supabase)return;
     setLoading(true);
     const [{data,error},{data:auditRows}] = await Promise.all([
-      supabase.from("prediction_question_templates").select("*").order("sort_order"),
+      supabase.rpc("admin_list_prediction_templates"),
       supabase.rpc("admin_list_prediction_question_audit")
     ]);
     if(error){setNotice("Could not load prediction templates: "+error.message);setLoading(false);return;}
     const rows=(data||[]) as Template[];
     setTemplates(rows);
     setAudit((auditRows||[]) as Audit[]);
-    const currentStart = (()=>{const now=new Date();const lagos=new Date(now.toLocaleString("en-US",{timeZone:"Africa/Lagos"}));const day=lagos.getDay();lagos.setDate(lagos.getDate()-((day+1)%7));return `${lagos.getFullYear()}-${String(lagos.getMonth()+1).padStart(2,"0")}-${String(lagos.getDate()).padStart(2,"0")}`;})();
-    const {data:questions}=await supabase.from("prediction_questions").select("id,template_key").eq("week_start",currentStart);
-    const counts:Record<string,number>={};
-    for(const q of questions||[]){const {count}=await supabase.from("prediction_entries").select("id",{count:"exact",head:true}).eq("question_id",q.id);counts[q.template_key||""]=(counts[q.template_key||""]||0)+(count||0);}
-    setPickCounts(counts);setLoading(false);
+    setPickCounts(Object.fromEntries(rows.map(row=>[row.template_key,Number(row.current_pick_count||0)])));
+    setLoading(false);
   },[setNotice]);
 
   useEffect(()=>{load();},[load]);
