@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null };
+type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
@@ -32,10 +32,11 @@ export default function Admin() {
   const [playerTwoSearch, setPlayerTwoSearch] = useState("");
   const [playerOnePickerOpen, setPlayerOnePickerOpen] = useState(false);
   const [playerTwoPickerOpen, setPlayerTwoPickerOpen] = useState(false);
+  const [playerPickerTarget, setPlayerPickerTarget] = useState<"one" | "two" | null>(null);
   const [venue, setVenue] = useState("BASE25");
   const [matchFormat, setMatchFormat] = useState<"single" | "best_of_3">("single");
   const [racks, setRacks] = useState<Rack[]>([
-    { winnerId: "", loserBalls: "0" },
+    { winnerId: "", loserBalls: "3" },
     { winnerId: "", loserBalls: "0" },
     { winnerId: "", loserBalls: "0" },
   ]);
@@ -282,16 +283,14 @@ export default function Admin() {
     if (error) {
       setMessage(`Match was not published: ${error.message}`);
     } else {
-      setMatchConfirmation({
-        playerOne: playerName(one),
-        playerTwo: playerName(two),
-        scoreOne: rackWins.one,
-        scoreTwo: rackWins.two,
-      });
-      setMessage("");
-      setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
+      setMatchConfirmation(null);
+      setMessage("Match recorded successfully. ELO ratings recalculated. Ready for the next match.");
+      setRacks([{ winnerId: "", loserBalls: "3" }, { winnerId: "", loserBalls: "3" }, { winnerId: "", loserBalls: "3" }]);
       setOne(""); setTwo("");
-      await refreshMatches();
+      setPlayerOneSearch(""); setPlayerTwoSearch("");
+      setPlayerOnePickerOpen(false); setPlayerTwoPickerOpen(false); setPlayerPickerTarget(null);
+      setActiveSection("match");
+      await Promise.all([refreshMatches(), refresh()]);
     }
     setBusy(false);
   }
@@ -394,74 +393,53 @@ export default function Admin() {
           </form>
         </section>
 
-        <section className="admin-card" style={{display:activeSection==="match"?"block":"none"}}>
-          <h2>Record match</h2>
-          <p className="eyebrow">OFFICIAL RANKED FORMAT · ONE RACK</p>
-          <form className="form" onSubmit={addMatch}>
-            <label>Player one
-              <div className="player-picker">
-                <input type="text" autoComplete="off" placeholder="Search or select player one..." value={playerOneSearch} onFocus={() => setPlayerOnePickerOpen(true)} onChange={(e) => { setPlayerOneSearch(e.target.value); setOne(""); setPlayerOnePickerOpen(true); }} />
-                {playerOnePickerOpen && <div className="player-picker-options">
-                  {playerOneOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setOne(player.id); setPlayerOneSearch(playerLabel(player)); setPlayerOnePickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
-                  {playerOneOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
-                </div>}
-              </div>
-            </label>
-            <label>Player two
-              <div className="player-picker">
-                <input type="text" autoComplete="off" placeholder="Search or select player two..." value={playerTwoSearch} onFocus={() => setPlayerTwoPickerOpen(true)} onChange={(e) => { setPlayerTwoSearch(e.target.value); setTwo(""); setPlayerTwoPickerOpen(true); }} />
-                {playerTwoPickerOpen && <div className="player-picker-options">
-                  {playerTwoOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setTwo(player.id); setPlayerTwoSearch(playerLabel(player)); setPlayerTwoPickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
-                  {playerTwoOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
-                </div>}
-              </div>
-            </label>
-            <label>Match format<select value={matchFormat} onChange={(e) => { setMatchFormat(e.target.value as "single" | "best_of_3"); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}><option value="single">Ranked match · One rack</option><option value="best_of_3">Special match · Best of 3</option></select></label>
-            <label>Venue / table<input value={venue} onChange={(e) => setVenue(e.target.value)} /></label>
-
-            {(matchFormat === "single" ? [0] : [0, 1]).map((index) => (
-              <div className="admin-card" key={index}>
-                <h3>Rack {index + 1}</h3>
-                <label>Rack winner
-                  <select required value={racks[index].winnerId} onChange={(e) => updateRack(index, "winnerId", e.target.value)}>
-                    <option value="">Select rack winner</option>
-                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
-                  </select>
-                </label>
-                <label>Balls left on table by losing player
-                  <input type="number" min="0" step="1" required value={racks[index].loserBalls} onChange={(e) => updateRack(index, "loserBalls", e.target.value)} />
-                </label>
-                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
-              </div>
-            ))}
-
-            {thirdRackNeeded && (
-              <div className="admin-card">
-                <h3>Rack 3 · Decider</h3>
-                <p className="eyebrow">The first two racks are tied 1–1. This rack decides the match.</p>
-                <label>Rack winner
-                  <select required value={racks[2].winnerId} onChange={(e) => updateRack(2, "winnerId", e.target.value)}>
-                    <option value="">Select rack winner</option>
-                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{player.full_name}</option>)}
-                  </select>
-                </label>
-                <label>Balls left on table by losing player
-                  <input type="number" min="0" step="1" required value={racks[2].loserBalls} onChange={(e) => updateRack(2, "loserBalls", e.target.value)} />
-                </label>
-                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
-              </div>
-            )}
-
-            <div className="admin-card">
-              <h3>Match score</h3>
-              <div className="two-fields"><p>{playerName(one)}<br /><strong>{rackWins.one}</strong></p><p>{playerName(two)}<br /><strong>{rackWins.two}</strong></p></div>
-              <p className="eyebrow">{matchFormat === "single" ? (rackWins.one === 1 ? `Match winner: ${playerName(one)}` : rackWins.two === 1 ? `Match winner: ${playerName(two)}` : "Complete the rack") : rackWins.one === 2 ? `Match winner: ${playerName(one)}` : rackWins.two === 2 ? `Match winner: ${playerName(two)}` : thirdRackNeeded ? "Decider required" : "Complete rack 1 and rack 2"}</p>
+        <section className="admin-card record-match-shell" style={{display:activeSection==="match"?"block":"none"}}>
+          <form className="record-match-form" onSubmit={addMatch}>
+            <div className="record-match-header"><button type="button" className="record-back" onClick={()=>setActiveSection("overview")} aria-label="Back">←</button><h2>Record match</h2><span /></div>
+            <div className="record-format-switch" role="group" aria-label="Match format">
+              <button type="button" className={matchFormat==="single"?"selected":""} onClick={()=>{setMatchFormat("single");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>One rack</button>
+              <button type="button" className={matchFormat==="best_of_3"?"selected":""} onClick={()=>{setMatchFormat("best_of_3");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>Best of 3</button>
             </div>
-            <button disabled={busy || !one || !two || one === two || !racks[0].winnerId || (matchFormat === "best_of_3" && !racks[1].winnerId) || (thirdRackNeeded && !racks[2].winnerId) || (matchFormat === "single" ? (rackWins.one !== 1 && rackWins.two !== 1) : (rackWins.one !== 2 && rackWins.two !== 2))}>
-              {busy ? "Saving match..." : "Save match"}
-            </button>
+            {matchFormat==="single"?<p className="record-format-note">Default format</p>:<p className="record-format-note">First to win 2 racks takes the match</p>}
+            <div className="record-step-label">1. Who played?</div>
+            <div className="record-player-pair">
+              {(["one","two"] as const).map((slot,index)=>{
+                const id=slot==="one"?one:two, player=players.find(p=>p.id===id);
+                return <div className="record-player-slot-wrap" key={slot}>
+                  <button type="button" className={"record-player-slot"+(player?" filled":"")+(playerPickerTarget===slot?" active":"")} onClick={()=>{setPlayerPickerTarget(slot);setPlayerOnePickerOpen(slot==="one");setPlayerTwoPickerOpen(slot==="two");}}>
+                    {player?<><span className="record-player-avatar" style={player.photo_url?{backgroundImage:`url(${player.photo_url})`}:{}}>{player.photo_url?"":player.full_name.slice(0,1).toUpperCase()}</span><b>{player.full_name}</b><small>{Number(player.elo_rating||1000).toLocaleString()} rating</small><em>Change</em></>:<><span className="record-add-circle">＋</span><b>Player {slot==="one"?"one":"two"}</b><em>Tap to choose</em></>}
+                  </button>
+                  {index===0&&<span className="record-versus">vs</span>}
+                </div>;
+              })}
+            </div>
+            <p className="record-player-hint">{!one?"Tap a card to choose each player.":!two?"Now choose player two.":"Both players set. Next, choose the winner."}</p>
+            <div className={"record-step-section"+(!one||!two?" is-dimmed":"")}>
+              {matchFormat==="single"?<>
+                <div className="record-step-label">2. Who won the rack?</div>
+                <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>updateRack(0,"winnerId",player.id)}>{racks[0].winnerId===player.id?"✓ ":""}{player.full_name}</button>)}</div>
+                <div className="record-step-label record-balls-label">3. Balls left on the table ({playerName(racks[0].winnerId&&racks[0].winnerId===one?two:one)})</div>
+                <div className="record-stepper"><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)<=0} onClick={()=>updateRack(0,"loserBalls",String(Math.max(0,Number(racks[0].loserBalls)-1)))}>−</button><strong>{racks[0].loserBalls}</strong><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)>=7} onClick={()=>updateRack(0,"loserBalls",String(Math.min(7,Number(racks[0].loserBalls)+1)))}>＋</button></div>
+              </>:<>
+                <div className="record-step-label">2. Rack results</div>
+                <div className="record-scoreboard"><div><small>{playerName(one)}</small><strong>{rackWins.one}</strong></div><span>–</span><div><small>{playerName(two)}</small><strong>{rackWins.two}</strong></div></div>
+                {Array.from({length:thirdRackNeeded?3:2},(_,index)=>index).map(index=>{
+                  const rack=racks[index], loser=rack.winnerId?(rack.winnerId===one?two:one):"";
+                  return <div className="record-rack-card" key={index}>
+                    <div className="record-rack-title"><b>Rack {index+1}</b>{index===2&&<small>DECIDING RACK</small>}</div>
+                    <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}{player.full_name}</button>)}</div>
+                    <div className="record-rack-balls"><span>Balls left ({playerName(loser)})</span><div className="record-stepper"><button type="button" disabled={!one||!two||Number(rack.loserBalls)<=0} onClick={()=>updateRack(index,"loserBalls",String(Math.max(0,Number(rack.loserBalls)-1)))}>−</button><strong>{rack.loserBalls}</strong><button type="button" disabled={!one||!two||Number(rack.loserBalls)>=7} onClick={()=>updateRack(index,"loserBalls",String(Math.min(7,Number(rack.loserBalls)+1)))}>＋</button></div></div>
+                  </div>;
+                })}
+                <p className="record-rack-hint">Rack 3 only appears when the score is tied 1–1. If one player wins the first two racks, the match ends 2–0.</p>
+              </>}
+            </div>
+            {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-result-card"><small>Result</small><div className="record-result-heading"><b>{playerName(rackWins.one>rackWins.two?one:two)} beats {playerName(rackWins.one>rackWins.two?two:one)}</b><strong>{rackWins.one}–{rackWins.two}</strong></div><div className="record-estimates"><div><small>{playerName(one)}</small><b>{rackWins.one>rackWins.two?"+ rating":"− rating"}</b></div><div><small>{playerName(two)}</small><b>{rackWins.two>rackWins.one?"+ rating":"− rating"}</b></div></div><p>Estimated rating change. Final values are calculated when you save.</p></div>}
+            <div className="record-footer-venue"><span>Ranked · BASE25 table</span><button type="button" onClick={()=>setVenue(venue==="BASE25"?"BASE25 Table 2":"BASE25")}>Change</button></div>
+            <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":"✓  Save match"}</button>
+            <button type="button" className="record-cancel-button" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
-        </section>
+        </section>>
       </div>
 
       {staffRole === "owner" && <>
