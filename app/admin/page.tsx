@@ -375,10 +375,10 @@ export default function Admin() {
         <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
         <h2 className="admin-v2-manage-title">Manage</h2>
         <div className="admin-v2-manage">
-          <button type="button" onClick={()=>setActiveSection("matches")}><span>☷</span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
-          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span>▣</span><div><b>Manage profiles</b><small>Photos, names and bios</small></div><i>›</i></button>}
-          <button type="button" onClick={()=>setActiveSection("directory")}><span>♧</span><div><b>Player directory</b><small>All {players.length} registered players</small></div><i>›</i></button>
-          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("staff")}><span>♙</span><div><b>Staff management</b><small>Owner only</small></div><i>›</i></button>}
+          <button type="button" onClick={()=>setActiveSection("matches")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg></span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2.2"/><path d="M5.8 16c.7-1.8 2-2.7 3.2-2.7s2.5.9 3.2 2.7M15 9h3M15 13h3"/></svg></span><div><b>Manage profiles</b><small>Photos, names and bios</small></div><i>›</i></button>}
+          <button type="button" onClick={()=>setActiveSection("directory")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3.1 2.5-4.8 5.5-4.8s5 1.7 5.5 4.8M16 5.5a3 3 0 0 1 0 5.8M17 14.5c2.1.6 3.3 2.1 3.6 4.5"/></svg></span><div><b>Player directory</b><small>All {players.length} registered players</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("staff")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5.5c0 4.6-3.2 7.7-8 9.5-4.8-1.8-8-4.9-8-9.5V6l8-3Z"/><rect x="9" y="10.5" width="6" height="5" rx="1"/><path d="M10.5 10.5V9a1.5 1.5 0 0 1 3 0v1.5"/></svg></span><div><b>Staff management</b><small>Owner only</small></div><i>›</i></button>}
         </div>
       </section>}
 
