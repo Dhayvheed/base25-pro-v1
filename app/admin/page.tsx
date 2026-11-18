@@ -40,6 +40,7 @@ export default function Admin() {
   const [wagerEnabled, setWagerEnabled] = useState(false);
   const [wagerOneStake, setWagerOneStake] = useState("2000");
   const [wagerTwoStake, setWagerTwoStake] = useState("2000");
+  const [wagerCustom, setWagerCustom] = useState(false);
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
     { winnerId: "", loserBalls: "0" },
@@ -298,8 +299,8 @@ export default function Admin() {
     }
     if (wagerEnabled) {
       const stakeOne = Number(wagerOneStake), stakeTwo = Number(wagerTwoStake);
-      if (!Number.isInteger(stakeOne) || !Number.isInteger(stakeTwo) || stakeOne <= 0 || stakeTwo <= 0 || stakeOne > 1000000 || stakeTwo > 1000000) {
-        setMessage("Enter valid wager stakes between ₦1 and ₦1,000,000 for both players.");
+      if (!Number.isInteger(stakeOne) || !Number.isInteger(stakeTwo) || stakeOne < 2000 || stakeTwo < 2000 || stakeOne > 1000000 || stakeTwo > 1000000) {
+        setMessage("The minimum wager is ₦2,000 per player. Maximum is ₦1,000,000.");
         return;
       }
     }
@@ -318,7 +319,7 @@ export default function Admin() {
       setMatchConfirmation(null);
       setMessage("Match recorded successfully. ELO ratings recalculated. Ready for the next match.");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
-      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000");
+      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000"); setWagerCustom(false);
       setOne(""); setTwo("");
       setPlayerOneSearch(""); setPlayerTwoSearch("");
       setPlayerOnePickerOpen(false); setPlayerTwoPickerOpen(false); setPlayerPickerTarget(null);
@@ -478,11 +479,11 @@ export default function Admin() {
               </button>
               {wagerEnabled&&<div className="record-wager-content">
                 <div className="record-wager-fields">
-                  <label>{playerName(one)||"Player one"} stakes<input type="number" min="1" max="1000000" step="1" value={wagerOneStake} onChange={e=>setWagerOneStake(e.target.value)} disabled={!one}/></label>
-                  <label>{playerName(two)||"Player two"} stakes<input type="number" min="1" max="1000000" step="1" value={wagerTwoStake} onChange={e=>setWagerTwoStake(e.target.value)} disabled={!two}/></label>
+                  <label>{playerName(one)||"Player one"} stakes<input type="number" min="2000" max="1000000" step="500" value={wagerOneStake} onChange={e=>{setWagerOneStake(e.target.value);setWagerCustom(true);}} disabled={!one}/></label>
+                  <label>{playerName(two)||"Player two"} stakes<input type="number" min="2000" max="1000000" step="500" value={wagerTwoStake} onChange={e=>{setWagerTwoStake(e.target.value);setWagerCustom(true);}} disabled={!two}/></label>
                 </div>
-                <div className="record-wager-presets">{[500,1000,2000,5000].map(amount=><button type="button" key={amount} className={Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));}}>₦{amount.toLocaleString("en-NG")}</button>)}</div>
-                <div className="record-wager-custom">Custom stakes can be entered separately above.</div>
+                <div className="record-wager-presets">{[2000,5000].map(amount=><button type="button" key={amount} className={!wagerCustom&&Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));setWagerCustom(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={wagerCustom?"selected":""} onClick={()=>setWagerCustom(true)}>Custom</button></div>
+                <div className="record-wager-custom">Enter a custom amount in either stake field. Minimum ₦2,000 per player.</div>
                 <div className="record-wager-pot"><span>Total pot · winner takes all</span><strong>₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</strong></div>
                 {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-wager-result"><span>{playerName(rackWins.one>rackWins.two?one:two)} wins</span><b>+₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</b></div>}
               </div>}
