@@ -50,9 +50,9 @@ function getCountdown(target: Date, now: Date): Countdown {
 
 function Avatar({ player, rank }: { player: WeeklyPlayer; rank: number }) {
   return (
-    <span className="competition-ref-avatar" style={{width:42,height:42,flex:"0 0 42px",display:"grid",placeItems:"center",position:"relative",overflow:"visible",border:"3px solid #c8f169",borderRadius:"50%",background:"#17251b",color:"#c8f169",fontSize:20,fontWeight:900,lineHeight:1}}>
+    <span className="competition-ref-avatar" style={{width:34,height:34,flex:"0 0 34px",display:"grid",placeItems:"center",position:"relative",overflow:"visible",border:"2px solid #c8f169",borderRadius:"50%",background:"#17251b",color:"#c8f169",fontSize:14,fontWeight:900,lineHeight:1}}>
       {player.photo_url ? <img src={player.photo_url} alt="" style={{width:"100%",height:"100%",borderRadius:"50%",objectFit:"cover"}} /> : player.username?.[0]?.toUpperCase() || "?"}
-      {rank === 1 && <i aria-label="Weekly leader" style={{position:"absolute",right:-7,top:-8,color:"#e8c547",fontSize:16,fontStyle:"normal"}}>♛</i>}
+      {rank === 1 && <i aria-label="Weekly leader" style={{position:"absolute",right:-7,top:-8,color:"#e8c547",fontSize:14,fontStyle:"normal"}}>♛</i>}
     </span>
   );
 }
@@ -220,7 +220,7 @@ export default function CompetitionPage() {
           <div className="competition-ref-leaderboard-heading">
             <h2>This week's leaderboard</h2>
           </div>
-          <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 92px 92px",alignItems:"center",gap:10,padding:"8px 12px 12px 112px",color:"#9aa69f",font:"11px 'DM Mono',monospace",letterSpacing:".14em"}}>
+          <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
             <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
           </div>
 
@@ -236,15 +236,15 @@ export default function CompetitionPage() {
                 const rank = index + 1;
                 return (
                   <Link href={"/players/" + player.id} className={"competition-ref-player-row " + (rank === 1 ? "is-leader" : "")} key={player.id}
-                    style={{display:"grid",gridTemplateColumns:"34px 42px minmax(0,1fr) 92px 92px",alignItems:"center",columnGap:10,minHeight:76,padding:"10px 12px",border:rank===1?"1.5px solid #9cbd55":"1px solid transparent",borderBottomColor:rank===1?"#9cbd55":"#26352b",borderRadius:rank===1?18:0,background:rank===1?"linear-gradient(90deg,rgba(200,241,105,.20),rgba(200,241,105,.05))":"transparent",color:"#f4f5f2",textDecoration:"none",width:"100%",boxSizing:"border-box"}}>
-                    <span className={"competition-ref-rank rank-" + rank} style={{width:34,height:34,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#3264cf":rank===3?"#d84838":rank===4?"#354b3e":"#354b3e",color:"#fff",fontSize:16,fontWeight:900,lineHeight:1,flexShrink:0}}><b>{rank}</b></span>
+                    style={{display:"grid",gridTemplateColumns:"26px 34px minmax(0,1fr) 48px 46px",alignItems:"center",columnGap:10,minHeight:56,padding:"0 10px",border:rank===1?"1px solid rgba(200,241,105,.55)":"1px solid transparent",borderBottomColor:rank===1?"rgba(200,241,105,.55)":"#1f2a24",borderRadius:rank===1?14:14,background:rank===1?"linear-gradient(90deg,rgba(200,241,105,.18),rgba(200,241,105,.04))":"transparent",color:"#f4f5f2",textDecoration:"none",width:"100%",boxSizing:"border-box"}}>
+                    <span className={"competition-ref-rank rank-" + rank} style={{width:26,height:26,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#2f5fd0":rank===3?"#d9402f":rank===4?"#7b3fa0":"#e8782a",color:"#111",fontSize:10,fontWeight:900,lineHeight:1,flexShrink:0,boxShadow:"inset -2px -2px 4px rgba(0,0,0,.35)"}}><b style={{width:16,height:16,borderRadius:"50%",background:"#fff",display:"grid",placeItems:"center",color:"#111"}}>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
                     <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
-                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"anywhere",lineHeight:1.2,fontSize:17,fontWeight:800,color:"#f4f5f2"}}>{player.username}</strong>
-                      <small style={{display:"block",font:"12px 'DM Mono',monospace",letterSpacing:".08em",color:"#9aa69f"}}>{player.player_code}</small>
+                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username}</strong>
+                      <small style={{display:"block",font:"10px 'JetBrains Mono',monospace",letterSpacing:"0",color:"#9aa69f"}}>{player.player_code}</small>
                     </span>
-                    <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:14,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
-                    <strong className="competition-ref-rating" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:20,fontWeight:900,color:"#c8f169",fontVariantNumeric:"tabular-nums"}}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
+                    <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:12,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
+                    <strong className="competition-ref-rating" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:17,fontWeight:800,color:"#c8f169",fontVariantNumeric:"tabular-nums"}}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
                   </Link>
                 );
               })}
