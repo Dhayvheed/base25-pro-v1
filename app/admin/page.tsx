@@ -37,8 +37,8 @@ export default function Admin() {
   const [matchFormat, setMatchFormat] = useState<"single" | "best_of_3">("single");
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "3" },
-    { winnerId: "", loserBalls: "0" },
-    { winnerId: "", loserBalls: "0" },
+    { winnerId: "", loserBalls: "3" },
+    { winnerId: "", loserBalls: "3" },
   ]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
