@@ -59,6 +59,7 @@ function Avatar({ player, rank }: { player: WeeklyPlayer; rank: number }) {
 
 export default function CompetitionPage() {
   const [players, setPlayers] = useState<WeeklyPlayer[]>([]);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [kingsPot, setKingsPot] = useState<KingsPot | null>(null);
   const [potIncreaseKey, setPotIncreaseKey] = useState(0);
   const previousPotAmount = useRef<number | null>(null);
@@ -129,7 +130,7 @@ export default function CompetitionPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const topFive = useMemo(() => players.slice(0, 5), [players]);
+  const visiblePlayers = useMemo(() => showAllPlayers ? players : players.slice(0, 5), [players, showAllPlayers]);
   const potAmount = kingsPot ? Math.max(0, Number(kingsPot.pot_amount || 0)) : null;
   const nextMilestone = potAmount === null ? 3000 : (Math.floor(potAmount / 3000) + 1) * 3000;
   const progress = potAmount === null ? 0 : Math.min(100, (potAmount / nextMilestone) * 100);
@@ -221,11 +222,11 @@ export default function CompetitionPage() {
             <p className="competition-ref-empty">Loading weekly standings…</p>
           ) : error ? (
             <p className="competition-ref-empty">{error}</p>
-          ) : topFive.length === 0 ? (
+          ) : players.length === 0 ? (
             <p className="competition-ref-empty">No qualifying matches recorded this week yet. Be the first to enter the rankings.</p>
           ) : (
             <div className="competition-ref-rows">
-              {topFive.map((player, index) => {
+              {visiblePlayers.map((player, index) => {
                 const rank = index + 1;
                 return (
                   <Link href={"/players/" + player.id} className={"competition-ref-player-row " + (rank === 1 ? "is-leader" : "")} key={player.id}
@@ -244,7 +245,7 @@ export default function CompetitionPage() {
             </div>
           )}
 
-          <Link href="/leaderboard" className="competition-ref-full-link" style={{minHeight:66,display:"flex",alignItems:"center",justifyContent:"center",gap:12,margin:"18px 4px 0",padding:"12px 16px",border:0,borderRadius:18,background:"#c8f169",color:"#0a0e0c",fontSize:20,fontWeight:900,textAlign:"center"}}>View full leaderboard <span style={{fontSize:24}}>→</span></Link>
+          <button type="button" onClick={() => setShowAllPlayers((current) => !current)} aria-expanded={showAllPlayers} className="competition-ref-full-link" style={{width:"calc(100% - 8px)",minHeight:66,display:"flex",alignItems:"center",justifyContent:"center",gap:12,margin:"18px 4px 0",padding:"12px 16px",border:0,borderRadius:18,background:"#c8f169",color:"#0a0e0c",fontSize:20,fontWeight:900,textAlign:"center",cursor:"pointer"}}>{showAllPlayers ? "Show less" : "View full leaderboard"} <span style={{fontSize:24}}>{showAllPlayers ? "↑" : "→"}</span></button>
         </section>
       </div>
 
