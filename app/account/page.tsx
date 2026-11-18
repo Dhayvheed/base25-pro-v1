@@ -11,8 +11,15 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
- useEffect(()=>{async function load(){
+ useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){window.location.replace("/login");return;}
+  const {data:mine,error:mineError}=await supabase.rpc("get_my_base25_player_profile");
+  const own=Array.isArray(mine)?mine[0]:mine;
+  if(mineError||!own?.id){setLoading(false);return;}
+  const playerId=own.id as string;
+  setId(playerId);
   const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",playerId).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${playerId},player_two_id.eq.${playerId}`).order("played_at",{ascending:false}),
@@ -21,17 +28,18 @@ export default function PlayerProfile(){
    supabase.from("weekly_leaderboard_archive_entries").select("rank,weekly_elo,matches_played,wins,losses,win_percentage,archive:weekly_leaderboard_archives(week_start,week_end)").eq("player_id",playerId).order("rank",{ascending:true}),
    supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount").eq("player_id",playerId).order("week_start",{ascending:false})
   ]);
-  setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===id)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===id)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
-  const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===id)+1);
+  if(!active)return;
+  setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
+  const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===playerId)+1);
   if(rows.length){const {data:rackRows,error:rackError}=await supabase.from("match_racks").select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").in("match_id",rows.map((m:any)=>m.id)).order("rack_number",{ascending:true});
    if(rackError)console.error("Could not load rack details:",rackError);
    const grouped:Record<string,Rack[]>={};(rackRows||[]).forEach((rack:Rack)=>{if(!grouped[rack.match_id])grouped[rack.match_id]=[];grouped[rack.match_id].push(rack)});setRacksByMatch(grouped);
   }
   setLoading(false);
- }load();},[id]);
+ }load();return()=>{active=false;};},[]);
  const progression=useMemo(()=>{
   const ordered=[...matches].reverse();
-  const values=ordered.map((m:any)=>m.player_one_id===playerId?Number(m.player_one_elo_after):Number(m.player_two_elo_after)).filter(Number.isFinite);
+  const values=ordered.map((m:any)=>m.player_one_id===id?Number(m.player_one_elo_after):Number(m.player_two_elo_after)).filter(Number.isFinite);
   const selected=range==="all"?values:values.slice(-Number(range));
   if(!selected.length)return [Number(player?.elo_rating??1000),Number(player?.elo_rating??1000)];
   return selected;
@@ -43,7 +51,7 @@ export default function PlayerProfile(){
  if(loading)return <main className="shell">Loading player...</main>;
  if(!player)return <main className="shell redesign-shell"><Link href="/">← Leaderboard</Link><h1>Player not found</h1></main>;
  const elo=Number(player.elo_rating)||1000;
- if(!privateView){
+ if(false){
   const sharePublic=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L\\nWin rate: ${player.win_percentage??0}%`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.href});else await navigator.clipboard.writeText(text);};
   return <main className="shell redesign-shell player-profile-page"><SiteNavigation/><section className="auth-wrap account-wrap"><div className="eyebrow">BASE25 PRO / PLAYER CARD</div><div className="auth-card account-card"><div className="account-head"><div><div className="eyebrow">PUBLIC PLAYER PROFILE</div><h2>{player.full_name||player.username}</h2><p className="muted">@{player.username} · {player.player_code}</p></div><strong>{elo.toLocaleString()}<small>ELO</small></strong></div><div className="account-stats"><div><small>MATCHES</small><b>{player.matches_played??0}</b></div><div><small>WINS</small><b>{player.wins??0}</b></div><div><small>LOSSES</small><b>{player.losses??0}</b></div><div><small>WIN RATE</small><b>{Number(player.win_percentage||0).toFixed(1)}%</b></div><div><small>GLOBAL RANK</small><b>#{rank||"—"}</b></div></div><div className="two-fields"><button type="button" className="secondary" onClick={sharePublic}>Share profile</button><Link className="account-action" href="/login">Player login</Link></div></div></section></main>;
  }
