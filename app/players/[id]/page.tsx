@@ -42,6 +42,8 @@ export default function PublicPlayerProfile() {
   const [viewerMatchCount, setViewerMatchCount] = useState(0);
   const [targetMatchCount, setTargetMatchCount] = useState(0);
   const [matchupReady, setMatchupReady] = useState(false);
+  const [matchupFormat, setMatchupFormat] = useState<"One rack" | "Best of 3">("One rack");
+  const [matchupCalculated, setMatchupCalculated] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -107,6 +109,13 @@ export default function PublicPlayerProfile() {
   const targetWinExpected = viewer ? 1 - matchupExpected : 0;
   const targetWinPoints = viewer ? Math.round(matchupK * (1 - targetWinExpected)) : 0;
   const matchupRatingGap = viewer ? Number(viewer.elo_rating || 0) - elo : 0;
+  const mutualMatches = viewer ? matches.filter((match) =>
+    (match.player_one_id === viewer.id && match.player_two_id === id) ||
+    (match.player_two_id === viewer.id && match.player_one_id === id)
+  ) : [];
+  const mutualWins = viewer ? mutualMatches.filter((match) => match.winner_id === viewer.id).length : 0;
+  const mutualLosses = mutualMatches.length - mutualWins;
+  const lastMutualMatch = mutualMatches.length ? mutualMatches[mutualMatches.length - 1] : null;
   const progression = useMemo(() => {
     const values = matches.map((m) => Number(m.player_one_id === id ? m.player_one_elo_after : m.player_two_elo_after)).filter(Number.isFinite);
     const selected = range === "all" ? values : values.slice(-Number(range));
@@ -171,7 +180,10 @@ export default function PublicPlayerProfile() {
     setMatchupLoading(false);
   };
 
-  const openMatchup = () => { void loadMutualMatchup(true); };
+  const openMatchup = () => {
+    setMatchupCalculated(false);
+    void loadMutualMatchup(true);
+  };
 
   const share = async () => {
     if (!player) return;
@@ -199,23 +211,41 @@ export default function PublicPlayerProfile() {
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
 
-        {viewer && matchupReady && <div className="public-rating-gap-strip">
-          <span>YOUR RATING GAP AGAINST {player.username?.toUpperCase()}</span><strong>{matchupRatingGap > 0 ? "+" : ""}{matchupRatingGap}</strong>
-        </div>}
-
-        {showMatchup && <section className="public-matchup-card">
-          {matchupLoading ? <p className="public-chart-note">Calculating your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer && matchupReady ? <div className="mc-result public-auto-odds">
-            <div className="public-section-heading"><div><small>YOUR MATCHUP</small><h2>{viewer.username} vs {player.username}</h2></div><button type="button" className="public-close" onClick={() => setShowMatchup(false)}>×</button></div>
-            <div className="mc-result-label">Win chance</div>
-            <div className="mc-prob-head"><div><b>{viewer.username}</b><strong>{matchupWinChance}%</strong></div><div><b>{player.username}</b><strong>{matchupLossChance}%</strong></div></div>
-            <div className="mc-bar"><i style={{width: matchupWinChance + "%"}} /></div>
-            <p className="mc-fav">{matchupWinChance >= matchupLossChance ? viewer.username : player.username} is the slight favourite.</p>
-            <div className="mc-result-label mc-stake-title">Rating points at stake</div>
-            <div className="mc-stakes"><div><small>If {viewer.username} wins</small><b>+{matchupWinPoints} points</b><em>{player.username} −{matchupWinPoints}</em></div><div><small>If {player.username} wins</small><b>+{targetWinPoints} points</b><em>{viewer.username} −{targetWinPoints}</em></div></div>
-            <p className="mc-foot">Based on current ratings. Beating a higher-rated player earns more points, so upsets pay more.</p>
-            <p className="mc-disclaimer">Estimate uses BASE25's current K-factor ({matchupK}). Actual match ratings also include rack-margin bonuses, so the final change may differ. This calculator does not save a match or change ratings.</p>
-          </div> : null}
+        {viewer && matchupReady && <section className="public-mutual-card">
+          <div className="public-mutual-title">YOU VS {player.username?.toUpperCase()}</div>
+          <div className="public-mutual-body">
+            <div className="public-mutual-record"><strong>{mutualWins} – {mutualLosses}</strong><span>{lastMutualMatch ? "Last met " + new Date(lastMutualMatch.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (viewer.id === lastMutualMatch.player_one_id ? (lastMutualMatch.two?.[0]?.player_code || "") : (lastMutualMatch.one?.[0]?.player_code || "")) : "No previous meeting"}</span></div>
+            <div className="public-mutual-gap"><small>RATING GAP</small><strong>{matchupRatingGap > 0 ? "+" : ""}{matchupRatingGap}</strong></div>
+          </div>
         </section>}
+
+        {showMatchup && <div className="public-calculator-overlay" role="dialog" aria-modal="true" aria-label="Matchup calculator">
+          <section className="public-calculator-modal">
+            <div className="public-calculator-header"><button type="button" onClick={() => setShowMatchup(false)} aria-label="Close calculator">←</button><div><h2>Matchup calculator</h2><p>See the odds before you play</p></div></div>
+            {matchupLoading ? <p className="public-chart-note">Loading your matchup…</p> : matchupError ? <div className="public-login-prompt"><strong>Login required</strong><p>{matchupError}</p><Link href="/login">Log in first →</Link></div> : viewer && matchupReady ? <>
+              <div className="public-calc-step">1. Choose two players</div>
+              <div className="public-calc-players">
+                <div className="public-calc-player"><div className="public-calc-avatar">{viewer.username?.[0]?.toUpperCase()}</div><strong>{viewer.username}</strong><small>{Number(viewer.elo_rating).toLocaleString()} rating</small><span>YOU</span></div>
+                <div className="public-calc-vs">VS</div>
+                <div className="public-calc-player"><div className="public-calc-avatar">{player.username?.[0]?.toUpperCase()}</div><strong>{player.username}</strong><small>{elo.toLocaleString()} rating</small><span>PROFILE</span></div>
+              </div>
+              <div className="public-calc-step">2. Format</div>
+              <div className="public-calc-formats"><button type="button" className={matchupFormat === "One rack" ? "selected" : ""} onClick={() => {setMatchupFormat("One rack");setMatchupCalculated(false);}}>One rack</button><button type="button" className={matchupFormat === "Best of 3" ? "selected" : ""} onClick={() => {setMatchupFormat("Best of 3");setMatchupCalculated(false);}}>Best of 3</button></div>
+              <button type="button" className="public-calc-button" onClick={() => setMatchupCalculated(true)}>▦ &nbsp; Calculate</button>
+              {matchupCalculated && <div className="public-calc-results">
+                <div className="public-calc-divider" />
+                <div className="public-calc-label">Win chance</div>
+                <div className="public-calc-probs"><div><b>{viewer.username}</b><strong>{matchupWinChance}%</strong></div><div><b>{player.username}</b><strong>{matchupLossChance}%</strong></div></div>
+                <div className="public-calc-bar"><i style={{width: matchupWinChance + "%"}} /></div>
+                <p className="public-calc-favourite">{matchupWinChance >= matchupLossChance ? viewer.username : player.username} is the slight favourite.</p>
+                <div className="public-calc-label public-calc-points-label">Rating points at stake</div>
+                <div className="public-calc-stakes"><div><small>If {viewer.username} wins</small><strong>+{matchupWinPoints} points</strong><em>{player.username} −{matchupWinPoints}</em></div><div><small>If {player.username} wins</small><strong>+{targetWinPoints} points</strong><em>{viewer.username} −{targetWinPoints}</em></div></div>
+                <p className="public-calc-foot">Based on current ratings. Beating a higher-rated player earns more points, so upsets pay more.</p>
+                <p className="public-calc-disclaimer">Estimate uses BASE25's current K-factor ({matchupK}). Actual match ratings also include rack-margin bonuses, so the final change may differ. This calculator does not save a match or change ratings.</p>
+              </div>}
+            </> : null}
+          </section>
+        </div>}
 
         <section className="public-rating-grid">
           <div className="public-rating-card">
@@ -351,6 +381,41 @@ export default function PublicPlayerProfile() {
         .public-loading,.public-empty{max-width:780px;margin:60px auto;color:#dce5d6}.public-empty h1{margin-bottom:15px}
         @media(max-width:560px){.public-profile{margin:12px auto 90px}.public-hero{padding:17px 15px 14px;border-radius:16px}.public-hero-main{grid-template-columns:76px minmax(0,1fr);gap:11px;margin:24px 0 18px}.public-avatar{width:74px;height:74px;border-width:3px;font-size:28px}.public-identity h1{font-size:25px;margin:8px 0 4px}.public-player-meta{gap:5px}.public-player-meta span{font-size:9px}.public-player-meta b{font-size:8px;padding:4px 6px}.public-global-rank{display:none}.public-back,.public-more{height:44px;width:44px}.public-page-title{font-size:16px}.public-rating-grid{gap:8px}.public-rating-card,.public-week-card{padding:14px 12px;min-height:145px}.public-rating-card strong{font-size:36px;margin:14px 0}.public-week-card>strong{font-size:35px}.public-card-label{font-size:8px}.public-earnings-card{grid-template-columns:minmax(0,1fr) 32px;gap:8px;padding:16px 13px}.public-trophy{font-size:29px}.public-win-history{grid-column:1/-1;border-top:1px solid #ffffff15;padding-top:9px}.public-record-grid{padding:13px 2px}.public-record-grid small{font-size:7px}.public-record-grid strong{font-size:22px}.public-section{padding:15px 12px}.public-section-heading h2{font-size:19px}.public-section-heading small{font-size:8px}.public-achievements{gap:6px}.public-achievement{min-height:100px;padding:10px 3px}.public-achievement span{font-size:9px}.public-achievement strong{font-size:17px}.public-profile-footer{font-size:7px}.public-match-row{gap:8px}.public-match-opponent strong{font-size:11px}.public-match-score{font-size:13px}.public-matchup-score strong{font-size:23px}.public-chart{grid-template-columns:32px 1fr}}
 
+
+        .public-mutual-card{margin:13px 0;padding:18px 17px 17px;border:1px solid #315a3d;border-radius:21px;background:#0d1a12;color:#f2f5ed;min-height:122px}
+        .public-mutual-title{font:700 10px monospace;letter-spacing:.16em;color:#b9ed6a;margin-bottom:10px}
+        .public-mutual-body{display:flex;justify-content:space-between;align-items:center;gap:12px}
+        .public-mutual-record{display:grid;gap:5px;min-width:0}
+        .public-mutual-record strong{font-size:32px;line-height:1;font-weight:850;letter-spacing:-.04em}
+        .public-mutual-record span{font-size:12px;color:#aab5a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .public-mutual-gap{display:grid;justify-items:end;gap:4px;flex:0 0 auto}
+        .public-mutual-gap small{font:700 9px monospace;letter-spacing:.15em;color:#929e91}
+        .public-mutual-gap strong{font:900 25px monospace;color:#e8c94d}
+        .public-calculator-overlay{position:fixed;inset:0;z-index:1000;background:#030805ed;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:22px 14px 40px}
+        .public-calculator-modal{width:100%;max-width:430px;min-height:calc(100dvh - 62px);padding:18px 16px 28px;border:1px solid #244633;border-radius:18px;background:radial-gradient(ellipse at 85% 0%,#0c4228 0%,#07150e 40%,#070d09 75%);color:#f3f5ef;box-shadow:0 20px 70px #000b}
+        .public-calculator-header{display:flex;align-items:center;gap:13px;margin-bottom:22px}
+        .public-calculator-header>button{width:37px;height:37px;border:1px solid #2a4434;border-radius:11px;background:#0c1710;color:#f2f5ef;font-size:21px}
+        .public-calculator-header h2{font-size:18px;margin:0 0 4px}.public-calculator-header p{font-size:11px;color:#9eaea1;margin:0}
+        .public-calc-step{margin:17px 0 9px;color:#aab5aa;font-size:11px}
+        .public-calc-players{display:grid;grid-template-columns:1fr 22px 1fr;align-items:center;gap:7px}
+        .public-calc-player{min-width:0;min-height:128px;padding:12px 6px 10px;border:1px solid #294333;border-radius:14px;background:#101713;display:flex;align-items:center;flex-direction:column;justify-content:center}
+        .public-calc-avatar{width:43px;height:43px;display:grid;place-items:center;border:2px solid #c5f36a;border-radius:50%;color:#c5f36a;font-weight:800;font-size:17px;margin-bottom:7px}
+        .public-calc-player strong{max-width:100%;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .public-calc-player small{font-size:10px;color:#9eaaa1;margin-top:3px}.public-calc-player span{font:700 8px monospace;letter-spacing:.12em;color:#c5f36a;margin-top:7px}
+        .public-calc-vs{text-align:center;color:#87958b;font-size:10px}
+        .public-calc-formats{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:#111914}
+        .public-calc-formats button{padding:11px 5px;border:0;border-radius:9px;background:transparent;color:#c0c9c1;font-size:11px;font-weight:700}
+        .public-calc-formats button.selected{background:#c7f36a;color:#10150d}
+        .public-calc-button{width:100%;margin-top:15px;padding:14px;border:0;border-radius:11px;background:#c7f36a;color:#10150d;font-weight:850}
+        .public-calc-results{margin-top:18px}.public-calc-divider{height:1px;background:#1d2a22;margin-bottom:16px}
+        .public-calc-label{color:#98a79c;font-size:10px}
+        .public-calc-probs{display:flex;justify-content:space-between;margin:7px 0 10px}.public-calc-probs>div{display:flex;flex-direction:column;gap:4px}.public-calc-probs>div:last-child{text-align:right}.public-calc-probs b{font-size:12px}.public-calc-probs strong{font:800 28px monospace;color:#c7f36a}
+        .public-calc-bar{height:12px;overflow:hidden;border-radius:20px;background:#27372d}.public-calc-bar i{display:block;height:100%;background:#c7f36a;border-radius:20px}
+        .public-calc-favourite{margin:7px 0 18px;color:#8e9d92;font-size:10px}
+        .public-calc-points-label{margin-bottom:9px}.public-calc-stakes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.public-calc-stakes>div{padding:12px;border:1px solid #24362b;border-radius:12px;background:#101713}
+        .public-calc-stakes small,.public-calc-stakes strong,.public-calc-stakes em{display:block}.public-calc-stakes small{color:#98a79c;font-size:10px}.public-calc-stakes strong{margin:8px 0;color:#c7f36a;font:800 16px monospace}.public-calc-stakes em{color:#e78d82;font-size:11px;font-style:normal}
+        .public-calc-foot,.public-calc-disclaimer{margin:10px 0 0;color:#98a79c;font-size:10px;line-height:1.55}.public-calc-disclaimer{color:#738078}
+        @media(max-width:480px){.public-mutual-card{padding:17px 15px;min-height:118px}.public-mutual-record strong{font-size:30px}.public-mutual-gap strong{font-size:24px}.public-calculator-overlay{padding:12px 10px 28px}.public-calculator-modal{min-height:calc(100dvh - 40px);padding:16px 13px 24px}.public-calc-stakes strong{font-size:14px}}
         .public-rating-gap-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0 12px;padding:7px 12px;min-height:34px;border:1px solid #334a35;border-radius:11px;background:#0b160f}
         .public-rating-gap-strip span{font:700 8px monospace;letter-spacing:.11em;color:#9eae9e}
         .public-rating-gap-strip strong{font:800 15px monospace;color:#e8ca4c}
