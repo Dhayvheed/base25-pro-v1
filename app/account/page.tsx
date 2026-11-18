@@ -1,29 +1,18 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 
 type Rack={id:string;match_id:string;rack_number:number;winner_id:string;loser_id:string;loser_balls_remaining:number;black_ball_finish:boolean};
 export default function PlayerProfile(){
  const [id,setId]=useState("");
- const searchParams=useSearchParams();
- const privateView=searchParams.get("view")==="private";
- const [accessChecked,setAccessChecked]=useState(false);
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
  useEffect(()=>{async function load(){
   if(!supabase){setLoading(false);return;}
-  if(privateView){
-   const {data:{session}}=await supabase.auth.getSession();
-   if(!session){window.location.replace("/login");return;}
-   const {data:ownProfile,error:ownProfileError}=await supabase.rpc("get_my_base25_player_profile");
-   const own=Array.isArray(ownProfile)?ownProfile[0]:ownProfile;
-   if(ownProfileError||!own?.id||own.id!==id){setPlayer(null);setAccessChecked(true);setLoading(false);return;}
-   setAccessChecked(true);
-  }
   const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",playerId).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${playerId},player_two_id.eq.${playerId}`).order("played_at",{ascending:false}),
@@ -63,7 +52,7 @@ export default function PlayerProfile(){
  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
  <section className="pro-profile">
   <div className="profile-hero">
-   <div className="profile-hero-top"><span className="profile-kicker">PRIVATE PLAYER DASHBOARD</span><Link className="profile-kicker" href="/players/{player.id}">VIEW PUBLIC PROFILE →</Link></div>
+   <div className="profile-hero-top"><span className="profile-kicker">PRIVATE PLAYER DASHBOARD</span><Link className="profile-kicker" href={`/players/${player.id}`}>VIEW PUBLIC PROFILE →</Link></div>
    <div className="profile-hero-bottom">
     <div className="pro-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
     <div className="pro-identity-copy"><div className="profile-code-line"><small>{player.player_code}</small><b>COMPETITIVE PLAYER</b></div><h1>{player.username}<span className="verified-mark">✓</span></h1><p>“Play smart. Clear tables.”</p></div>
