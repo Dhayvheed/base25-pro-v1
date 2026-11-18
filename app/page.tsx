@@ -18,6 +18,7 @@ export default function Home(){
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
+ const [showAllWeekly,setShowAllWeekly]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
   const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
@@ -33,7 +34,7 @@ export default function Home(){
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
- const visiblePlayers=weeklyPlayers.slice(0,5);
+ const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
  return <main className="shell redesign-shell home-v2">
   <SiteNavigation />
   <div className="home-v2-glow" aria-hidden="true"/>
@@ -76,13 +77,13 @@ export default function Home(){
     <div className="home-v2-table">
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
      {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
-      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]}}><i>{rank}</i></span></span>
+      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
       <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong><small>{p.player_code}</small></span></span>
       <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
     </div>}
-   <Link className="home-v2-full-link" href="/leaderboard">View full weekly leaderboard <span>→</span></Link>
+   <button type="button" className="home-v2-full-link" onClick={()=>setShowAllWeekly((current)=>!current)} aria-expanded={showAllWeekly}>{showAllWeekly?"Show less":"View full weekly leaderboard"} <span>{showAllWeekly?"↑":"→"}</span></button>
   </section>
   {champion&&<section className="home-v2-champion">
    <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
