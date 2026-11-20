@@ -1,0 +1,117 @@
+name: BASE25 Daily Database Backup
+
+on:
+  schedule:
+    # 02:00 UTC = 03:00 Nigeria time (WAT)
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: base25-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Export, encrypt and upload Supabase database
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+      DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+      DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+
+    steps:
+      - name: Check required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_DB_URL BACKUP_ENCRYPTION_PASSPHRASE DROPBOX_APP_KEY DROPBOX_APP_SECRET DROPBOX_REFRESH_TOKEN; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Install Supabase CLI
+        run: |
+          npm install --global supabase@3.2.0
+          supabase --version
+
+      - name: Export database
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/data.sql --use-copy --data-only \
+            -x "storage.buckets_vectors" \
+            -x "storage.vector_indexes"
+
+          cat > backup/manifest.txt <<EOF
+          BASE25 Supabase logical database backup
+          Created UTC: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          Supabase project ref: alqfeigvhrcufgcqcucx
+          Includes: roles, schema, RLS policies, functions, triggers, database data and auth.users (as supported by Supabase CLI dump)
+          Storage object files: not included; Storage metadata only
+          Restore notes: use Supabase CLI/psql restore procedure; test on a separate project first
+          EOF
+
+          test -s backup/roles.sql
+          test -s backup/schema.sql
+          test -s backup/data.sql
+          tar -czf base25-database-backup.tar.gz -C backup .
+          sha256sum base25-database-backup.tar.gz > base25-database-backup.tar.gz.sha256
+
+      - name: Encrypt backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
+            -pass env:BACKUP_ENCRYPTION_PASSPHRASE \
+            -in base25-database-backup.tar.gz \
+            -out base25-database-backup.tar.gz.enc
+          test -s base25-database-backup.tar.gz.enc
+
+      - name: Upload encrypted backup to Dropbox
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TOKEN_RESPONSE=$(curl --fail --silent --show-error \
+            --user "$DROPBOX_APP_KEY:$DROPBOX_APP_SECRET" \
+            --data-urlencode "grant_type=refresh_token" \
+            --data-urlencode "refresh_token=$DROPBOX_REFRESH_TOKEN" \
+            https://api.dropbox.com/oauth2/token)
+
+          ACCESS_TOKEN=$(printf '%s' "$TOKEN_RESPONSE" | jq -er '.access_token')
+          BACKUP_NAME="base25-db-$(date -u +'%Y-%m-%dT%H-%M-%SZ').tar.gz.enc"
+          BACKUP_SIZE=$(stat -c%s base25-database-backup.tar.gz.enc)
+
+          # Dropbox's simple upload endpoint supports files up to 150 MB.
+          if [ "$BACKUP_SIZE" -gt 150000000 ]; then
+            echo "::error::Encrypted backup exceeds 150 MB; switch to Dropbox upload sessions before the next run."
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --header "Dropbox-API-Arg: {\"path\": \"/BASE25 Backups/$BACKUP_NAME\", \"mode\": \"add\", \"autorename\": false, \"mute\": true}" \
+            --data-binary @base25-database-backup.tar.gz.enc \
+            https://content.dropboxapi.com/2/files/upload > dropbox-upload.json
+
+          jq -e '.id and .path_display' dropbox-upload.json >/dev/null
+          echo "Encrypted backup uploaded: $(jq -r '.path_display' dropbox-upload.json)"
+          echo "Uploaded bytes: $(jq -r '.size' dropbox-upload.json)"
+
+      - name: Remove plaintext backup files
+        if: always()
+        run: |
+          rm -rf backup base25-database-backup.tar.gz base25-database-backup.tar.gz.sha256 base25-database-backup.tar.gz.enc dropbox-upload.json
