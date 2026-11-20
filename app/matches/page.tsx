@@ -1,16 +1,16 @@
 "use client";
 import {useEffect,useState} from "react";
 import Link from "next/link";
-import {useSearchParams} from "next/navigation";
 import {supabase} from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 type PlayerRef={id:string;username:string;player_code:string};
 type Match={id:string;played_at:string;player_one_id:string;player_two_id:string;player_one_score:number;player_two_score:number;one?:PlayerRef|PlayerRef[]|null;two?:PlayerRef|PlayerRef[]|null};
 function playerRef(value:Match["one"]|Match["two"]){return Array.isArray(value)?value[0]??null:value??null}
 export default function MatchesPage(){
- const params=useSearchParams(),playerId=params.get("player");
+ const [playerId, setPlayerId]=useState<string|null>(null);
  const [matches,S]=useState<Match[]>([]),[playerName,N]=useState(""),[loading,L]=useState(true),[error,E]=useState("");
- useEffect(()=>{let active=true;(async()=>{
+ useEffect(()=>{setPlayerId(new URLSearchParams(window.location.search).get("player"));},[]);
+ useEffect(()=>{if(playerId===null && new URLSearchParams(window.location.search).has("player")) return; let active=true;(async()=>{
   if(!supabase){E("Match history is temporarily unavailable.");L(false);return}
   let query=supabase.from("matches").select("id,played_at,player_one_id,player_two_id,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(id,username,player_code),two:players!matches_player_two_id_fkey(id,username,player_code)");
   if(playerId) query=query.or(`player_one_id.eq.${playerId},player_two_id.eq.${playerId}`);
