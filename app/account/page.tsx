@@ -63,10 +63,10 @@ export default function PlayerProfile(){
   <div className="private-view-switch"><button className={!publicPreview?"active":""} onClick={()=>setPublicPreview(false)}>My view</button><Link className={publicPreview?"active":""} href={`/players/${player.id}`}>Preview as public</Link></div>
   {publicPreview ? <div className="private-preview-note">This is the public profile other players see. <Link href={`/players/${player.id}`}>Open public profile →</Link></div> : null}
   <section className="private-identity-card">
-   <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}<span>✎</span></div>
+   <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
    </div>
-   <div className="private-identity-actions"><Link href="/account/edit">Edit profile</Link><button onClick={shareProfile}>Share</button></div>
+   <div className="private-identity-actions" style={{gridTemplateColumns:"1fr"}}><button onClick={shareProfile}>Share profile</button></div><p style={{margin:"10px 2px 0",fontSize:11,color:"#9eaa9b"}}>Username is managed by BASE25 and cannot be changed by players. Contact an admin if a correction is needed.</p>
   </section>
 
   <section className="private-prediction-card">
