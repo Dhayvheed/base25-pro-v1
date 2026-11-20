@@ -322,7 +322,7 @@ export default function CompetitionPage() {
         .competition-ref-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
         .competition-ref-avatar i{position:absolute;right:-5px;top:-7px;color:#e8c547;font-size:12px;font-style:normal;text-shadow:0 1px 3px #000}
         .competition-ref-player-name{min-width:0;display:grid;gap:3px}
-        .competition-player-tag{width:max-content;max-width:100%;padding:3px 7px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.05em}.competition-player-tag.boardman-tag{background:#2b2421;color:#f0c4a8;border-color:#9b6951}.competition-player-tag.ghost-tag{background:#171d27;color:#c4d7f6;border-color:#536b91}.competition-ref-player-name strong{overflow:hidden;color:#f4f5f2;font-size:12px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
+        .competition-player-tag{width:max-content;max-width:100%;padding:3px 7px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.05em}.competition-player-tag.boardman-tag{background:#3b2d12;color:#ffd36a;border-color:#b8892e}.competition-player-tag.ghost-tag{background:#24163b;color:#d7b5ff;border-color:#8054b8}.competition-ref-player-name strong{overflow:hidden;color:#f4f5f2;font-size:12px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
         .competition-ref-player-name small{color:#9aa69f;font:9px ui-monospace,SFMono-Regular,monospace}
         .competition-ref-record{color:#d5dad6;font-size:10px;text-align:right;white-space:nowrap}
         .competition-ref-rating{color:#c8f169;font-size:14px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
