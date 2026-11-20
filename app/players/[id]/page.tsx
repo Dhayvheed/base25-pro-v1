@@ -333,7 +333,7 @@ export default function PublicPlayerProfile() {
         </section>
 
         <section className="public-section public-recent-section">
-          <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Recent matches</h2></div><Link href="/matches">View all →</Link></div>
+          <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Recent matches</h2></div><Link href={`/matches?player=${id}`}>View all →</Link></div>
           {matches.length ? <div className="public-match-list">{[...matches].reverse().slice(0, 8).map((match) => {
             const isOne = match.player_one_id === id;
             const opponent = relationPlayer(isOne ? match.two : match.one);
