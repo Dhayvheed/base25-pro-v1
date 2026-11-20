@@ -24,7 +24,7 @@ function MenuIcon({ name }: { name: string }) {
 
 const competitionLinks = [
   { href: "/competition", label: "Competition home", icon: "trophy" },
-  { href: "/leaderboard", label: "Leaderboard", icon: "chart" },
+  { href: "/competition?leaderboard=full#weekly-leaderboard", label: "Leaderboard", icon: "chart" },
   { href: "/matches", label: "Match history", icon: "history" },
   { href: "/weekly-archive", label: "Weekly archive", icon: "calendar" },
   { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
@@ -189,7 +189,7 @@ export default function SiteNavigation() {
           </button>
           {competitionOpen && <div className="menu-v2-subnav" aria-label="Competition pages">
             <Link className={pathname === "/competition" ? "active" : ""} href="/competition" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="trophy" /></span>Competition home</Link>
-            <Link className={pathname === "/leaderboard" ? "active" : ""} href="/leaderboard" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="chart" /></span>Leaderboard</Link>
+            <Link className={pathname === "/leaderboard" ? "active" : ""} href="/competition?leaderboard=full#weekly-leaderboard" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="chart" /></span>Leaderboard</Link>
             <Link className={pathname === "/matches" ? "active" : ""} href="/matches" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="history" /></span>Match history</Link>
             <Link className={pathname === "/weekly-archive" ? "active" : ""} href="/weekly-archive" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="calendar" /></span>Weekly archive</Link>
             <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="crown" /></span>Hall of Fame</Link>
