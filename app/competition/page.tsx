@@ -156,7 +156,7 @@ export default function CompetitionPage() {
           <div className="competition-ref-live"><i /> LIVE POT</div>
           <div className="competition-ref-pot-value">
             {potLoading ? <span className="competition-ref-loading-value">Loading…</span> : potError ? "Unavailable" : money(potAmount || 0)}
-{potIncreaseKey > 0 && <span key={potIncreaseKey} className="competition-ref-chip">+₦200</span>}
+{potIncreaseKey > 0 && <span key={potIncreaseKey} className="competition-ref-chip">+₦100</span>}
           </div>
           <div className="competition-ref-milestone">
             <span>Next milestone</span>
@@ -171,17 +171,17 @@ export default function CompetitionPage() {
         <div className="competition-ref-stats">
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon">♧</span>
-            <div><strong>{potLoading ? "—" : Number(kingsPot?.contributor_count || 0)}</strong><small>Players joined</small></div>
+            <div><strong>{potLoading ? "—" : Number(kingsPot?.contributor_count || 0)}</strong><small>Matches added</small></div>
           </div>
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon gold">◉</span>
-            <div><strong>₦200</strong><small>Added per new player</small></div>
+            <div><strong>₦100</strong><small>Added per eligible match</small></div>
           </div>
         </div>
 
         <section className="competition-ref-grow">
           <h2>HOW IT WORKS</h2>
-          <p>Every player who records their <strong>first qualifying one-rack ranking match</strong> this week adds <strong>₦200</strong> to The King's Pot.</p>
+          <p>Every recorded verified match adds <strong>₦100</strong> to The King's Pot, except a HOUSE GHOST vs BOARDMAN match, which adds nothing. Best-of-three counts as one match.</p>
           <p><strong>TOP 5 PLAYERS</strong> qualify for the Saturday Final.</p>
           <p className="competition-ref-grow-winner">ONE WINNER. THE ENTIRE POT. 🏆</p>
         </section>
