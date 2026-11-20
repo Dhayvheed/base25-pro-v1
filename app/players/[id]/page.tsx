@@ -18,11 +18,15 @@ type MatchRow = {
   player_two_elo_before: number | null;
   player_one_elo_after: number | null;
   player_two_elo_after: number | null;
-  one?: { username: string; player_code: string }[] | null;
-  two?: { username: string; player_code: string }[] | null;
+  one?: { username: string; player_code: string } | { username: string; player_code: string }[] | null;
+  two?: { username: string; player_code: string } | { username: string; player_code: string }[] | null;
 };
 
 type ChampionRow = { id: string; week_start: string; prize_amount: number };
+
+function relationPlayer(value: MatchRow["one"] | MatchRow["two"]) {
+  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+}
 
 export default function PublicPlayerProfile() {
   const { id } = useParams<{ id: string }>();
@@ -218,7 +222,7 @@ export default function PublicPlayerProfile() {
         {viewer && matchupReady && <section className="public-mutual-card">
           <div className="public-mutual-title">YOU VS {player.username?.toUpperCase()}</div>
           <div className="public-mutual-body">
-            <div className="public-mutual-record"><strong>{mutualWins} – {mutualLosses}</strong><span>{lastMutualMatch ? "Last met " + new Date(lastMutualMatch.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (viewer.id === lastMutualMatch.player_one_id ? (lastMutualMatch.two?.[0]?.player_code || "") : (lastMutualMatch.one?.[0]?.player_code || "")) : "No previous meeting"}</span></div>
+            <div className="public-mutual-record"><strong>{mutualWins} – {mutualLosses}</strong><span>{lastMutualMatch ? "Last met " + new Date(lastMutualMatch.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (viewer.id === lastMutualMatch.player_one_id ? (relationPlayer(lastMutualMatch.two)?.player_code || "") : (relationPlayer(lastMutualMatch.one)?.player_code || "")) : "No previous meeting"}</span></div>
             <div className="public-mutual-gap"><small>RATING GAP</small><strong>{matchupRatingGap > 0 ? "+" : ""}{matchupRatingGap}</strong></div>
           </div>
         </section>}
@@ -332,7 +336,7 @@ export default function PublicPlayerProfile() {
           <div className="public-section-heading"><div><small>HEAD-TO-HEAD</small><h2>Recent matches</h2></div><Link href="/matches">View all →</Link></div>
           {matches.length ? <div className="public-match-list">{[...matches].reverse().slice(0, 8).map((match) => {
             const isOne = match.player_one_id === id;
-            const opponent = (isOne ? match.two : match.one)?.[0];
+            const opponent = relationPlayer(isOne ? match.two : match.one);
             const won = match.winner_id === id;
             const before = Number(isOne ? match.player_one_elo_before : match.player_two_elo_before);
             const after = Number(isOne ? match.player_one_elo_after : match.player_two_elo_after);
