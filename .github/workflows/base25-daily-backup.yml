@@ -39,7 +39,7 @@ jobs:
 
       - name: Install Supabase CLI
         run: |
-          npm install --global supabase@3.2.0
+          npm install --global supabase@latest
           supabase --version
 
       - name: Export database
@@ -47,9 +47,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p backup
-          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/roles.sql --role-only
-          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/schema.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" --file backup/data.sql --use-copy --data-only \
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --use-copy --data-only \
             -x "storage.buckets_vectors" \
             -x "storage.vector_indexes"
 
