@@ -15,6 +15,7 @@ type Player = {
   wins: number;
   losses: number;
   win_percentage: number;
+  designation: "regular" | "boardman" | "house_ghost";
 };
 
 function Avatar({ player }: { player: Player }) {
@@ -41,7 +42,7 @@ export default function LeaderboardPage() {
         return;
       }
 
-      const { data, error: requestError } = await supabase.rpc("get_period_leaderboard", {
+      const { data, error: requestError } = await supabase.rpc("get_period_leaderboard_with_designation", {
         p_period: "this_week",
       });
 
@@ -118,7 +119,7 @@ export default function LeaderboardPage() {
                 return (
                   <Link href={`/players/${player.id}`} className={`weekly-player-row ${rank <= 5 ? "is-qualifying" : ""} ${rank === 1 ? "is-leader" : ""}`} key={player.id}>
                     <span className="weekly-rank">{rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : String(rank).padStart(2, "0")}</span>
-                    <span className="weekly-player"><Avatar player={player} /><span><b>{player.username}</b><small>{player.player_code}</small></span></span>
+                    <span className="weekly-player"><Avatar player={player} /><span><b>{player.username}</b>{player.designation === "boardman" ? <em className="weekly-player-tag boardman-tag">BOARDMAN 💀</em> : player.designation === "house_ghost" ? <em className="weekly-player-tag ghost-tag">HOUSE GHOSTS 👻</em> : null}<small>{player.player_code}</small></span></span>
                     <strong>{player.wins}</strong>
                     <strong>{player.losses}</strong>
                     <b className="weekly-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}</b>
@@ -164,7 +165,7 @@ export default function LeaderboardPage() {
         .weekly-player{display:flex;align-items:center;gap:11px;min-width:0;text-align:left}
         .weekly-avatar{width:42px;height:42px;flex:none;display:grid;place-items:center;overflow:hidden;border:1px solid #526a3e;border-radius:50%;background:#1b2b1b;color:#d5f36a;font-size:15px;font-weight:900}
         .weekly-avatar img{width:100%;height:100%;object-fit:cover}
-        .weekly-player>span:last-child{display:grid;gap:3px;min-width:0}.weekly-player b{overflow:hidden;color:#f4f6ef;font-size:13px;text-overflow:ellipsis;white-space:nowrap}.weekly-player small{color:#91a191;font:9px monospace}
+        .weekly-player>span:last-child{display:grid;gap:3px;min-width:0}.weekly-player-tag{width:max-content;max-width:100%;padding:2px 6px;border:1px solid #ffffff24;border-radius:999px;font:800 7px monospace;font-style:normal;letter-spacing:.04em}.weekly-player-tag.boardman-tag{background:#2b2421;color:#f0c4a8;border-color:#9b6951}.weekly-player-tag.ghost-tag{background:#171d27;color:#c4d7f6;border-color:#536b91}.weekly-player b{overflow:hidden;color:#f4f6ef;font-size:13px;text-overflow:ellipsis;white-space:nowrap}.weekly-player small{color:#91a191;font:9px monospace}
         .weekly-player-row>strong{font-size:13px}.weekly-rating{color:#d4f36a;font-size:17px!important}
         .weekly-board-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:13px;color:#819282;font:9px monospace;letter-spacing:.04em}
         .weekly-board-foot span:first-child{color:#c5f36a}.weekly-board-foot i{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#c5f32d}
