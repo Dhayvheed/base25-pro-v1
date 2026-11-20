@@ -1,6 +1,9 @@
 name: BASE25 Daily Database Backup
 
 on:
+  push:
+    branches:
+      - backup-automation
   schedule:
     # 02:00 UTC = 03:00 Nigeria time (WAT)
     - cron: "0 2 * * *"
