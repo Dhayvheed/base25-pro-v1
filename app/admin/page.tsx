@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null };
+type Designation = "regular" | "boardman" | "house_ghost";
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
@@ -18,6 +19,7 @@ export default function Admin() {
   const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
   const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
+  const [playerDesignations, setPlayerDesignations] = useState<Record<string, Designation>>({});
   const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
   const [playerPasswordDrafts, setPlayerPasswordDrafts] = useState<Record<string, string>>({});
@@ -81,6 +83,27 @@ export default function Admin() {
     const { data, error } = await supabase.rpc("admin_list_players");
     if (error) setMessage(error.message);
     setPlayers(data || []);
+  }
+
+  async function refreshPlayerDesignations() {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_list_player_designations");
+    if (error) { setMessage(`Could not load player designations: ${error.message}`); return; }
+    setPlayerDesignations(Object.fromEntries((data || []).map((row: { player_id: string; designation: Designation }) => [row.player_id, row.designation])));
+  }
+
+  async function savePlayerDesignation(player: Player, designation: Designation) {
+    if (!supabase || staffRole !== "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_set_player_designation", { p_player_id: player.id, p_designation: designation });
+    if (error) {
+      setMessage(`Designation update failed: ${error.message}`);
+      await refreshPlayerDesignations();
+    } else {
+      setPlayerDesignations(current => ({ ...current, [player.id]: designation }));
+      setMessage(designation === "boardman" ? "BOARDMAN 💀 assigned." : designation === "house_ghost" ? "HOUSE GHOSTS 👻 assigned." : "Player designation cleared.");
+    }
+    setBusy(false);
   }
 
   async function refreshPlayerAccountStatuses() {
@@ -154,7 +177,7 @@ export default function Admin() {
       setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
       if (role) { refresh(); refreshMatches(); }
-      if (role === "owner") { refreshStaff(); refreshPlayerAccountStatuses(); }
+      if (role === "owner") { refreshStaff(); refreshPlayerAccountStatuses(); refreshPlayerDesignations(); }
     }
     checkAdmin();
   }, [session]);
@@ -534,7 +557,8 @@ export default function Admin() {
             <div className="eyebrow">USERNAME · @{players.find(item=>item.id===editingPlayer)?.username || "—"} (LOCKED)</div>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div>{playerDesignations[player.id] === "boardman" ? <div className="eyebrow">BOARDMAN 💀</div> : playerDesignations[player.id] === "house_ghost" ? <div className="eyebrow">HOUSE GHOSTS 👻</div> : null}</div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+           <label style={{display:"block",marginTop:12}}>Player designation<select value={playerDesignations[player.id] || "regular"} disabled={busy} onChange={e=>savePlayerDesignation(player,e.target.value as Designation)}><option value="regular">Regular player</option><option value="boardman">BOARDMAN 💀</option><option value="house_ghost">HOUSE GHOSTS 👻</option></select></label>
           <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={account?.account_status === "Verified"} /></label><label>{account?.account_status === "Verified" ? "Set new password" : "Choose password"}<div style={{display:"flex",width:"100%",minWidth:0,alignItems:"stretch",gap:8}}><input style={{flex:"1 1 0%",width:0,minWidth:0,boxSizing:"border-box"}} type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /><button type="button" className="secondary" style={{flex:"0 0 76px",width:76,minWidth:76,paddingLeft:8,paddingRight:8}} aria-label={showPlayerPasswords[player.id]?"Hide password":"Show password"} onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div>{account?.account_status === "Verified" ? <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8} onClick={()=>resetPlayerPassword(player)}>Update player password</button> : <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}</div>
         </div>})}
       </section>
