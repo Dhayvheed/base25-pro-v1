@@ -339,7 +339,7 @@ export default function PublicPlayerProfile() {
             const delta = Number.isFinite(before) && Number.isFinite(after) ? after - before : 0;
             return <Link href={"/matches/" + match.id} key={match.id} className="public-match-row">
               <b className={won ? "public-result-win" : "public-result-loss"}>{won ? "W" : "L"}</b>
-              <span className="public-match-opponent"><strong>vs {opponent?.username || "Opponent"}</strong><small>{opponent?.player_code || "BASE25"} · {new Date(match.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</small></span>
+              <span className="public-match-opponent"><strong>{player.username} vs {opponent?.username || "Unknown Player"}</strong><small>{opponent?.player_code || "BASE25"} · {new Date(match.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</small></span>
               <span className="public-match-score">{isOne ? match.player_one_score : match.player_two_score} – {isOne ? match.player_two_score : match.player_one_score}<small className={delta >= 0 ? "public-delta-up" : "public-delta-down"}>{delta > 0 ? "+" : ""}{delta} ELO</small></span>
             </Link>;
           })}</div> : <p className="public-chart-note">No recorded matches yet.</p>}
