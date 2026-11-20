@@ -15,6 +15,7 @@ type WeeklyPlayer = {
   wins: number;
   losses: number;
   win_percentage: number;
+  designation: "regular" | "boardman" | "house_ghost";
 };
 
 type KingsPot = {
@@ -90,7 +91,7 @@ export default function CompetitionPage() {
       }
 
       const [leaderboardResult, potResult] = await Promise.all([
-        supabase.rpc("get_period_leaderboard", { p_period: "this_week" }),
+        supabase.rpc("get_period_leaderboard_with_designation", { p_period: "this_week" }),
         supabase.rpc("get_current_kings_pot"),
       ]);
 
@@ -240,7 +241,7 @@ export default function CompetitionPage() {
                     <span className={"competition-ref-rank rank-" + rank} style={{width:26,height:26,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#2f5fd0":rank===3?"#d9402f":rank===4?"#7b3fa0":"#e8782a",color:"#111",fontSize:10,fontWeight:900,lineHeight:1,flexShrink:0,boxShadow:"inset -2px -2px 4px rgba(0,0,0,.35)"}}><b style={{width:16,height:16,borderRadius:"50%",background:"#fff",display:"grid",placeItems:"center",color:"#111"}}>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
                     <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
-                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username}</strong>
+                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username}</strong>{player.designation === "boardman" ? <em className="competition-player-tag boardman-tag">BOARDMAN 💀</em> : player.designation === "house_ghost" ? <em className="competition-player-tag ghost-tag">HOUSE GHOSTS 👻</em> : null}
                       <small style={{display:"block",font:"10px 'JetBrains Mono',monospace",letterSpacing:"0",color:"#9aa69f"}}>{player.player_code}</small>
                     </span>
                     <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:12,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
@@ -321,7 +322,7 @@ export default function CompetitionPage() {
         .competition-ref-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
         .competition-ref-avatar i{position:absolute;right:-5px;top:-7px;color:#e8c547;font-size:12px;font-style:normal;text-shadow:0 1px 3px #000}
         .competition-ref-player-name{min-width:0;display:grid;gap:3px}
-        .competition-ref-player-name strong{overflow:hidden;color:#f4f5f2;font-size:12px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
+        .competition-player-tag{width:max-content;max-width:100%;padding:3px 7px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.05em}.competition-player-tag.boardman-tag{background:#2b2421;color:#f0c4a8;border-color:#9b6951}.competition-player-tag.ghost-tag{background:#171d27;color:#c4d7f6;border-color:#536b91}.competition-ref-player-name strong{overflow:hidden;color:#f4f5f2;font-size:12px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
         .competition-ref-player-name small{color:#9aa69f;font:9px ui-monospace,SFMono-Regular,monospace}
         .competition-ref-record{color:#d5dad6;font-size:10px;text-align:right;white-space:nowrap}
         .competition-ref-rating{color:#c8f169;font-size:14px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
