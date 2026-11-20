@@ -238,7 +238,7 @@ export default function Admin() {
   function startEditPlayer(player: Player) { setEditingPlayer(player.id); setEditFullName(player.full_name); setEditUsername(player.username); setEditPhoto(player.photo_url || ""); }
   async function savePlayerEdit(event: FormEvent) {
     event.preventDefault(); if (!supabase || !editingPlayer) return; setBusy(true);
-    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: editUsername.trim().replace(/^@/, ""), p_photo_url: editPhoto.trim() || null });
+    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: players.find(item => item.id === editingPlayer)?.username || "", p_photo_url: editPhoto.trim() || null });
     if (error) setMessage(`Player update failed: ${error.message}`); else { setMessage("Player profile updated."); setEditingPlayer(null); await refresh(); }
     setBusy(false);
   }
@@ -531,7 +531,7 @@ export default function Admin() {
         {players.map(player=>{ const account = playerAccountStatuses.find(row => row.player_id === player.id); return <div key={player.id} className="player-row" style={{display:"block"}}>
           {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
             <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
-            <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
+            <div className="eyebrow">USERNAME · @{players.find(item=>item.id===editingPlayer)?.username || "—"} (LOCKED)</div>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
           </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
