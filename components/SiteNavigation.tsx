@@ -214,6 +214,7 @@ export default function SiteNavigation() {
       <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition"><span>♜</span>Competition</Link>
       <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players"><span>♧</span>Players</Link>
       <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions"><span>◎</span>Predictions</Link>
+      <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame"><span>♛</span>Hall of Fame</Link>
     </nav>
   </>;
 }
