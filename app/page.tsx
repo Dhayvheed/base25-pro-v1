@@ -44,7 +44,7 @@ export default function Home(){
     <h1>Every match<br/><span>counts.</span></h1>
     <p>Your game. Your ranking. Your crown.</p>
     <div className="home-v2-actions">
-     <Link className="home-v2-primary" href="/leaderboard"><span className="home-v2-action-icon" aria-hidden="true">▥</span>View Leaderboard</Link>
+     <Link className="home-v2-primary" href="/competition?leaderboard=full#weekly-leaderboard"><span className="home-v2-action-icon" aria-hidden="true">▥</span>View Leaderboard</Link>
      <Link className="home-v2-secondary" href="/competition"><span className="home-v2-action-icon" aria-hidden="true">♜</span>Competition</Link>
     </div>
    </div>
@@ -83,7 +83,7 @@ export default function Home(){
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
     </div>}
-   <Link className="home-v2-full-link" href="/leaderboard">View full weekly leaderboard <span>→</span></Link>
+   <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
   </section>
   {champion&&<section className="home-v2-champion">
    <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
