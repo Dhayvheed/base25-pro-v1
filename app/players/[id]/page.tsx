@@ -64,7 +64,7 @@ export default function PublicPlayerProfile() {
         { data: wagerTotal }
       ] = await Promise.all([
         supabase.from("player_public_leaderboard")
-          .select("id,username,player_code,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage")
+          .select("id,username,player_code,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage,designation")
           .eq("id", id).single(),
         supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating", { ascending: false }),
         supabase.rpc("get_period_leaderboard", { p_period: "this_week" }),
@@ -214,7 +214,7 @@ export default function PublicPlayerProfile() {
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
-              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1><p>“Play smart. Clear tables.”</p></div>
+              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation === "boardman" ? <span className="player-designation-tag boardman-tag">BOARDMAN 💀</span> : player.designation === "house_ghost" ? <span className="player-designation-tag ghost-tag">HOUSE GHOSTS 👻</span> : null}<p>“Play smart. Clear tables.”</p></div>
           </div>
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
@@ -351,7 +351,7 @@ export default function PublicPlayerProfile() {
         <footer className="public-profile-footer"><span>BASE25 PRO</span><span>THE TABLE REMEMBERS.</span><Link href="/players">Explore players →</Link></footer>
       </div>
       <style jsx>{`
-        .public-profile{width:100%;max-width:780px;margin:22px auto 110px;min-width:0;color:#f3f5ef}
+        .player-designation-tag{display:inline-flex;align-items:center;width:max-content;margin-top:8px;padding:5px 9px;border:1px solid #ffffff24;border-radius:999px;font:800 9px monospace;letter-spacing:.08em}.boardman-tag{background:#2b2421;color:#f0c4a8;border-color:#9b6951}.ghost-tag{background:#171d27;color:#c4d7f6;border-color:#536b91}.public-profile{width:100%;max-width:780px;margin:22px auto 110px;min-width:0;color:#f3f5ef}
         .public-hero-top{display:grid;grid-template-columns:50px 1fr 50px;align-items:center}.public-back,.public-more{height:48px;width:50px;display:grid;place-items:center;border:1px solid #273b2b;border-radius:14px;background:#09110d;color:#f2f6ef;text-decoration:none;font-size:24px}.public-more{font-size:16px;letter-spacing:2px}.public-page-title{text-align:center;font-size:17px;font-weight:800}.public-view-label{text-align:center;margin-top:14px;color:#9da99a;font-size:12px}.public-hero-main{grid-template-columns:108px minmax(0,1fr);margin:22px 0 18px}.public-identity h1{font-size:clamp(25px,5vw,34px)}.public-identity p{font-style:italic}.public-verified{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#c5f36a;color:#0b150d;font-style:normal;font-size:13px;vertical-align:middle}.public-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;margin-top:8px}
         .public-rank-pill{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #354a32;border-radius:13px;background:#0b150e}.public-rank-pill span{font-size:19px;color:#e8cb36}.public-rank-pill b{font:900 18px monospace;color:#e8cb36}.public-rank-pill small{font:700 8px monospace;letter-spacing:.1em;color:#8f9c88}
         .public-share-button{border:1px solid #b9f52d;border-radius:13px;background:#0b150e;color:#c5f36a;font-weight:800;font-size:13px;cursor:pointer}
