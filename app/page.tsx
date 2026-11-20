@@ -83,7 +83,7 @@ export default function Home(){
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
     </div>}
-   <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
+   <Link className="home-v2-full-link" href="/leaderboard">View full weekly leaderboard <span>→</span></Link>
   </section>
   {champion&&<section className="home-v2-champion">
    <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
