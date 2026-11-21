@@ -4,7 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 
-type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
+type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation:"regular"|"boardman"|"house_ghost" };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
 type Champion = { id:string; week_start:string; week_end:string; player_id:string; prize_amount?:number|null; players?:{username:string;player_code:string;photo_url:string|null}|null };
 type KingsPot = { week_start:string; pot_amount:number; contributor_count:number };
@@ -23,7 +23,7 @@ export default function Home(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
   const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
-   supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
+   supabase.rpc("get_period_leaderboard_with_designation_preview",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
    supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
    supabase.rpc("get_current_kings_pot")
@@ -78,7 +78,7 @@ export default function Home(){
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
      {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
       <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
-      <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong><small>{p.player_code}</small></span></span>
+      <span className="home-v2-player"><Avatar player={p}/><span><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"?<em className="home-v2-designation-tag boardman-tag">BOARDMAN 💀</em>:p.designation==="house_ghost"?<em className="home-v2-designation-tag ghost-tag">HOUSE GHOSTS 👻</em>:null}<small>{p.player_code}</small></span></span>
       <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
