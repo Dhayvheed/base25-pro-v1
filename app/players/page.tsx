@@ -15,6 +15,7 @@ type Player = {
   wins: number;
   losses: number;
   win_percentage: number | string;
+  designation: "regular" | "boardman" | "house_ghost";
 };
 
 const PAGE_SIZE = 5;
@@ -48,7 +49,7 @@ export default function PlayersPage() {
 
       const { data, error: queryError } = await supabase
         .from("player_public_leaderboard")
-        .select("id,username,player_code,photo_url,elo_rating,matches_played,wins,losses,win_percentage")
+        .select("id,username,player_code,photo_url,elo_rating,matches_played,wins,losses,win_percentage,designation")
         .order("elo_rating", { ascending: false })
         .order("username", { ascending: true });
 
@@ -133,7 +134,7 @@ export default function PlayersPage() {
                         : (player.username?.[0] || "?").toUpperCase()}
                     </span>
                     <span className="players-identity" style={{ flex: "1 1 0%", minWidth: 0, overflow: "hidden" }}>
-                      <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>}</strong>
+                      <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>}</strong>{player.designation === "boardman" ? <em className="players-designation-tag boardman-tag">BOARDMAN 💀</em> : player.designation === "house_ghost" ? <em className="players-designation-tag ghost-tag">HOUSE GHOSTS 👻</em> : null}
                       <small>{player.player_code}</small>
                     </span>
                     <span className="players-record" style={{ flex: "0 0 48px", width: 48, textAlign: "right", whiteSpace: "nowrap" }}>{player.wins}W / {player.losses}L</span>
@@ -158,6 +159,7 @@ export default function PlayersPage() {
       </section>
 
       <style jsx>{`
+        .players-designation-tag{display:inline-flex;align-items:center;vertical-align:middle;margin-top:4px;padding:3px 6px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.04em;white-space:nowrap}.players-designation-tag.boardman-tag{background:#3b2d12;color:#ffd36a;border-color:#b8892e}.players-designation-tag.ghost-tag{background:#24163b;color:#d7b5ff;border-color:#8054b8}
         .players-page{min-height:100vh;padding-bottom:110px;color:#f4f5f2}
         .players-content{position:relative;isolation:isolate;width:100%;max-width:760px;margin:0 auto;padding:38px 0 70px}
         .players-content:before{content:"";position:absolute;z-index:-1;top:-20px;right:-160px;width:520px;height:460px;background:radial-gradient(ellipse at 60% 25%,#1f7a42 0%,#0f3d22 38%,transparent 75%);pointer-events:none;opacity:.78}
