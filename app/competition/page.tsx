@@ -155,7 +155,7 @@ export default function CompetitionPage() {
           <div className="competition-ref-live"><i /> LIVE POT</div>
           <div className="competition-ref-pot-value">
             {potLoading ? <span className="competition-ref-loading-value">Loading…</span> : potError ? "Unavailable" : money(potAmount || 0)}
-{potIncreaseKey > 0 && <span key={potIncreaseKey} className="competition-ref-chip">+₦200</span>}
+{potIncreaseKey > 0 && <span key={potIncreaseKey} className="competition-ref-chip">+₦100</span>}
           </div>
           <div className="competition-ref-milestone">
             <span>Next milestone</span>
@@ -170,11 +170,11 @@ export default function CompetitionPage() {
         <div className="competition-ref-stats">
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon">♧</span>
-            <div><strong>{potLoading ? "—" : Number(kingsPot?.contributor_count || 0)}</strong><small>Players joined</small></div>
+            <div><strong>{potLoading ? "—" : Number(kingsPot?.contributor_count || 0)}</strong><small>Players contributing</small></div>
           </div>
           <div className="competition-ref-stat">
             <span className="competition-ref-stat-icon gold">◉</span>
-            <div><strong>₦200</strong><small>Added per new player</small></div>
+            <div><strong>₦100</strong><small>Added per qualifying match</small></div>
           </div>
         </div>
 
