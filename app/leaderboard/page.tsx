@@ -42,7 +42,7 @@ export default function LeaderboardPage() {
         return;
       }
 
-      const { data, error: requestError } = await supabase.rpc("get_period_leaderboard_with_designation", {
+      const { data, error: requestError } = await supabase.rpc("get_period_leaderboard_with_designation_preview", {
         p_period: "this_week",
       });
 
