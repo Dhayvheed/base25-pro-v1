@@ -1000,3 +1000,8 @@
 .record-wager-pot span{font-size:12px;color:#aeb9ae}.record-wager-pot strong{font:900 23px monospace;color:#f0d34d}
 .record-wager-result{display:flex;justify-content:space-between;gap:10px;padding:12px 0 0;color:#c5f36a;font-size:12px}.record-wager-result b{font:850 15px monospace}
 @media(max-width:420px){.record-wager-fields{gap:7px}.record-wager-fields input{font-size:18px;padding:0 9px}.record-wager-presets{grid-template-columns:repeat(2,1fr)}}
+
+/* BASE25 PRO home leaderboard designation tags */
+.home-v2-designation-tag{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:3px 7px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.04em;white-space:nowrap}
+.home-v2-designation-tag.boardman-tag{background:#3b2d12;color:#ffd36a;border-color:#b8892e}
+.home-v2-designation-tag.ghost-tag{background:#24163b;color:#d7b5ff;border-color:#8054b8}
