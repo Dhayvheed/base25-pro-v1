@@ -53,6 +53,11 @@ export default function Home(){
     <div className="home-v2-eight"><span>8</span></div>
    </div>
   </section>
+  <section className="home-v2-stats">
+   <div><strong>{players.length}</strong><span>Registered players</span></div>
+   <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
+   <div><strong>{totalWins}</strong><span>Total wins</span></div>
+  </section>
   <section className="home-v2-pot" aria-label="King's Pot">
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
@@ -62,9 +67,9 @@ export default function Home(){
    <div className="home-v2-pot-winner">Winner takes it all on Saturday 🏆</div>
   </section>
   <section className="home-v2-stats">
-   <div><strong>{players.length}</strong><span>Registered players</span></div>
-   <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
-   <div><strong>{totalWins}</strong><span>Total wins</span></div>
+   <div><strong>{weeklyPlayers.length}</strong><span>Players this week</span></div>
+   <div><strong>{Math.round(weeklyPlayers.reduce((n,p)=>n+Number(p.matches_played||0),0)/2)}</strong><span>Matches this week</span></div>
+   <div><strong>{weeklyPlayers.reduce((n,p)=>n+Number(p.wins||0),0)}</strong><span>Wins this week</span></div>
   </section>
   <section className="home-v2-weekly">
    <div className="home-v2-section-head">
