@@ -204,6 +204,11 @@ export default function PublicPlayerProfile() {
   if (!player) return <main className="shell redesign-shell"><SiteNavigation /><div className="public-empty"><h1>Player not found</h1><Link href="/players">← All players</Link></div></main>;
 
   const weeklyChampions = champions.length;
+  const boardmanSlayerWins = matches.filter((match) => {
+    if (match.winner_id !== id) return false;
+    const opponent = relationPlayer(match.player_one_id === id ? match.two : match.one);
+    return opponent?.designation === "boardman";
+  }).length;
 
   return (
     <main className="shell redesign-shell public-player-page">
@@ -306,7 +311,7 @@ export default function PublicPlayerProfile() {
           <div className="public-section-heading"><div><small>CAREER MILESTONES</small><h2>Achievements</h2></div><span>PLAYER LEGACY</span></div>
           <div className="public-achievements">
             <div className="public-achievement"><i>♛</i><strong>{weeklyChampions}</strong><span>Saturday<br />Champion</span></div>
-            <div className="public-achievement"><i>♜</i><strong>—</strong><span>Weekly<br />Leader</span></div>
+            <div className="public-achievement boardman-slayer-achievement"><i>⚔️</i><strong>{boardmanSlayerWins || "—"}</strong><span>Boardman<br />Slayer{boardmanSlayerWins === 1 ? "" : "s"}</span></div>
             <div className="public-achievement"><i>★</i><strong>—</strong><span>Top 5<br />Finishes</span></div>
             <div className="public-achievement"><i>▥</i><strong>{peak.toLocaleString()}</strong><span>Peak<br />ELO</span></div>
           </div>
