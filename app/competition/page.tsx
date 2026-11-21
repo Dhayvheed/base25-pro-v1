@@ -180,7 +180,7 @@ export default function CompetitionPage() {
 
         <section className="competition-ref-grow">
           <h2>HOW IT WORKS</h2>
-          <p>Every player who records their <strong>first qualifying one-rack ranking match</strong> this week adds <strong>₦200</strong> to The King's Pot.</p>
+          <p>Every qualifying one-rack ranking match adds <strong>₦100</strong> to The King's Pot. Contributions are counted per match, not per leaderboard signup.</p>
           <p><strong>TOP 5 PLAYERS</strong> qualify for the Saturday Final.</p>
           <p className="competition-ref-grow-winner">ONE WINNER. THE ENTIRE POT. 🏆</p>
         </section>
