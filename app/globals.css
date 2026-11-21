@@ -467,9 +467,10 @@
 .home-v2-player{display:flex;align-items:center;gap:10px;min-width:0}
 .home-v2-avatar{width:38px;height:38px;flex:none;display:grid;place-items:center;overflow:hidden;border-radius:50%;background:#263629;color:#c8f169;font-size:15px;font-weight:850}
 .home-v2-avatar img{width:100%;height:100%;object-fit:cover}
-.home-v2-player>span:last-child{min-width:0}
-.home-v2-player strong,.home-v2-player small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.home-v2-player strong{font-size:14px}
+.home-v2-player>span:last-child{display:grid;align-content:center;gap:3px;min-width:0}
+.home-v2-player strong{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;white-space:nowrap;font-size:14px}
+.home-v2-player-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-v2-player small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .home-v2-player small{margin-top:4px;color:#9aa69f;font:10px 'DM Mono',monospace}
 .home-v2-record{color:#d5dad6;text-align:right;font-size:12px;font-weight:600;white-space:nowrap}
 .home-v2-rating{color:#c8f169;text-align:right;font-size:15px;font-weight:850;font-variant-numeric:tabular-nums}
@@ -1002,6 +1003,6 @@
 @media(max-width:420px){.record-wager-fields{gap:7px}.record-wager-fields input{font-size:18px;padding:0 9px}.record-wager-presets{grid-template-columns:repeat(2,1fr)}}
 
 /* BASE25 PRO home leaderboard designation tags */
-.home-v2-designation-tag{display:inline-flex;align-items:center;width:max-content;margin-top:4px;padding:3px 7px;border:1px solid #ffffff24;border-radius:999px;font:800 8px monospace;font-style:normal;letter-spacing:.04em;white-space:nowrap}
+.home-v2-designation-tag{display:inline-flex;align-items:center;flex:none;width:max-content;max-width:100%;margin:0;padding:3px 6px;border:1px solid #ffffff24;border-radius:999px;font:800 7px monospace;font-style:normal;letter-spacing:.03em;white-space:nowrap}
 .home-v2-designation-tag.boardman-tag{background:#3b2d12;color:#ffd36a;border-color:#b8892e}
 .home-v2-designation-tag.ghost-tag{background:#24163b;color:#d7b5ff;border-color:#8054b8}
