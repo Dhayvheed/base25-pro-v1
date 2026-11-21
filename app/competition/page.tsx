@@ -91,7 +91,7 @@ export default function CompetitionPage() {
       }
 
       const [leaderboardResult, potResult] = await Promise.all([
-        supabase.rpc("get_period_leaderboard_with_designation", { p_period: "this_week" }),
+        supabase.rpc("get_period_leaderboard_with_designation_preview", { p_period: "this_week" }),
         supabase.rpc("get_current_kings_pot"),
       ]);
 
