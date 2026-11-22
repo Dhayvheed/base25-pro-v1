@@ -195,6 +195,10 @@ export default function Admin() {
     checkAdmin();
   }, [session]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("section") === "match") setActiveSection("match");
+  }, []);
+
   const thirdRackNeeded = matchFormat === "best_of_3" && !!racks[0].winnerId && !!racks[1].winnerId && racks[0].winnerId !== racks[1].winnerId;
   const rackWins = useMemo(() => {
     const completed = matchFormat === "single" ? racks.slice(0, 1) : thirdRackNeeded ? racks.slice(0, 3) : racks.slice(0, 2);
