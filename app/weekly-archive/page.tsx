@@ -32,5 +32,5 @@ export default function WeeklyArchivePage(){
    {list.length>5&&<section className="archive-more"><div><small>COMPLETE WEEKLY TABLE</small><h2>All recorded standings</h2></div><div className="archive-table">{list.slice(5).map(p=><Link key={p.player_id} href={"/players/"+p.player_id} className="archive-player-row"><b className="archive-rank">{p.rank}</b><span className="archive-mini-avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username?.[0]?.toUpperCase()}</span><span className="archive-player-info"><strong>{p.username}</strong><small>{p.player_code||"—"}</small></span><span className="archive-record">{p.wins} – {p.losses}</span><span className="archive-elo"><strong>{num(p.weekly_elo)}</strong><small>WEEKLY</small></span></Link>)}</div></section>}
   </>}
  </section>
-</section></main>;
+</main>;
 }
