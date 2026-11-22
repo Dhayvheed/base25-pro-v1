@@ -248,7 +248,7 @@ export default function CompetitionPage() {
                     <span className={"competition-ref-rank rank-" + rank} style={{width:26,height:26,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#2f5fd0":rank===3?"#d9402f":rank===4?"#7b3fa0":"#e8782a",color:"#111",fontSize:10,fontWeight:900,lineHeight:1,flexShrink:0,boxShadow:"inset -2px -2px 4px rgba(0,0,0,.35)"}}><b style={{width:16,height:16,borderRadius:"50%",background:"#fff",display:"grid",placeItems:"center",color:"#111"}}>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
                     <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
-                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username} {player.designation === "boardman" && <span className="competition-designation-tag">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="competition-designation-tag">HOUSE GHOSTS 👻</span>}</strong>
+                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username} {player.designation === "boardman" && <span className="competition-designation-tag is-boardman">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="competition-designation-tag">HOUSE GHOSTS 👻</span>}</strong>
                       <small style={{display:"block",font:"10px 'JetBrains Mono',monospace",letterSpacing:"0",color:"#9aa69f"}}>{player.player_code}</small>
                     </span>
                     <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:12,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
@@ -359,7 +359,7 @@ export default function CompetitionPage() {
           .competition-ref-rating{font-size:13px!important}
         }
         @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-progress span{transition:none}}
-        .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}
+        .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}.competition-designation-tag.is-boardman{background:#3a1717;border-color:#b94444;color:#ff7777}
       `}</style>
     </main>
   );
