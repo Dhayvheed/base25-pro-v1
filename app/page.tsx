@@ -47,6 +47,11 @@ export default function Home(){
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
  const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
  return <main className="shell redesign-shell home-v2">
+  <style jsx global>{`
+   .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
+   .home-v2-player-row.is-first .home-v2-player-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px}
+   .home-v2-player-row.is-first .home-v2-player small{margin-top:0;line-height:1.25}
+  `}</style>
   <SiteNavigation onHomeAccountChange={setAccount} />
   <header className="home-header">
    <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
