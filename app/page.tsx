@@ -101,7 +101,7 @@ export default function Home(){
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
      {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
       <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
-      <span className="home-v2-player"><Avatar player={p}/><span className="home-v2-player-copy"><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"&&<span className="home-v2-designation-tag">BOARDMAN 💀</span>}{p.designation==="house_ghost"&&<span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>}<small>{p.player_code}</small></span></span>
+      <span className="home-v2-player"><Avatar player={p}/><span className="home-v2-player-copy"><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"&&<span className="home-v2-designation-tag is-boardman">BOARDMAN 💀</span>}{p.designation==="house_ghost"&&<span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>}<small>{p.player_code}</small></span></span>
       <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
       <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
      </Link>})}
