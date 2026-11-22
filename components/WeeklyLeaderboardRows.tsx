@@ -15,10 +15,11 @@ export type WeeklyLeaderboardPlayer = {
 };
 
 function DesignationBadge({ designation, variant }: { designation?: WeeklyLeaderboardPlayer["designation"]; variant: "home" | "competition" }) {
-  if (designation === "boardman") {
+  const normalizedDesignation = String(designation || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalizedDesignation === "boardman") {
     return <span className={variant === "home" ? "home-v2-designation-tag is-boardman" : "competition-designation-tag is-boardman"}>BOARDMAN 💀</span>;
   }
-  if (designation === "house_ghost") {
+  if (normalizedDesignation === "house_ghost" || normalizedDesignation === "house_ghosts") {
     return <span className={variant === "home" ? "home-v2-designation-tag" : "competition-designation-tag"}>HOUSE GHOSTS 👻</span>;
   }
   return null;
