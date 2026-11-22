@@ -94,7 +94,7 @@ export default function Home(){
     <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
     <span className="home-v2-live-pill"><i/> LIVE</span>
    </div>
-   <p className="home-v2-subtitle">Top 5 qualify for the Saturday final. Points and the pot reset every Saturday.</p>
+   <p className="home-v2-subtitle">Top 5 real players qualify for the Saturday final. Boardman and House players rank but can’t qualify for finals or prizes. Points and the pot reset every Saturday.</p>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
     <div className="home-v2-table">
