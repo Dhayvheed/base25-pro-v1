@@ -53,8 +53,8 @@ export default function Home(){
    .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
    .home-v2-player-row.is-first .home-v2-player-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px}
    .home-v2-player-row.is-first .home-v2-player small{margin-top:0;line-height:1.25}
+   .home-v2-designation-tag.is-boardman-slayer,.competition-designation-tag.is-boardman-slayer{background:#382713!important;border:1px solid #a87932!important;color:#f0c36b!important}
   `}
-.home-v2-designation-tag.is-boardman-slayer,.competition-designation-tag.is-boardman-slayer{background:#382713!important;border:1px solid #a87932!important;color:#f0c36b!important}
   </style>
   <SiteNavigation onHomeAccountChange={setAccount} />
   <header className="home-header">
