@@ -18,6 +18,7 @@ export default function Admin() {
   const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
   const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
+  const [recentPlayerIds, setRecentPlayerIds] = useState<string[]>([]);
   const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
   const [playerPasswordDrafts, setPlayerPasswordDrafts] = useState<Record<string, string>>({});
@@ -69,6 +70,13 @@ export default function Admin() {
     setStaffMembers(rows);
     setStaffRoleDrafts(Object.fromEntries(rows.filter((row) => row.role !== "owner").map((row) => [row.user_id, row.role as "manager" | "attendant"])));
   }
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("base25-record-match-recent-players");
+      if (saved) setRecentPlayerIds(JSON.parse(saved).filter((id: unknown) => typeof id === "string").slice(0, 3));
+    } catch { /* Ignore unavailable or invalid local recent-player history. */ }
+  }, []);
 
   useEffect(() => {
     if (!message) return;
@@ -347,6 +355,14 @@ export default function Admin() {
   if (!staffRole) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
   const playerName = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username}` : "Select player"; };
+  const recentPlayers = recentPlayerIds.map((id) => players.find((player) => player.id === id)).filter((player): player is Player => Boolean(player));
+  function selectMatchPlayer(id: string, target: "one" | "two") {
+    if (target === "one") { setOne(id); setPlayerOneSearch(""); setPlayerPickerTarget("two"); }
+    else { setTwo(id); setPlayerTwoSearch(""); setPlayerPickerTarget(null); }
+    const next = [id, ...recentPlayerIds.filter((recentId) => recentId !== id)].slice(0, 3);
+    setRecentPlayerIds(next);
+    try { window.localStorage.setItem("base25-record-match-recent-players", JSON.stringify(next)); } catch { /* Recent history remains available for this session. */ }
+  }
   const playerMatchLabel = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username} · ${player.player_code}` : "Unknown player"; };
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
   const playerOneOptions = players.filter((player) => player.id !== two && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerOneSearch.trim().toLowerCase()));
@@ -503,8 +519,8 @@ export default function Admin() {
           <div className="record-picker-handle" />
           <div className="record-picker-heading"><h3>Choose player {playerPickerTarget}</h3><button type="button" onClick={()=>{setPlayerPickerTarget(null);setPlayerOnePickerOpen(false);setPlayerTwoPickerOpen(false);}}>Close</button></div>
           <input className="record-picker-search" autoFocus placeholder="Search username or player ID" value={playerPickerTarget==="one"?playerOneSearch:playerTwoSearch} onChange={event=>playerPickerTarget==="one"?setPlayerOneSearch(event.target.value):setPlayerTwoSearch(event.target.value)} />
-          <div className="record-picker-recent"><span>Recent</span>{players.slice(0,3).map(player=><button type="button" key={player.id} disabled={player.id===(playerPickerTarget==="one"?two:one)} onClick={()=>{if(playerPickerTarget==="one"){setOne(player.id);setPlayerOneSearch("");setPlayerPickerTarget("two");}else{setTwo(player.id);setPlayerTwoSearch("");setPlayerPickerTarget(null);}}}>@{player.username}</button>)}</div>
-          <div className="record-picker-list">{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).slice(0,5).map(player=><button type="button" key={player.id} onClick={()=>{if(playerPickerTarget==="one"){setOne(player.id);setPlayerOneSearch("");setPlayerPickerTarget("two");}else{setTwo(player.id);setPlayerTwoSearch("");setPlayerPickerTarget(null);}}}><span className="record-picker-avatar">{player.username.slice(0,1).toUpperCase()}</span><span><b>@{player.username}</b><small>{player.player_code} · {Number(player.elo_rating||1000).toLocaleString()}</small></span>{player.id===(playerPickerTarget==="one"?one:two)&&<strong>✓</strong>}</button>)}{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).length===0&&<p className="record-picker-empty">No matching players</p>}</div>
+          <div className="record-picker-recent"><span>Recent</span>{recentPlayers.map(player=><button type="button" key={player.id} disabled={player.id===(playerPickerTarget==="one"?two:one)} onClick={()=>selectMatchPlayer(player.id,playerPickerTarget)}>@{player.username}</button>)}</div>
+          <div className="record-picker-list">{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).slice(0,5).map(player=><button type="button" key={player.id} onClick={()=>selectMatchPlayer(player.id,playerPickerTarget)}><span className="record-picker-avatar">{player.username.slice(0,1).toUpperCase()}</span><span><b>@{player.username}</b><small>{player.player_code} · {Number(player.elo_rating||1000).toLocaleString()}</small></span>{player.id===(playerPickerTarget==="one"?one:two)&&<strong>✓</strong>}</button>)}{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).length===0&&<p className="record-picker-empty">No matching players</p>}</div>
         </section>
       </div>}
       {staffRole === "owner" && <>
