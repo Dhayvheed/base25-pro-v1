@@ -110,7 +110,7 @@ export default function CompetitionPage() {
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
         const [slayerIds, bonusData] = await Promise.all([getBoardmanSlayerPlayerIds(supabase), getBoardmanBonusData(supabase)]);
         const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", hasBoardmanSlayerBadge: slayerIds.has(player.id), boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }));
-        setPlayers(enrichedRows.sort((a, b) => Number(b.elo_rating || 0) - Number(a.elo_rating || 0)));
+        setPlayers(enrichedRows.sort((a, b) => (Number(b.elo_rating || 0) + Number(b.boardmanBonusPoints || 0)) - (Number(a.elo_rating || 0) + Number(a.boardmanBonusPoints || 0))));
         setError("");
       }
       setLoading(false);
