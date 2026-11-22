@@ -1088,3 +1088,23 @@
 .home-header-avatar{overflow:hidden;border:2px solid #c8f169;border-radius:50%;background:#14251a;color:#c8f169;font-weight:850}
 .home-header-avatar img{width:100%;height:100%;object-fit:cover}
 .home-header-login{width:auto;min-width:82px;padding:0 16px;background:#c8f169;color:#0a0e0c;font-weight:850}
+
+
+/* Home header menu control */
+.home-header-actions{gap:8px}
+.home-header-menu{width:44px;height:44px;min-width:44px;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #2b3a31;border-radius:13px;background:#101512;color:#c8f169}
+.home-header-menu span{width:17px;height:2px;border-radius:2px;background:currentColor}
+.home-header-login{min-height:44px}
+.home-v2-pot{box-shadow:0 0 26px rgba(216,183,106,.08)}
+.home-v2-columns{display:grid;grid-template-columns:24px minmax(0,1fr) 52px 48px;gap:8px;align-items:center}
+.home-v2-player-row{display:grid;grid-template-columns:24px minmax(0,1fr) 52px 48px;gap:8px;align-items:center}
+.home-v2-row-wrap:has(.is-house) .home-v2-player-row{background:repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 7px,transparent 7px 14px)}
+.home-v2-player-row.is-house .home-v2-rank{color:#89918c}
+.home-v2-player-row.is-house .home-v2-rating{color:#f4f5f2}
+.home-house-tag{display:inline-block;margin-left:5px;padding:2px 4px;border:1px solid #647069;border-radius:3px;color:#aab3ad;font:8px 'DM Mono',monospace;letter-spacing:.08em}
+.home-v2-player-row.is-house .home-v2-player .home-v2-avatar{border:1px dashed #8b9690}
+.home-v2-player-row.is-real{position:relative}
+.home-v2-player-row.is-real:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:#c8f169}
+.home-v2-cutline{margin:9px 0 5px;border-top:1px dashed #536341;text-align:center}
+.home-v2-cutline span{position:relative;top:-7px;padding:0 8px;background:#101712;color:#c8f169;font:8px 'DM Mono',monospace;letter-spacing:.13em}
+@media(prefers-reduced-motion:reduce){.home-v2-live i,.home-v2-pot-chip{animation:none!important}}
