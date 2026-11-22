@@ -69,7 +69,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
         return;
       }
       setSignedIn(true);
-      const { data: staffAccessData } = await supabase.rpc("get_my_staff_access");
+      const { data: staffAccessData } = await supabase!.rpc("get_my_staff_access");
       if (!active) return;
       const staffAccess = Array.isArray(staffAccessData) ? staffAccessData[0] : staffAccessData;
       setStaffRole(staffAccess?.is_active ? staffAccess.role : null);
