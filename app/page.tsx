@@ -110,6 +110,5 @@ export default function Home(){
    <Link className="home-v2-all-matches" href="/matches">View all matches <span>→</span></Link>
   </section>
   <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span></footer>
-  <nav className="home-bottom-nav" aria-label="Bottom navigation"><Link className="active" href="/">⌂<span>Home</span></Link><Link href="/competition">♜<span>Competition</span></Link><Link href="/players">♙<span>Players</span></Link><Link href="/predictions">◎<span>Predictions</span></Link><Link href="/hall-of-fame">♛<span>Hall of Fame</span></Link></nav>
  </main>;
 }
