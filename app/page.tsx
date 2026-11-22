@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 
-type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman" };
+type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman"; hasBoardmanSlayerBadge?: boolean };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
 type Champion = { id:string; week_start:string; week_end:string; player_id:string; prize_amount?:number|null; players?:{username:string;player_code:string;photo_url:string|null}|null };
 type KingsPot = { week_start:string; pot_amount:number; contributor_count:number };
@@ -42,7 +42,7 @@ export default function Home(){
   ]);
   if(!active)return;
   if(pe||we||me||ce||potError||matchCountError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
+  const slayerIds = await getBoardmanSlayerPlayerIds(supabase);\n  setPlayers((p||[]) as Player[]);setWeeklyPlayers(((w||[]) as Player[]).map(player=>({...player,hasBoardmanSlayerBadge:slayerIds.has(player.id)})));setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
