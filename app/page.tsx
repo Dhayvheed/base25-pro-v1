@@ -29,7 +29,8 @@ export default function Home(){
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
    supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
-   supabase.rpc("get_current_kings_pot")
+   supabase.rpc("get_current_kings_pot"),
+   supabase.from("matches").select("id", { count: "exact", head: true }).gte("played_at", weekStart + "T00:00:00+01:00")
   ]);
   if(!active)return;
   if(pe||we||me||ce||potError||potMatchesError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||potMatchesError?.message||"Unable to load records.");
