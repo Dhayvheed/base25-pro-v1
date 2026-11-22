@@ -27,16 +27,32 @@ export async function getBoardmanBonusData(client: any): Promise<BoardmanBonusDa
   const bonusByPlayerId = new Map<string, number>();
   if (!client) return { bonusByMatchId, bonusByPlayerId };
 
-  const [{ data: players, error: playersError }, { data: matches, error: matchesError }] = await Promise.all([
-    client.from("players").select("id,designation"),
-    client.from("matches").select("id,played_at,created_at,player_one_id,player_two_id,winner_id").order("played_at", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }),
-  ]);
-  if (playersError || matchesError || !players?.length || !matches?.length) return { bonusByMatchId, bonusByPlayerId };
+  const { data: players, error: playersError } = await client.from("players").select("id,designation");
+  if (playersError || !players?.length) return { bonusByMatchId, bonusByPlayerId };
 
   const boardmanIds = new Set(players.filter((player: any) => player.designation === "boardman").map((player: any) => player.id));
+  if (!boardmanIds.size) return { bonusByMatchId, bonusByPlayerId };
+
+  const idList = Array.from(boardmanIds).join(",");
+  const matches: BoardmanBonusMatch[] = [];
+  const pageSize = 1000;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: page, error } = await client.from("matches")
+      .select("id,played_at,created_at,player_one_id,player_two_id,winner_id")
+      .or(`player_one_id.in.(${idList}),player_two_id.in.(${idList})`)
+      .order("played_at", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) return { bonusByMatchId: new Map<string, number>(), bonusByPlayerId: new Map<string, number>() };
+    matches.push(...((page || []) as BoardmanBonusMatch[]));
+    if (!page || page.length < pageSize) break;
+  }
+  if (!matches.length) return { bonusByMatchId, bonusByPlayerId };
+
   const countsByWeekAndPlayer = new Map<string, number>();
 
-  for (const match of matches as BoardmanBonusMatch[]) {
+  for (const match of matches) {
     const oneIsBoardman = boardmanIds.has(match.player_one_id);
     const twoIsBoardman = boardmanIds.has(match.player_two_id);
     if (oneIsBoardman === twoIsBoardman) continue;
