@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
+import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
@@ -381,6 +382,7 @@ export default function Admin() {
 
   if (!session) return (
     <main className="shell admin-shell">
+      <SiteNavigation />
       <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><Link href="/">← Public site</Link></header>
       <div className="admin-card"><div className="eyebrow">RESTRICTED ACCESS</div><h1>Admin login<span>.</span></h1>
         <form className="form" onSubmit={login}>
