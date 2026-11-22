@@ -1018,3 +1018,57 @@
  @media(max-width:600px){.archive-page{padding-left:15px;padding-right:15px}.archive-intro h1{font-size:32px}.archive-player-row{grid-template-columns:20px 36px minmax(0,1fr) 40px 62px;gap:6px;padding:9px 8px}.archive-mini-avatar{width:34px;height:34px}.archive-player-info strong{font-size:11px}.archive-elo strong{font-size:14px}.archive-record{font-size:10px}.archive-weekly-rating{font-size:21px}.place-1 .archive-weekly-rating{font-size:25px}.archive-alltime{font-size:8px;padding:4px 5px}}
  @media(min-width:431px){.archive-page{border-left:1px solid #16221a;border-right:1px solid #16221a}}
 
+
+
+/* Manage player profiles — compact accordion layout */
+.manage-profiles-panel{width:100%;max-width:760px;margin:0 auto;padding:22px 18px 30px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.manage-profiles-heading{margin:10px 0 18px}
+.manage-profiles-heading .eyebrow{font:600 11px 'JetBrains Mono',monospace;letter-spacing:1.8px;color:#C8F169}
+.manage-profiles-heading h1{margin:8px 0 7px;font-size:clamp(27px,7vw,36px);line-height:1.05;letter-spacing:-1.3px;font-weight:800;color:#F4F5F2}
+.manage-profiles-heading p{max-width:430px;margin:0;color:#9AA69F;font-size:15px;line-height:1.5}
+.manage-profile-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:17px 8px;margin:18px 0 14px;border:1px solid #1F2A24;border-radius:20px;background:#101512}
+.manage-profile-stats>div{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.manage-profile-stats>div+div{border-left:1px solid #2B3A31}
+.manage-profile-stats strong{font-size:29px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;color:#F4F5F2}
+.manage-profile-stats>div:nth-child(2) strong{color:#C8F169}
+.manage-profile-stats>div:nth-child(3) strong{color:#E8C547}
+.manage-profile-stats span{font-size:12px;color:#9AA69F}
+.manage-profile-search{height:54px;display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:0 15px;border:1px solid #2B3A31;border-radius:13px;background:#090e0b}
+.manage-profile-search svg{width:19px;height:19px;flex:none;fill:none;stroke:#9AA69F;stroke-width:2;stroke-linecap:round}
+.manage-profile-search input{width:100%;height:100%;min-width:0;border:0!important;outline:0;background:transparent!important;color:#F4F5F2;font:400 16px Inter,system-ui!important;padding:0!important;box-shadow:none!important}
+.manage-profile-search input::placeholder{color:#9AA69F}
+.manage-profile-filters{display:flex;gap:9px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}
+.manage-profile-filters::-webkit-scrollbar{display:none}
+.manage-profile-filters button{min-height:48px;flex:none;padding:0 16px;border:1px solid #2B3A31;border-radius:999px;background:transparent;color:#D8DED9;font:500 13px Inter,system-ui}
+.manage-profile-filters button.selected{background:#C8F169;border-color:#C8F169;color:#0A0E0C;font-weight:800}
+.manage-profile-list{display:flex;flex-direction:column;gap:10px}
+.manage-profile-card{overflow:hidden;border:1px solid #1F2A24;border-radius:20px;background:#101512;transition:border-color .16s ease,background .16s ease}
+.manage-profile-card.expanded{border-color:#C8F169;background:linear-gradient(145deg,#12281A,#0D140F)}
+.manage-profile-row{width:100%;min-height:84px;display:flex;align-items:center;gap:12px;padding:13px 14px;border:0;background:transparent;color:#F4F5F2;text-align:left;cursor:pointer}
+.manage-profile-avatar{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1.5px solid #426b4a;border-radius:50%;background:#111b14;color:#C8F169;font-size:19px;font-weight:800}
+.manage-profile-identity{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.manage-profile-identity strong{overflow:hidden;color:#F4F5F2;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:800}
+.manage-profile-identity small{overflow:hidden;color:#9AA69F;text-overflow:ellipsis;white-space:nowrap;font:10px 'JetBrains Mono',monospace}
+.manage-profile-status{flex:none;padding:6px 8px;border:1px solid #6D5B27;border-radius:999px;color:#E8C547;font:600 9px 'JetBrains Mono',monospace;letter-spacing:1px;white-space:nowrap}
+.manage-profile-status:before{content:"";display:inline-block;width:6px;height:6px;margin:0 6px 1px 0;border-radius:50%;background:#E8C547}
+.manage-profile-status.active{border-color:#426b4a;color:#C8F169}
+.manage-profile-status.active:before{background:#C8F169}
+.manage-profile-chevron{width:18px;height:18px;flex:none;fill:none;stroke:#9AA69F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .16s}
+.manage-profile-card.expanded .manage-profile-chevron{transform:rotate(180deg);stroke:#C8F169}
+.manage-profile-details{display:flex;flex-direction:column;gap:15px;padding:16px 16px 18px;border-top:1px solid #24402F}
+.manage-profile-details>label,.manage-profile-edit>label{display:flex;flex-direction:column;gap:8px;color:#9AA69F;font-size:13px;font-weight:500}
+.manage-profile-details input,.manage-profile-details select,.manage-profile-edit input{width:100%;height:54px;min-height:54px;padding:0 14px;border:1px solid #2B3A31;border-radius:13px;background:#090e0b;color:#F4F5F2;font:400 16px Inter,system-ui;outline:none}
+.manage-profile-details input:focus,.manage-profile-details select:focus,.manage-profile-edit input:focus{border-color:#C8F169}
+.manage-profile-password{display:flex;align-items:stretch;gap:8px;min-width:0}
+.manage-profile-password input{flex:1;min-width:0}
+.manage-profile-password button{min-width:76px;min-height:54px;padding:0 13px;border:1px solid #2B3A31;border-radius:13px;background:transparent;color:#C8F169;font-weight:700}
+.manage-profile-generate{width:100%;min-height:50px;border:1px dashed #2B3A31;border-radius:13px;background:transparent;color:#C8F169;font-weight:700}
+.manage-profile-help{margin:-2px 0 0;color:#9AA69F;font-size:13px;line-height:1.5}
+.manage-profile-primary{width:100%;min-height:56px;border:1px solid #e0ffa366;border-radius:15px;background:#C8F169;color:#0A0E0C;font-size:16px;font-weight:800}
+.manage-profile-primary:disabled{opacity:.5}
+.manage-profile-edit-button{width:100%;min-height:54px;border:1px solid #2B3A31;border-radius:14px;background:transparent;color:#F4F5F2;font-size:15px;font-weight:700}
+.manage-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.manage-profile-actions button{min-height:48px}
+.manage-profile-empty{padding:24px 16px;border:1px dashed #2B3A31;border-radius:16px;color:#9AA69F;text-align:center}
+.manage-profile-count{margin:16px 0 4px;color:#9AA69F;text-align:center;font:10px 'JetBrains Mono',monospace;letter-spacing:.3px}
+@media(max-width:600px){.manage-profiles-panel{padding:12px 0 28px!important}.manage-profiles-heading h1{font-size:32px}.manage-profile-row{gap:10px;padding:12px}.manage-profile-avatar{width:44px;height:44px}.manage-profile-identity strong{font-size:14px}.manage-profile-status{padding:5px 6px;font-size:8px;letter-spacing:.6px}.manage-profile-details{padding:15px 14px 16px}.manage-profile-stats strong{font-size:27px}}
