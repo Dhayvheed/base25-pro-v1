@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import WeeklyLeaderboardRows from "@/components/WeeklyLeaderboardRows";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman" };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
@@ -99,12 +100,7 @@ export default function Home(){
    {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
     <div className="home-v2-table">
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
-     {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
-      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
-      <span className="home-v2-player"><Avatar player={p}/><span className="home-v2-player-copy"><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"&&<span className="home-v2-designation-tag is-boardman">BOARDMAN 💀</span>}{p.designation==="house_ghost"&&<span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>}<small>{p.player_code}</small></span></span>
-      <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
-      <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
-     </Link>})}
+     <WeeklyLeaderboardRows players={visiblePlayers} variant="home" />
     </div>}
    <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
   </section>
