@@ -61,6 +61,10 @@ export default function Admin() {
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
   const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions">("overview");
+  const [profileSearch, setProfileSearch] = useState("");
+  const [profileFilter, setProfileFilter] = useState<"all" | "no-login" | "active">("all");
+  const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
+
 
   async function refreshStaff() {
     if (!supabase) return;
@@ -401,6 +405,17 @@ export default function Admin() {
   const playerTwoOptions = players.filter((player) => player.id !== one && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerTwoSearch.trim().toLowerCase()));
   const winnerOptions = players.filter((player) => player.id === one || player.id === two);
 
+  const activeProfileCount = playerAccountStatuses.filter(row => row.account_status === "Verified").length;
+  const noLoginProfileCount = Math.max(0, players.length - activeProfileCount);
+  const visibleProfilePlayers = players.filter(player => {
+    const account = playerAccountStatuses.find(row => row.player_id === player.id);
+    const active = account?.account_status === "Verified";
+    const matchesFilter = profileFilter === "all" || (profileFilter === "active" ? active : !active);
+    const query = profileSearch.trim().toLowerCase();
+    const matchesSearch = !query || `${player.full_name} @${player.username} ${player.player_code}`.toLowerCase().includes(query);
+    return matchesFilter && matchesSearch;
+  });
+
   const today = new Date();
   const daysToSaturday = (6 - today.getDay() + 7) % 7 || 7;
   const saturdayCountdown = daysToSaturday === 1 ? "1 day" : `${daysToSaturday} days`;
@@ -575,16 +590,56 @@ export default function Admin() {
         </div>)}
       </section>
 
-      <section className="admin-card" style={{display:activeSection==="players"?"block":"none"}}><h2>Manage player profiles</h2><p className="muted">Create player logins here. Choose the email and temporary password, then give the login details directly to the player.</p>
-        {players.map(player=>{ const account = playerAccountStatuses.find(row => row.player_id === player.id); return <div key={player.id} className="player-row" style={{display:"block"}}>
-          {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
-            <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
-            <div className="eyebrow">USERNAME · @{players.find(item=>item.id===editingPlayer)?.username || "—"} (LOCKED)</div>
-            <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
-            <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginTop:10}}><label style={{fontSize:12,color:"#aab6aa"}}>Player role<select aria-label={`Player role for ${player.username}`} value={player.designation || "regular"} disabled={busy} onChange={e=>updatePlayerDesignation(player,e.target.value as "regular" | "house_ghost" | "boardman")} style={{marginLeft:8,minWidth:145}}><option value="regular">Regular</option><option value="house_ghost">House Ghost</option><option value="boardman">Boardman</option></select></label></div>
-          <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={account?.account_status === "Verified"} /></label><label>{account?.account_status === "Verified" ? "Set new password" : "Choose password"}<div style={{display:"flex",width:"100%",minWidth:0,alignItems:"stretch",gap:8}}><input style={{flex:"1 1 0%",width:0,minWidth:0,boxSizing:"border-box"}} type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /><button type="button" className="secondary" style={{flex:"0 0 76px",width:76,minWidth:76,paddingLeft:8,paddingRight:8}} aria-label={showPlayerPasswords[player.id]?"Hide password":"Show password"} onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div>{account?.account_status === "Verified" ? <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8} onClick={()=>resetPlayerPassword(player)}>Update player password</button> : <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}</div>
-        </div>})}
+      <section className="admin-card manage-profiles-panel" style={{display:activeSection==="players"?"block":"none"}}>
+        <div className="manage-profiles-heading">
+          <div className="eyebrow">ADMIN · PLAYERS</div>
+          <h1>Manage player profiles</h1>
+          <p>Create logins for players and hand the details to them in person.</p>
+        </div>
+        <div className="manage-profile-stats">
+          <div><strong>{players.length}</strong><span>Players</span></div>
+          <div><strong>{activeProfileCount}</strong><span>Have login</span></div>
+          <div><strong>{noLoginProfileCount}</strong><span>No login</span></div>
+        </div>
+        <label className="manage-profile-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input type="search" value={profileSearch} onChange={e=>setProfileSearch(e.target.value)} placeholder="Search name, @username or B25-ID" aria-label="Search players"/></label>
+        <div className="manage-profile-filters" role="group" aria-label="Filter players">
+          <button type="button" className={profileFilter==="all"?"selected":""} onClick={()=>setProfileFilter("all")}>All {players.length}</button>
+          <button type="button" className={profileFilter==="no-login"?"selected":""} onClick={()=>setProfileFilter("no-login")}>No login {noLoginProfileCount}</button>
+          <button type="button" className={profileFilter==="active"?"selected":""} onClick={()=>setProfileFilter("active")}>Active {activeProfileCount}</button>
+        </div>
+        <div className="manage-profile-list">
+          {visibleProfilePlayers.map(player=>{
+            const account=playerAccountStatuses.find(row=>row.player_id===player.id);
+            const active=account?.account_status==="Verified";
+            const expanded=expandedProfileId===player.id;
+            return <article key={player.id} className={"manage-profile-card"+(expanded?" expanded":"")}>
+              <button type="button" className="manage-profile-row" aria-expanded={expanded} onClick={()=>setExpandedProfileId(expanded?null:player.id)}>
+                <span className="manage-profile-avatar">{player.full_name?.trim()?.[0]?.toUpperCase()||player.username?.[0]?.toUpperCase()||"?"}</span>
+                <span className="manage-profile-identity"><strong>{player.full_name}</strong><small>@{player.username} · {player.player_code}</small></span>
+                <span className={"manage-profile-status"+(active?" active":"")}>{active?"ACTIVE":"NO LOGIN"}</span>
+                <svg className="manage-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              </button>
+              {expanded&&<div className="manage-profile-details">
+                {editingPlayer===player.id?<form className="form manage-profile-edit" onSubmit={savePlayerEdit}>
+                  <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
+                  <div className="eyebrow">USERNAME · @{player.username} (LOCKED)</div>
+                  <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
+                  <div className="manage-profile-actions"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
+                </form>:<>
+                  <label>Player role<select aria-label={`Player role for ${player.username}`} value={player.designation||"regular"} disabled={busy} onChange={e=>updatePlayerDesignation(player,e.target.value as "regular"|"house_ghost"|"boardman")}><option value="regular">Regular</option><option value="house_ghost">House Ghost</option><option value="boardman">Boardman</option></select></label>
+                  <label>Player email<input type="email" value={emailDrafts[player.id]||""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={active}/></label>
+                  <label>Temporary password<div className="manage-profile-password"><input type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id]||""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters"/><button type="button" className="secondary" onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label>
+                  <button type="button" className="manage-profile-generate" onClick={()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";const values=new Uint32Array(14);window.crypto.getRandomValues(values);setPlayerPasswordDrafts(current=>({...current,[player.id]:Array.from(values,v=>chars[v%chars.length]).join("")}));setShowPlayerPasswords(current=>({...current,[player.id]:true}));}}>Generate password</button>
+                  <p className="manage-profile-help">Give these details to the player directly. They can change the password after first login.</p>
+                  {active?<button type="button" className="manage-profile-primary" disabled={busy||(playerPasswordDrafts[player.id]||"").length<8} onClick={()=>resetPlayerPassword(player)}>Reset password</button>:<button type="button" className="manage-profile-primary" disabled={busy||(playerPasswordDrafts[player.id]||"").length<8||!(emailDrafts[player.id]||"").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}
+                  <button type="button" className="manage-profile-edit-button" onClick={()=>startEditPlayer(player)}>Edit profile</button>
+                </>}
+              </div>}
+            </article>;
+          })}
+          {visibleProfilePlayers.length===0&&<div className="manage-profile-empty">No players match this search or filter.</div>}
+        </div>
+        <p className="manage-profile-count">Showing {visibleProfilePlayers.length} of {players.length} · Scroll to browse</p>
       </section>
       <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
         {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerMatchLabel(editingMatch.one)} vs {playerMatchLabel(editingMatch.two)}</h3>
