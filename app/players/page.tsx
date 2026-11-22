@@ -15,6 +15,7 @@ type Player = {
   wins: number;
   losses: number;
   win_percentage: number | string;
+  designation?: "regular" | "house_ghost" | "boardman";
 };
 
 const PAGE_SIZE = 5;
@@ -48,7 +49,7 @@ export default function PlayersPage() {
 
       const { data, error: queryError } = await supabase
         .from("player_public_leaderboard")
-        .select("id,username,player_code,photo_url,elo_rating,matches_played,wins,losses,win_percentage")
+        .select("id,username,player_code,photo_url,elo_rating,matches_played,wins,losses,win_percentage,designation")
         .order("elo_rating", { ascending: false })
         .order("username", { ascending: true });
 
@@ -133,7 +134,7 @@ export default function PlayersPage() {
                         : (player.username?.[0] || "?").toUpperCase()}
                     </span>
                     <span className="players-identity" style={{ flex: "1 1 0%", minWidth: 0, overflow: "hidden" }}>
-                      <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>}</strong>
+                      <strong>{player.username}{rank === 1 && <span className="players-crown" aria-label="Top rated player">♛</span>} {player.designation === "boardman" && <span className="player-designation-tag">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="player-designation-tag">HOUSE GHOSTS 👻</span>}</strong>
                       <small>{player.player_code}</small>
                     </span>
                     <span className="players-record" style={{ flex: "0 0 48px", width: 48, textAlign: "right", whiteSpace: "nowrap" }}>{player.wins}W / {player.losses}L</span>
@@ -189,7 +190,7 @@ export default function PlayersPage() {
         .players-avatar{position:relative;width:34px;height:34px;display:grid;place-items:center;overflow:hidden;border:2px solid #c8f169;border-radius:50%;background:#101512;color:#c8f169;font-size:14px;font-weight:800}
         .players-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
         .players-identity{min-width:0;display:grid;gap:3px}
-        .players-identity strong{display:block;min-width:0;color:#f4f5f2;font-size:14px;font-weight:700;white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.25}.players-crown{display:inline-block;margin-left:5px;color:#e8c547;font-size:13px;vertical-align:1px;white-space:nowrap}
+        .players-identity strong{display:block;min-width:0;color:#f4f5f2;font-size:14px;font-weight:700;white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.25}.players-crown{display:inline-block;margin-left:5px;color:#e8c547;font-size:13px;vertical-align:1px;white-space:nowrap}.player-designation-tag{display:inline-block;margin:3px 0 0 4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 'DM Mono',monospace;letter-spacing:.02em;vertical-align:middle;white-space:nowrap}
         .players-identity small{color:#9aa69f;font:500 10px/1.3 'DM Mono',monospace;letter-spacing:.02em}
         .players-record{color:#d5dad6;text-align:right;font-size:11px;white-space:nowrap}
         .players-rating{color:#c8f169;text-align:right;font:800 16px/1 'DM Mono',monospace}
