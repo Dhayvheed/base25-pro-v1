@@ -14,7 +14,9 @@ function Avatar({player}:{player:{username:string;photo_url?:string|null}}){
 }
 function money(value:number){return "₦"+Number(value||0).toLocaleString("en-NG");}
 
+type HomeAccount = { signedIn:boolean; authReady:boolean; profile:any; accountName:string };
 export default function Home(){
+ const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
@@ -36,7 +38,7 @@ export default function Home(){
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
  const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
  return <main className="shell redesign-shell home-v2">
-  <SiteNavigation />
+  <SiteNavigation onHomeAccountChange={setAccount} />
   <div className="home-v2-glow" aria-hidden="true"/>
   <section className="home-v2-hero">
    <div className="home-v2-hero-copy">
@@ -45,7 +47,7 @@ export default function Home(){
     <p>Your game. Your ranking. Your crown.</p>
     <div className="home-v2-actions">
      <Link className="home-v2-primary" href="/competition?leaderboard=full#weekly-leaderboard"><span className="home-v2-action-icon" aria-hidden="true">▥</span>View Leaderboard</Link>
-     <Link className="home-v2-secondary" href="/competition"><span className="home-v2-action-icon" aria-hidden="true">♜</span>Competition</Link>
+     <Link className="home-v2-secondary" href="/hall-of-fame">Hall of Fame</Link>
     </div>
    </div>
    <div className="home-v2-ball-art" aria-hidden="true">
@@ -56,27 +58,25 @@ export default function Home(){
   <section className="home-v2-stats">
    <div><strong>{players.length}</strong><span>Registered players</span></div>
    <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
-   <div><strong>{totalWins}</strong><span>Total wins</span></div>
+   <div><strong>—</strong><span>Paid out</span></div>
   </section>
   <section className="home-v2-pot" aria-label="King's Pot">
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-meta">{Number(kingsPot?.contributor_count||0)} players have contributed to the pot this week.</div>
-   <p>Every qualifying match adds <strong>₦100</strong> to the pot.</p>
-   <div className="home-v2-pot-winner">Winner takes it all on Saturday 🏆</div>
+   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{Number(kingsPot?.contributor_count||0)} matches since last Saturday · ₦100 each</span></div>
+   <p>Every recorded match adds ₦100. The full pool goes to the Saturday champion, then the pot resets to ₦0.</p>
+   <Link href="/how-it-works">How it works <span>→</span></Link>
   </section>
-  <section className="home-v2-stats">
-   <div><strong>{weeklyPlayers.length}</strong><span>Players this week</span></div>
-   <div><strong>{Math.round(weeklyPlayers.reduce((n,p)=>n+Number(p.matches_played||0),0)/2)}</strong><span>Matches this week</span></div>
-   <div><strong>{weeklyPlayers.reduce((n,p)=>n+Number(p.wins||0),0)}</strong><span>Wins this week</span></div>
+  <section className="home-personal-card">
+   {account.signedIn ? <><div className="home-v2-eyebrow">MY STANDING · {account.profile?.player_code || "BASE25 PRO"}</div><div className="home-personal-main"><Avatar player={{username:account.profile?.username||account.accountName,photo_url:account.profile?.photo_url}}/><div><strong>{account.profile?.username||account.accountName||"Player"}</strong><span>{account.profile?.globalRank ? "Global rank #"+account.profile.globalRank : "Unranked"}</span></div></div><div className="home-personal-ratings"><div><strong>{account.profile?.elo_rating ? Number(account.profile.elo_rating).toLocaleString("en-NG") : "—"}</strong><span>ALL-TIME RATING</span></div><div><strong>{account.profile?.weeklyElo ? Number(account.profile.weeklyElo).toLocaleString("en-NG") : "—"}</strong><span>WEEKLY RATING</span></div></div>{!account.profile?.matches_played&&<p>Play your first match to get a rating.</p>}<Link href="/account">View my profile →</Link></> : <><div className="home-v2-eyebrow">PLAYER ACCOUNT</div><h2>Welcome, player</h2><p>Log in to see your rank and rating.</p><Link className="home-personal-login" href="/login">Player login</Link><small>No login yet? Ask the admin at the base.</small></>}
   </section>
   <section className="home-v2-weekly">
    <div className="home-v2-section-head">
     <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
     <span className="home-v2-live-pill"><i/> LIVE</span>
    </div>
-   <p className="home-v2-subtitle">Top five qualify for the Saturday final. Weekly leaderboard runs Saturday to Friday. Points reset every Saturday.</p>
+   <p className="home-v2-subtitle">Top 5 qualify for the Saturday final. Points and the pot reset every Saturday.</p>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
     <div className="home-v2-table">
@@ -100,11 +100,12 @@ export default function Home(){
    {matches.length===0?<p className="home-v2-empty">Matches will appear here once recorded.</p>:<div className="home-v2-match-list">
     {matches.map((m,i)=>{const date=new Date(m.played_at);const previous=i>0?new Date(matches[i-1].played_at):null;const dateKey=date.toLocaleDateString("en-CA");const previousKey=previous?.toLocaleDateString("en-CA");return <div key={m.id}>
      {dateKey!==previousKey&&<div className="home-v2-match-date">{date.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase()}<span/></div>}
-     <div className="home-v2-match-card"><span className="home-v2-match-accent"/><div className="home-v2-match-names"><strong>{m.one?.username||"Player 1"}</strong><span>{m.two?.username||"Player 2"}</span></div><b className="home-v2-match-score">{m.player_one_score} - {m.player_two_score}</b></div>
+     <div className="home-v2-match-card"><span className="home-v2-match-accent"/><div className="home-v2-match-names"><strong>{m.player_one_score>=m.player_two_score?(m.one?.username||"Player 1"):(m.two?.username||"Player 2")} beat</strong><span>{m.player_one_score>=m.player_two_score?(m.two?.username||"Player 2"):(m.one?.username||"Player 1")}</span></div><b className="home-v2-match-score">{m.player_one_score} - {m.player_two_score}</b></div>
     </div>})}
    </div>}
    <Link className="home-v2-all-matches" href="/matches">View all matches <span>→</span></Link>
   </section>
   <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span></footer>
+  <nav className="home-bottom-nav" aria-label="Bottom navigation"><Link className="active" href="/">⌂<span>Home</span></Link><Link href="/competition">♜<span>Competition</span></Link><Link href="/players">♙<span>Players</span></Link><Link href="/predictions">◎<span>Predictions</span></Link><Link href="/hall-of-fame">♛<span>Hall of Fame</span></Link></nav>
  </main>;
 }
