@@ -8,6 +8,7 @@ import SiteNavigation from "@/components/SiteNavigation";
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
+type MatchWager = { match_id: string; player_one_stake: number | string; player_two_stake: number | string };
 type Rack = { winnerId: string; loserBalls: string };
 type StaffMember = { user_id: string; email: string; role: "owner" | "manager" | "attendant"; is_active: boolean; created_at: string };
 
@@ -55,6 +56,11 @@ export default function Admin() {
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [matchCount, setMatchCount] = useState<number | null>(null);
   const [kingsPot, setKingsPot] = useState<{ pot_amount: number; contributor_count: number } | null>(null);
+  const [matchWagers, setMatchWagers] = useState<Record<string, number>>({});
+  const [playersLoaded, setPlayersLoaded] = useState(false);
+  const [matchesLoaded, setMatchesLoaded] = useState(false);
+  const [accountStatusesLoaded, setAccountStatusesLoaded] = useState(false);
+  const [snapshotReady, setSnapshotReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editFullName, setEditFullName] = useState("");
@@ -121,6 +127,7 @@ export default function Admin() {
     if (designationError) { setMessage(`Could not load player roles: ${designationError.message}`); return; }
     const roleById = new Map((designations || []).map((row: any) => [row.id, row.designation]));
     setPlayers((data || []).map((player: Player) => ({ ...player, designation: (roleById.get(player.id) as Player["designation"]) || "regular" })));
+    setPlayersLoaded(true);
   }
 
   async function refreshPlayerAccountStatuses() {
@@ -129,6 +136,7 @@ export default function Admin() {
     if (error) { setMessage(`Could not load account assignments: ${error.message}`); return; }
     const rows = (data || []) as PlayerAccountStatus[];
     setPlayerAccountStatuses(rows);
+    setAccountStatusesLoaded(true);
     setEmailDrafts(Object.fromEntries(rows.map(row => [row.player_id, row.assigned_email || ""])));
   }
 
@@ -175,8 +183,14 @@ export default function Admin() {
       .order("played_at", { ascending: false })
       .limit(50);
     if (error) setMessage(`Could not load match history: ${error.message}`);
-    setMatches(data || []);
+    const rows = data || [];
+    setMatches(rows);
     setMatchCount(count ?? null);
+    setMatchesLoaded(true);
+    if (rows.length) {
+      const { data: wagerRows, error: wagerError } = await supabase.from("match_wagers").select("match_id,player_one_stake,player_two_stake").in("match_id", rows.map((row: MatchRecord) => row.id));
+      if (!wagerError) setMatchWagers(Object.fromEntries(((wagerRows || []) as MatchWager[]).map(row => [row.match_id, Number(row.player_one_stake || 0) + Number(row.player_two_stake || 0)])));
+    } else setMatchWagers({});
   }
 
   useEffect(() => {
@@ -198,6 +212,10 @@ export default function Admin() {
         refresh(); refreshMatches();
         const { data: potData, error: potError } = await supabase.rpc("get_current_kings_pot");
         if (!potError && Array.isArray(potData) && potData[0]) setKingsPot(potData[0]);
+        const { data: snapshot } = await supabase.from("weekly_leaderboard_archives").select("week_end,snapshot_at").order("snapshot_at", { ascending: false }).limit(1).maybeSingle();
+        const localToday = new Date();
+        const todayKey = [localToday.getFullYear(), String(localToday.getMonth()+1).padStart(2,"0"), String(localToday.getDate()).padStart(2,"0")].join("-");
+        setSnapshotReady(Boolean(snapshot?.snapshot_at && snapshot?.week_end === todayKey));
       }
       if (role === "owner") { refreshStaff(); refreshPlayerAccountStatuses(); }
     }
@@ -469,9 +487,11 @@ export default function Admin() {
       {activeSection==="overview"&&<section className="admin-v2-overview">
         <div className="admin-v2-heading"><div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1><p>Signed in as {session?.user?.email?.split("@")[0] || "staff"}</p></div>
         <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
-        <div className="admin-v2-quick-actions"><button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon">＋</span><b>Register player</b></button><button type="button" className="admin-v2-champion-action" disabled><span className="admin-v2-action-icon">♛</span><b>Crown Saturday champion<small>Available Saturday</small></b></button></div>
+        <div className="admin-v2-quick-actions">{staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/></svg></span><b>Register player</b></button>}{staffRole==="owner"&&<button type="button" className="admin-v2-champion-action" disabled={!snapshotReady} onClick={()=>setActiveSection("champion")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 7 5 4 5-7 5 7 5-4-2 13H4L2 7Z"/></svg></span><b>Crown Saturday champion<small>{snapshotReady?"Weekly snapshot saved":"Available Saturday"}</small></b></button>}</div>
         <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING'S POT · THIS WEEK</small><strong>{kingsPot?("₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG")):"—"}</strong><span>{kingsPot?(`${Number(kingsPot.contributor_count)} matches × ₦100`):"Waiting for pot data"}</span></div><div className="admin-v2-pot-count"><strong>{saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
-        <div className="admin-v2-stats"><div><strong>{players.length||"—"}</strong><span>Players</span></div><div><strong>{matchCount===null?"—":matchCount.toLocaleString("en-NG")}</strong><span>Matches</span></div><div><strong>{staffRole==="owner"&&playerAccountStatuses.length?noLoginProfileCount:"—"}</strong><span>No login yet</span></div></div>
+        <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING&#39;S POT · THIS WEEK</small><strong>{kingsPot?"₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG"):"—"}</strong><span>{kingsPot?Number(kingsPot.contributor_count).toLocaleString("en-NG")+" matches × ₦100":"Pot data unavailable"}</span></div><div className="admin-v2-pot-count"><strong>{daysToSaturday===0?"Final day":saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
+        <div className="admin-v2-stats"><div><strong>{playersLoaded?players.length.toLocaleString("en-NG"):"—"}</strong><span>Players</span></div><div><strong>{matchCount===null?"—":matchCount.toLocaleString("en-NG")}</strong><span>Matches</span></div><div><strong>{staffRole==="owner"&&accountStatusesLoaded?noLoginProfileCount.toLocaleString("en-NG"):"—"}</strong><span>No login yet</span></div></div>
+        {staffRole==="owner"&&accountStatusesLoaded&&noLoginProfileCount>0&&<button type="button" className="admin-v2-attention" onClick={()=>setActiveSection("players")}><span className="admin-v2-attention-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></span><span><b>{noLoginProfileCount.toLocaleString("en-NG")} players can&#39;t log in yet.</b><small>Create their logins in Manage profiles.</small></span><i>›</i></button>}
         {staffRole==="owner"&&playerAccountStatuses.length>0&&noLoginProfileCount>0&&<button type="button" className="admin-v2-attention" onClick={()=>setActiveSection("players")}><span className="admin-v2-attention-icon">!</span><span><b>{noLoginProfileCount} players can't log in yet.</b><small>Create their logins in Manage profiles.</small></span><i>›</i></button>}
         <h2 className="admin-v2-manage-title">Manage</h2><div className="admin-v2-manage">
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("predictions")}><span className="admin-v2-manage-icon">▤</span><div><b>Prediction questions</b><small>Weekly questions, points and schedules</small></div><i>›</i></button>}
@@ -482,9 +502,9 @@ export default function Admin() {
         </div>
         <div className="admin-v2-section-head admin-v2-recent-head"><h2>Recent matches</h2><button type="button" onClick={()=>setActiveSection("matches")}>Manage all →</button></div>
         <div className="admin-v2-recent">
-          {matches.length===0?<p className="admin-v2-empty">No matches recorded yet.</p>:matches.slice(0,3).map(match=><div className="admin-v2-match" key={match.id}>
-            <span className="admin-v2-win">W</span><div className="admin-v2-match-copy"><strong>{playerName(match.winner_id)} beat {playerName(match.winner_id===match.player_one_id?match.player_two_id:match.player_one_id)}</strong><small>{new Date(match.played_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · {match.player_one_score} – {match.player_two_score}</small></div>
-            <button type="button" aria-label="Edit match result" onClick={()=>{startEditMatch(match);setActiveSection("matches");}}>✎</button>
+          {!matchesLoaded?<div className="admin-v2-skeleton-list"><i/><i/><i/></div>:matches.length===0?<p className="admin-v2-empty">No matches recorded yet. <button type="button" onClick={()=>setActiveSection("match")}>Record a match →</button></p>:matches.slice(0,3).map(match=><div className="admin-v2-match" key={match.id}>
+            <span className="admin-v2-win">W</span><div className="admin-v2-match-copy"><strong>{playerName(match.winner_id)} beat {playerName(match.winner_id===match.player_one_id?match.player_two_id:match.player_one_id)}</strong><small>{new Date(match.played_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · {match.player_one_score} – {match.player_two_score}</small>{(matchWagers[match.id]||0)>0&&<em className="admin-v2-wager-tag">Wager ₦{matchWagers[match.id].toLocaleString("en-NG")}</em>}</div>
+            <button type="button" aria-label="Edit match result" onClick={()=>{if(window.confirm("Open this match for editing?")){startEditMatch(match);setActiveSection("matches");}}}>✎</button>
           </div>)}
         </div>
         <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
@@ -671,7 +691,7 @@ export default function Admin() {
         </form>}
         {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
           <div style={{flex:"1 1 180px"}}><b>{playerMatchLabel(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerMatchLabel(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
-          <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
+          <button type="button" className="secondary" onClick={()=>{if(window.confirm("Open this match for editing?"))startEditMatch(match);}}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
         </div>)}
       </section>
       </>}
