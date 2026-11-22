@@ -17,7 +17,7 @@ function Avatar({player,className=""}:{player:{username:string;photo_url?:string
 function isHouse(player:Player){ return player.designation==="boardman"||player.designation==="house_ghost"; }
 
 export default function Home(){
- const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
+ const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});\n const [openMenu,setOpenMenu]=useState<(()=>void)|null>(null);
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
@@ -48,7 +48,7 @@ export default function Home(){
  const latestMatchDate=matches[0]?.played_at?new Date(matches[0].played_at):null;
  const paidOutTotal=26000;
  return <main className="shell redesign-shell home-v2">
-  <SiteNavigation onHomeAccountChange={setAccount}/>
+  <SiteNavigation onHomeAccountChange={setAccount} onHomeMenuReady={setOpenMenu}/>
   <header className="home-header">
    <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
    <div className="home-header-actions">
