@@ -42,7 +42,8 @@ export default function Home(){
   ]);
   if(!active)return;
   if(pe||we||me||ce||potError||matchCountError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
-  const slayerIds = await getBoardmanSlayerPlayerIds(supabase);\n  setPlayers((p||[]) as Player[]);setWeeklyPlayers(((w||[]) as Player[]).map(player=>({...player,hasBoardmanSlayerBadge:slayerIds.has(player.id)})));setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
+  const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers(((w||[]) as Player[]).map(player=>({...player,hasBoardmanSlayerBadge:slayerIds.has(player.id)})));setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
