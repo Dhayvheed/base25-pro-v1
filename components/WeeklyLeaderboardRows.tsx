@@ -17,10 +17,10 @@ export type WeeklyLeaderboardPlayer = {
 function DesignationBadge({ designation, variant }: { designation?: WeeklyLeaderboardPlayer["designation"]; variant: "home" | "competition" }) {
   const normalizedDesignation = String(designation || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (normalizedDesignation === "boardman") {
-    return <span className={variant === "home" ? "home-v2-designation-tag is-boardman" : "competition-designation-tag is-boardman"}>BOARDMAN 💀</span>;
+    return <span className="home-v2-designation-tag is-boardman">BOARDMAN 💀</span>;
   }
   if (normalizedDesignation === "house_ghost" || normalizedDesignation === "house_ghosts") {
-    return <span className={variant === "home" ? "home-v2-designation-tag" : "competition-designation-tag"}>HOUSE GHOSTS 👻</span>;
+    return <span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>;
   }
   return null;
 }
@@ -58,8 +58,10 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
       </span>
       <span className="competition-ref-player-name" style={{ minWidth: 0, display: "grid", gap: 4 }}>
         <strong style={{ display: "block", minWidth: 0, overflow: "visible", textOverflow: "clip", whiteSpace: "normal", overflowWrap: "break-word", lineHeight: 1.2, fontSize: 15, fontWeight: 600, color: "#f4f5f2" }}>
-          {player.username} <DesignationBadge designation={player.designation} variant="competition" />{player.hasBoardmanSlayerBadge && <span className="competition-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
+          {player.username}
         </strong>
+        <DesignationBadge designation={player.designation} variant="competition" />
+        {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
         <small style={{ display: "block", font: "10px 'JetBrains Mono',monospace", letterSpacing: 0, color: "#9aa69f" }}>{player.player_code}</small>
       </span>
       <span className="competition-ref-record" style={{ display: "block", textAlign: "right", whiteSpace: "nowrap", fontSize: 12, color: "#d5dad6" }}>{player.wins}W / {player.losses}L</span>
