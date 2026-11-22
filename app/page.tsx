@@ -13,26 +13,35 @@ function Avatar({player}:{player:{username:string;photo_url?:string|null}}){
  return <span className="home-v2-avatar">{player.photo_url?<img src={player.photo_url} alt="" />:player.username?.[0]?.toUpperCase()||"?"}</span>;
 }
 function money(value:number){return "₦"+Number(value||0).toLocaleString("en-NG");}
+function getLagosWeekStartIso(){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const part=(type:string)=>Number(parts.find(p=>p.type===type)?.value||0);
+ const todayUtc=Date.UTC(part("year"),part("month")-1,part("day"));
+ const weekday=new Date(todayUtc).getUTCDay();
+ const daysSinceSaturday=(weekday+1)%7;
+ return new Date(todayUtc-daysSinceSaturday*86400000-3600000).toISOString();
+}
 
 type HomeAccount = { signedIn:boolean; authReady:boolean; profile:any; accountName:string };
 export default function Home(){
  const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
- const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
+ const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null),[matchesSinceSaturday,setMatchesSinceSaturday]=useState(0);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
  const [showAllWeekly,setShowAllWeekly]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
-  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
+  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError},{count:weeklyMatchCount,error:matchCountError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard_with_designation",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
    supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
-   supabase.rpc("get_current_kings_pot")
+   supabase.rpc("get_current_kings_pot"),
+   supabase.from("matches").select("id",{count:"exact",head:true}).gte("played_at",getLagosWeekStartIso())
   ]);
   if(!active)return;
-  if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setLoading(false);
+  if(pe||we||me||ce||potError||matchCountError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
@@ -68,7 +77,7 @@ export default function Home(){
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{Number(kingsPot?.contributor_count||0)} matches since last Saturday · ₦100 each</span></div>
+   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{matchesSinceSaturday} matches since last Saturday · ₦100 each</span></div>
    <p>Every recorded match adds ₦100. The full pool goes to the Saturday champion, then the pot resets to ₦0.</p>
    <Link href="/how-it-works">How it works <span>→</span></Link>
   </section>
