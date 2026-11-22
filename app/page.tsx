@@ -23,7 +23,8 @@ export default function Home(){
  const [showAllWeekly,setShowAllWeekly]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
-  const lagosToday=new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"});const [ly,lm,ld]=lagosToday.split("-").map(Number);const lagosDate=new Date(Date.UTC(ly,lm-1,ld));lagosDate.setUTCDate(lagosDate.getUTCDate()-((lagosDate.getUTCDay()+1)%7));const weekStart=lagosDate.toISOString().slice(0,10);\n  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError},{count:potMatches,error:potMatchesError}]=await Promise.all([
+  const lagosToday=new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"});const [ly,lm,ld]=lagosToday.split("-").map(Number);const lagosDate=new Date(Date.UTC(ly,lm-1,ld));lagosDate.setUTCDate(lagosDate.getUTCDate()-((lagosDate.getUTCDay()+1)%7));const weekStart=lagosDate.toISOString().slice(0,10);
+  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError},{count:potMatches,error:potMatchesError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
