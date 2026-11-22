@@ -361,8 +361,10 @@ export default function CompetitionPage() {
           .competition-ref-rating{font-size:13px!important}
         }
         @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-progress span{transition:none}}
-      `} .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}.competition-ref-house-toggle{display:inline-flex;align-items:center;gap:7px;color:#aeb9b0;font-size:11px}.competition-ref-house-toggle input{accent-color:#c8f169}
-</style>
+        .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}
+        .competition-ref-house-toggle{display:inline-flex;align-items:center;gap:7px;color:#aeb9b0;font-size:11px}
+        .competition-ref-house-toggle input{accent-color:#c8f169}
+      `}</style>
     </main>
   );
 }
