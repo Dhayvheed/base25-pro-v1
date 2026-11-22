@@ -346,7 +346,7 @@ export default function Admin() {
 
   if (!staffRole) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
-  const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
+  const playerName = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username}` : "Select player"; };
   const playerMatchLabel = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username} · ${player.player_code}` : "Unknown player"; };
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
   const playerOneOptions = players.filter((player) => player.id !== two && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerOneSearch.trim().toLowerCase()));
@@ -454,7 +454,7 @@ export default function Admin() {
             <div className={"record-step-section"+(!one||!two?" is-dimmed":"")}>
               {matchFormat==="single"?<>
                 <div className="record-step-label">2. Who won the rack?</div>
-                <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>updateRack(0,"winnerId",player.id)}>{racks[0].winnerId===player.id?"✓ ":""}{player.full_name}</button>)}</div>
+                <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>updateRack(0,"winnerId",player.id)}>{racks[0].winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
                 <div className="record-step-label record-balls-label">3. Balls left on the table ({playerName(racks[0].winnerId&&racks[0].winnerId===one?two:one)})</div>
                 <div className="record-stepper"><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)<=0} onClick={()=>updateRack(0,"loserBalls",String(Math.max(0,Number(racks[0].loserBalls)-1)))}>−</button><strong>{racks[0].loserBalls}</strong><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)>=7} onClick={()=>updateRack(0,"loserBalls",String(Math.min(7,Number(racks[0].loserBalls)+1)))}>＋</button></div>
               </>:<>
@@ -464,7 +464,7 @@ export default function Admin() {
                   const rack=racks[index], loser=rack.winnerId?(rack.winnerId===one?two:one):"";
                   return <div className="record-rack-card" key={index}>
                     <div className="record-rack-title"><b>Rack {index+1}</b>{index===2&&<small>DECIDING RACK</small>}</div>
-                    <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}{player.full_name}</button>)}</div>
+                    <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
                     <div className="record-rack-balls"><span>Balls left ({playerName(loser)})</span><div className="record-stepper"><button type="button" disabled={!one||!two||Number(rack.loserBalls)<=0} onClick={()=>updateRack(index,"loserBalls",String(Math.max(0,Number(rack.loserBalls)-1)))}>−</button><strong>{rack.loserBalls}</strong><button type="button" disabled={!one||!two||Number(rack.loserBalls)>=7} onClick={()=>updateRack(index,"loserBalls",String(Math.min(7,Number(rack.loserBalls)+1)))}>＋</button></div></div>
                   </div>;
                 })}
@@ -502,7 +502,7 @@ export default function Admin() {
         <section className="record-picker-sheet" role="dialog" aria-modal="true" aria-label={`Choose player ${playerPickerTarget}`} onClick={event=>event.stopPropagation()}>
           <div className="record-picker-handle" />
           <div className="record-picker-heading"><h3>Choose player {playerPickerTarget}</h3><button type="button" onClick={()=>{setPlayerPickerTarget(null);setPlayerOnePickerOpen(false);setPlayerTwoPickerOpen(false);}}>Close</button></div>
-          <input className="record-picker-search" autoFocus placeholder="Search by name or ID" value={playerPickerTarget==="one"?playerOneSearch:playerTwoSearch} onChange={event=>playerPickerTarget==="one"?setPlayerOneSearch(event.target.value):setPlayerTwoSearch(event.target.value)} />
+          <input className="record-picker-search" autoFocus placeholder="Search username or player ID" value={playerPickerTarget==="one"?playerOneSearch:playerTwoSearch} onChange={event=>playerPickerTarget==="one"?setPlayerOneSearch(event.target.value):setPlayerTwoSearch(event.target.value)} />
           <div className="record-picker-recent"><span>Recent</span>{players.slice(0,3).map(player=><button type="button" key={player.id} disabled={player.id===(playerPickerTarget==="one"?two:one)} onClick={()=>{if(playerPickerTarget==="one"){setOne(player.id);setPlayerOneSearch("");setPlayerPickerTarget("two");}else{setTwo(player.id);setPlayerTwoSearch("");setPlayerPickerTarget(null);}}}>{player.full_name}</button>)}</div>
           <div className="record-picker-list">{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).slice(0,5).map(player=><button type="button" key={player.id} onClick={()=>{if(playerPickerTarget==="one"){setOne(player.id);setPlayerOneSearch("");setPlayerPickerTarget("two");}else{setTwo(player.id);setPlayerTwoSearch("");setPlayerPickerTarget(null);}}}><span className="record-picker-avatar">{player.username.slice(0,1).toUpperCase()}</span><span><b>@{player.username}</b><small>{player.player_code} · {Number(player.elo_rating||1000).toLocaleString()}</small></span>{player.id===(playerPickerTarget==="one"?one:two)&&<strong>✓</strong>}</button>)}{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).length===0&&<p className="record-picker-empty">No matching players</p>}</div>
         </section>
