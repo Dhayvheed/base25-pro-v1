@@ -72,6 +72,27 @@ export default function Admin() {
   }
 
   useEffect(() => {
+    if (!playerPickerTarget) return;
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const updatePickerViewport = () => {
+      document.documentElement.style.setProperty("--record-picker-vh", `${viewport.height}px`);
+      document.documentElement.style.setProperty("--record-picker-top", `${viewport.offsetTop}px`);
+    };
+    updatePickerViewport();
+    viewport.addEventListener("resize", updatePickerViewport);
+    viewport.addEventListener("scroll", updatePickerViewport);
+    window.addEventListener("orientationchange", updatePickerViewport);
+    return () => {
+      viewport.removeEventListener("resize", updatePickerViewport);
+      viewport.removeEventListener("scroll", updatePickerViewport);
+      window.removeEventListener("orientationchange", updatePickerViewport);
+      document.documentElement.style.removeProperty("--record-picker-vh");
+      document.documentElement.style.removeProperty("--record-picker-top");
+    };
+  }, [playerPickerTarget]);
+
+  useEffect(() => {
     try {
       const saved = window.localStorage.getItem("base25-record-match-recent-players");
       if (saved) setRecentPlayerIds(JSON.parse(saved).filter((id: unknown) => typeof id === "string").slice(0, 3));
