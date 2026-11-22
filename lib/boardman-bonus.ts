@@ -50,8 +50,6 @@ export async function getBoardmanBonusData(client: any): Promise<BoardmanBonusDa
   }
   if (!matches.length) return { bonusByMatchId, bonusByPlayerId };
 
-  const countsByWeekAndPlayer = new Map<string, number>();
-
   for (const match of matches) {
     const oneIsBoardman = boardmanIds.has(match.player_one_id);
     const twoIsBoardman = boardmanIds.has(match.player_two_id);
@@ -61,11 +59,6 @@ export async function getBoardmanBonusData(client: any): Promise<BoardmanBonusDa
     if (winnerIsBoardman) continue;
 
     const winnerId = match.winner_id;
-    const key = lagosWeekKey(match.played_at) + ":" + winnerId;
-    const earned = countsByWeekAndPlayer.get(key) || 0;
-    if (earned >= 3) continue;
-
-    countsByWeekAndPlayer.set(key, earned + 1);
     bonusByMatchId.set(match.id, 10);
     if (lagosWeekKey(new Date()) === lagosWeekKey(match.played_at)) {
       bonusByPlayerId.set(winnerId, (bonusByPlayerId.get(winnerId) || 0) + 10);
