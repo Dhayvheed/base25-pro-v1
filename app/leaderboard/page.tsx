@@ -132,7 +132,7 @@ export default function LeaderboardPage() {
                     <span className="weekly-player"><Avatar player={player} /><span><b>{player.username} {player.designation === "boardman" && <span className="weekly-designation is-boardman">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="weekly-designation is-ghost">HOUSE GHOSTS 👻</span>}</b><small>{player.player_code}</small></span></span>
                     <strong>{player.wins}</strong>
                     <strong>{player.losses}</strong>
-                    <b className="weekly-rating">{(Number(player.elo_rating || 0) + Number(player.boardmanBonusPoints || 0)).toLocaleString("en-NG")}<small style={{display:"block",fontSize:9,color:"#f0c36b",fontWeight:700,marginTop:2}}>ELO {Number(player.elo_rating || 0).toLocaleString("en-NG")} + {Number(player.boardmanBonusPoints || 0)} BONUS</small></b>
+                    <b className="weekly-rating">{(Number(player.elo_rating || 0) + Number(player.boardmanBonusPoints || 0)).toLocaleString("en-NG")}</b>
                   </Link>
                 );
               })}
