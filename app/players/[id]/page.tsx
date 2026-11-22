@@ -278,9 +278,9 @@ export default function PublicPlayerProfile() {
           <div className="public-week-card">
             <div className="public-card-label">THIS WEEK <span>↗</span></div>
             <strong>#{weeklyRank || "—"}</strong>
-            <div className="public-rating-foot"><span>WEEKLY ELO</span><b>{(weeklyElo ?? elo).toLocaleString()}</b></div>
-            <div className="public-rating-foot"><span>BOARDMAN BONUS</span><b style={{color:"#f0c36b"}}>+{weeklyBoardmanBonus}</b></div>
-            <small>Separate from ELO · Maximum 30 bonus points per week</small>
+            <div className="public-rating-foot"><span>WEEKLY TOTAL POINTS</span><b>{((weeklyElo ?? elo) + weeklyBoardmanBonus).toLocaleString()}</b></div>
+            <div className="public-rating-foot"><span>ELO + BONUS</span><b>{(weeklyElo ?? elo).toLocaleString()} + {weeklyBoardmanBonus}</b></div>
+            <small>Boardman bonus is added to weekly total points, not ELO</small>
           </div>
         </section>
 
