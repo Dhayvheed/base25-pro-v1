@@ -62,7 +62,7 @@ export default function Home(){
   <section className="home-v2-stats">
    <div><strong>{players.length}</strong><span>Registered players</span></div>
    <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
-   <div><strong>—</strong><span>Paid out</span></div>
+   <div><strong>₦26,000</strong><span>Paid out</span></div>
   </section>
   <section className="home-v2-pot" aria-label="King's Pot">
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
