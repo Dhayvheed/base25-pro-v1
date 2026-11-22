@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
-import WeeklyLeaderboardRows from "@/components/WeeklyLeaderboardRows";
+import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 
 type WeeklyPlayer = {
   id: string;
@@ -107,7 +107,8 @@ export default function CompetitionPage() {
           ? await supabase.from("players").select("id,designation").in("id", playerIds)
           : { data: [] as { id: string; designation: WeeklyPlayer["designation"] }[] };
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
-        const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular" }));
+        const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
+        const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", hasBoardmanSlayerBadge: slayerIds.has(player.id) }));
         setPlayers(enrichedRows.sort((a, b) => Number(b.elo_rating || 0) - Number(a.elo_rating || 0)));
         setError("");
       }
@@ -345,7 +346,7 @@ export default function CompetitionPage() {
           .competition-ref-rating{font-size:13px!important}
         }
         @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-progress span{transition:none}}
-        .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}.competition-designation-tag.is-boardman{background:#3a1717;border-color:#b94444;color:#ff7777}
+        .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}.competition-designation-tag.is-boardman{background:#3a1717;border-color:#b94444;color:#ff7777}.competition-designation-tag.is-boardman-slayer{background:#382713;border-color:#a87932;color:#f0c36b}
       `}</style>
     </main>
   );
