@@ -12,6 +12,7 @@ export type WeeklyLeaderboardPlayer = {
   losses: number;
   designation?: "regular" | "house_ghost" | "boardman";
   hasBoardmanSlayerBadge?: boolean;
+  boardmanBonusPoints?: number;
 };
 
 function DesignationBadge({ designation, variant }: { designation?: WeeklyLeaderboardPlayer["designation"]; variant: "home" | "competition" }) {
@@ -41,7 +42,7 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
         </span>
       </span>
       <strong className="home-v2-record">{player.wins}W / {player.losses}L</strong>
-      <strong className="home-v2-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
+      <strong className="home-v2-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}<small style={{display:"block",fontSize:9,color:"#f0c36b",fontWeight:700,marginTop:2}}>{Number(player.boardmanBonusPoints||0)} BONUS PTS</small></strong>
     </Link>;
   })}</>;
 }
@@ -65,7 +66,7 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
         <small style={{ display: "block", font: "10px 'JetBrains Mono',monospace", letterSpacing: 0, color: "#9aa69f" }}>{player.player_code}</small>
       </span>
       <span className="competition-ref-record" style={{ display: "block", textAlign: "right", whiteSpace: "nowrap", fontSize: 12, color: "#d5dad6" }}>{player.wins}W / {player.losses}L</span>
-      <strong className="competition-ref-rating" style={{ display: "block", textAlign: "right", whiteSpace: "nowrap", fontSize: 17, fontWeight: 800, color: "#c8f169", fontVariantNumeric: "tabular-nums" }}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
+      <strong className="competition-ref-rating" style={{ display: "block", textAlign: "right", whiteSpace: "nowrap", fontSize: 17, fontWeight: 800, color: "#c8f169", fontVariantNumeric: "tabular-nums" }}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}<small style={{display:"block",fontSize:9,color:"#f0c36b",fontWeight:700,marginTop:2}}>{Number(player.boardmanBonusPoints||0)} BONUS PTS</small></strong>
     </Link>;
   })}</>;
 }

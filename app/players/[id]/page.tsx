@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 import { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
+import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
 type MatchRow = {
   id: string;
@@ -36,6 +37,7 @@ export default function PublicPlayerProfile() {
   const [rank, setRank] = useState(0);
   const [weeklyRank, setWeeklyRank] = useState(0);
   const [weeklyElo, setWeeklyElo] = useState<number | null>(null);
+  const [weeklyBoardmanBonus, setWeeklyBoardmanBonus] = useState(0);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [champions, setChampions] = useState<ChampionRow[]>([]);
   const [wagerWinnings, setWagerWinnings] = useState(0);
@@ -81,7 +83,7 @@ export default function PublicPlayerProfile() {
         supabase.rpc("get_player_wager_winnings", { p_player_id: id })
       ]);
       if (!active) return;
-      const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
+      const [slayerIds, bonusData] = await Promise.all([getBoardmanSlayerPlayerIds(supabase), getBoardmanBonusData(supabase)]);
       if (!active) return;
       setHasBoardmanSlayerBadge(slayerIds.has(id));
       setPlayer(profile || null);
@@ -89,6 +91,7 @@ export default function PublicPlayerProfile() {
       const weekly = weekBoard || [];
       setWeeklyRank(weekly.findIndex((p: any) => p.id === id) + 1);
       setWeeklyElo(weekly.find((p: any) => p.id === id)?.elo_rating ?? null);
+      setWeeklyBoardmanBonus(bonusData.bonusByPlayerId.get(id) || 0);
       setMatches((games || []) as MatchRow[]);
       setChampions((wins || []) as ChampionRow[]);
       setWagerWinnings(Number(wagerTotal || 0));
@@ -276,7 +279,8 @@ export default function PublicPlayerProfile() {
             <div className="public-card-label">THIS WEEK <span>↗</span></div>
             <strong>#{weeklyRank || "—"}</strong>
             <div className="public-rating-foot"><span>WEEKLY ELO</span><b>{(weeklyElo ?? elo).toLocaleString()}</b></div>
-            <small>Weekly ranking resets every Monday</small>
+            <div className="public-rating-foot"><span>BOARDMAN BONUS</span><b style={{color:"#f0c36b"}}>+{weeklyBoardmanBonus}</b></div>
+            <small>Separate from ELO · Maximum 30 bonus points per week</small>
           </div>
         </section>
 

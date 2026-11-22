@@ -4,12 +4,14 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import {supabase} from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 type P={id:string;username:string;player_code:string;photo_url:string|null;designation?: "regular" | "house_ghost" | "boardman" | null};
 type R={id:string;rack_number:number;winner_id:string;loser_id:string;loser_balls_remaining:number;black_ball_finish:boolean};
 export default function MatchDetail(){
  const {id}=useParams<{id:string}>();
  const [m,M]=useState<any>(null),[racks,R]=useState<R[]>([]),[busy,B]=useState(true),[error,E]=useState("");
- useEffect(()=>{let ok=true;(async()=>{if(!supabase){B(false);return}const {data,error}=await supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(id,username,player_code,photo_url,designation),two:players!matches_player_two_id_fkey(id,username,player_code,photo_url,designation)").eq("id",id).maybeSingle();if(!ok)return;if(error)E(error.message);M(data);if(data){const {data:rs,error:re}=await supabase.from("match_racks").select("id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").eq("match_id",id).order("rack_number");if(!ok)return;if(re)E(re.message);R((rs||[]) as R[])}B(false)})();return()=>{ok=false}},[id]);
+ const [boardmanBonus,BB]=useState(0);
+ useEffect(()=>{let ok=true;(async()=>{if(!supabase){B(false);return}const bonusData=await getBoardmanBonusData(supabase);const {data,error}=await supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(id,username,player_code,photo_url,designation),two:players!matches_player_two_id_fkey(id,username,player_code,photo_url,designation)").eq("id",id).maybeSingle();if(!ok)return;if(error)E(error.message);M(data);BB(bonusData.bonusByMatchId.get(id)||0);if(data){const {data:rs,error:re}=await supabase.from("match_racks").select("id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").eq("match_id",id).order("rack_number");if(!ok)return;if(re)E(re.message);R((rs||[]) as R[])}B(false)})();return()=>{ok=false}},[id]);
  const share=async()=>{if(!m)return;const a=m.one as P,b=m.two as P,t=`BASE25 PRO MATCH RESULT\n${a.username} ${m.player_one_score} — ${m.player_two_score} ${b.username}\nWinner: ${m.winner_id===a.id?a.username:b.username}`;if(navigator.share)await navigator.share({title:"BASE25 PRO Match Result",text:t,url:location.href});else await navigator.clipboard.writeText(t)};
  if(busy)return <main className="shell redesign-shell"><SiteNavigation/><p>Loading match…</p></main>;
  if(!m)return <main className="shell redesign-shell"><SiteNavigation/><section className="section"><h1>Match not found.</h1><p>{error}</p><Link href="/matches">← Match history</Link></section></main>;
@@ -26,7 +28,7 @@ export default function MatchDetail(){
    </div>
    <div className="md-score"><strong>{m.player_one_score}<i>—</i>{m.player_two_score}</strong><span>♛ &nbsp; {win.username.toUpperCase()} · MATCH VICTORY</span></div>
   </div>
-  <div className="md-elo"><div><small>{a.username.toUpperCase()}</small><b className={na>=0?"up":"down"}>{fmt(na)} ELO</b></div><div><small>{b.username.toUpperCase()}</small><b className={nb>=0?"up":"down"}>{fmt(nb)} ELO</b></div></div>
+  <div className="md-elo"><div><small>{a.username.toUpperCase()}</small><b className={na>=0?"up":"down"}>{fmt(na)} ELO</b>{boardmanBonus===10&&win.id===a.id&&<small className="md-bonus">BOARDMAN DEFEAT BONUS +10</small>}</div><div><small>{b.username.toUpperCase()}</small><b className={nb>=0?"up":"down"}>{fmt(nb)} ELO</b>{boardmanBonus===10&&win.id===b.id&&<small className="md-bonus">BOARDMAN DEFEAT BONUS +10</small>}</div></div>
   <div className="md-meta"><span><i>▢</i><small>{new Date(m.played_at).toLocaleDateString("en-NG",{month:"short",day:"numeric",year:"numeric"})}</small></span><span><i>#</i><small>Match ID: {String(m.id).slice(0,8).toUpperCase()}</small></span>{m.venue&&<span><i>⌖</i><small>{m.venue}</small></span>}{m.table_label&&<span><i>▤</i><small>{m.table_label}</small></span>}</div>
   <section className="md-racks"><div className="md-section-label">MATCH RECORD</div><h2>Rack-by-rack result</h2>
    {!racks.length?<p className="muted">No rack-by-rack record was saved for this match.</p>:<div className="md-rack-list">{rackRows.map(r=><div className="md-rack" key={r.id}><b className="rack-label">Rack {r.rack_number}</b><span className={"rack-outcome "+(r.winner.id===win.id?"rack-win":"rack-loss")}>{r.winner.id===win.id?"✓":"×"}</span><span className="rack-description"><strong>{r.winner.username} won</strong><small>{r.loser.username} left {r.loser_balls_remaining} {r.loser_balls_remaining===1?"ball":"balls"}{r.black_ball_finish?" · Black ball finish":""}</small></span><b className="rack-score">{r.scoreA} – {r.scoreB}</b></div>)}</div>}
@@ -36,7 +38,7 @@ export default function MatchDetail(){
  </section>
  <style jsx>{`
  .md-page{width:100%;max-width:760px;margin:20px auto 110px;min-width:0}
- .md-heading{display:flex;align-items:center;gap:13px;margin-bottom:17px}.md-heading>a,.md-heading>button{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid #617d30;border-radius:12px;background:#0d160e;color:#c5f36a;font-size:25px;text-decoration:none}.md-heading>button{margin-left:auto;font-size:22px}.md-heading h1{font-size:24px;line-height:1.1;margin:0}.md-heading p{font-size:11px;color:#9eac9b;margin:4px 0 0}
+ .md-bonus{display:block;margin-top:6px;color:#f0c36b;font:900 9px monospace;letter-spacing:.03em}.md-heading{display:flex;align-items:center;gap:13px;margin-bottom:17px}.md-heading>a,.md-heading>button{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid #617d30;border-radius:12px;background:#0d160e;color:#c5f36a;font-size:25px;text-decoration:none}.md-heading>button{margin-left:auto;font-size:22px}.md-heading h1{font-size:24px;line-height:1.1;margin:0}.md-heading p{font-size:11px;color:#9eac9b;margin:4px 0 0}
  .md-hero{position:relative;overflow:hidden;padding:21px 18px 19px;border:1px solid #587b28;border-radius:18px;background:radial-gradient(ellipse at 18% 36%,#24501c 0%,transparent 43%),radial-gradient(ellipse at 85% 38%,#4b2b12 0%,transparent 43%),linear-gradient(135deg,#09120c,#10190f 55%,#0a100b);box-shadow:inset 0 0 45px #b9f52d0b}
  .md-hero:after{content:"";position:absolute;left:50%;top:14%;height:62%;width:2px;background:linear-gradient(transparent,#b9f52d,transparent);transform:rotate(22deg);box-shadow:0 0 18px #b9f52d;opacity:.7}
  .md-versus{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);align-items:center;gap:7px}

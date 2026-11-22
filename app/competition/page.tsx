@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
+import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
 type WeeklyPlayer = {
   id: string;
@@ -107,8 +108,8 @@ export default function CompetitionPage() {
           ? await supabase.from("players").select("id,designation").in("id", playerIds)
           : { data: [] as { id: string; designation: WeeklyPlayer["designation"] }[] };
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
-        const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
-        const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", hasBoardmanSlayerBadge: slayerIds.has(player.id) }));
+        const [slayerIds, bonusData] = await Promise.all([getBoardmanSlayerPlayerIds(supabase), getBoardmanBonusData(supabase)]);
+        const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", hasBoardmanSlayerBadge: slayerIds.has(player.id), boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }));
         setPlayers(enrichedRows.sort((a, b) => Number(b.elo_rating || 0) - Number(a.elo_rating || 0)));
         setError("");
       }
