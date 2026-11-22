@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
 type Player = {
   id: string;
@@ -16,6 +17,7 @@ type Player = {
   losses: number;
   win_percentage: number;
   designation?: "regular" | "house_ghost" | "boardman" | null;
+  boardmanBonusPoints?: number;
 };
 
 function Avatar({ player }: { player: Player }) {
@@ -57,7 +59,9 @@ export default function LeaderboardPage() {
           ? await supabase.from("players").select("id,designation").in("id", ids)
           : { data: [] as { id: string; designation: Player["designation"] }[] };
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
-        setPlayers(rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular" })));
+        const bonusData = await getBoardmanBonusData(supabase);
+        setPlayers(rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }))
+          .sort((a, b) => (Number(b.elo_rating || 0) + Number(b.boardmanBonusPoints || 0)) - (Number(a.elo_rating || 0) + Number(a.boardmanBonusPoints || 0))));
       }
       setLoading(false);
     }
@@ -119,7 +123,7 @@ export default function LeaderboardPage() {
             <div className="weekly-empty">{search ? "No players match your search." : "No weekly rankings yet. Players appear after their first ranked match."}</div>
           ) : (
             <div className="weekly-table">
-              <div className="weekly-table-head"><span>RANK</span><span>PLAYER</span><span>W</span><span>L</span><span>RATING</span></div>
+              <div className="weekly-table-head"><span>RANK</span><span>PLAYER</span><span>W</span><span>L</span><span>TOTAL PTS</span></div>
               {filtered.map((player) => {
                 const rank = players.findIndex((p) => p.id === player.id) + 1;
                 return (
@@ -128,7 +132,7 @@ export default function LeaderboardPage() {
                     <span className="weekly-player"><Avatar player={player} /><span><b>{player.username} {player.designation === "boardman" && <span className="weekly-designation is-boardman">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="weekly-designation is-ghost">HOUSE GHOSTS 👻</span>}</b><small>{player.player_code}</small></span></span>
                     <strong>{player.wins}</strong>
                     <strong>{player.losses}</strong>
-                    <b className="weekly-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}</b>
+                    <b className="weekly-rating">{(Number(player.elo_rating || 0) + Number(player.boardmanBonusPoints || 0)).toLocaleString("en-NG")}<small style={{display:"block",fontSize:9,color:"#f0c36b",fontWeight:700,marginTop:2}}>ELO {Number(player.elo_rating || 0).toLocaleString("en-NG")} + {Number(player.boardmanBonusPoints || 0)} BONUS</small></b>
                   </Link>
                 );
               })}
