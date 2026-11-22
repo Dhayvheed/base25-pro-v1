@@ -18,12 +18,12 @@ type HomeAccount = { signedIn:boolean; authReady:boolean; profile:any; accountNa
 export default function Home(){
  const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
- const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
+ const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null),[potMatchCount,setPotMatchCount]=useState<number|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
  const [showAllWeekly,setShowAllWeekly]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
-  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError}]=await Promise.all([
+  const lagosToday=new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"});const [ly,lm,ld]=lagosToday.split("-").map(Number);const lagosDate=new Date(Date.UTC(ly,lm-1,ld));lagosDate.setUTCDate(lagosDate.getUTCDate()-((lagosDate.getUTCDay()+1)%7));const weekStart=lagosDate.toISOString().slice(0,10);\n  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError},{count:potMatches,error:potMatchesError}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
@@ -31,8 +31,8 @@ export default function Home(){
    supabase.rpc("get_current_kings_pot")
   ]);
   if(!active)return;
-  if(pe||we||me||ce||potError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setLoading(false);
+  if(pe||we||me||ce||potError||potMatchesError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||potMatchesError?.message||"Unable to load records.");
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);if(!potMatchesError)setPotMatchCount(potMatches??0);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
@@ -68,7 +68,7 @@ export default function Home(){
    <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
    <div className="home-v2-live"><i/> LIVE POT</div>
    <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
-   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{Number(kingsPot?.contributor_count||0)} matches since last Saturday · ₦100 each</span></div>
+   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{potMatchCount===null?"—":potMatchCount.toLocaleString("en-NG")} matches since last Saturday · ₦100 each</span></div>
    <p>Every recorded match adds ₦100. The full pool goes to the Saturday champion, then the pot resets to ₦0.</p>
    <Link href="/how-it-works">How it works <span>→</span></Link>
   </section>
