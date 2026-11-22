@@ -39,6 +39,10 @@ export default function Home(){
  const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
  return <main className="shell redesign-shell home-v2">
   <SiteNavigation onHomeAccountChange={setAccount} />
+  <header className="home-header">
+   <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
+   {account.signedIn ? <div className="home-header-actions"><Link href="/account" className="home-header-bell" aria-label="Notifications">♧</Link><Link href="/account" className="home-header-avatar" aria-label="My profile">{account.profile?.photo_url ? <img src={account.profile.photo_url} alt="" /> : (account.profile?.username || account.accountName || "P").charAt(0).toUpperCase()}</Link></div> : <Link href="/login" className="home-header-login">Log in</Link>}
+  </header>
   <div className="home-v2-glow" aria-hidden="true"/>
   <section className="home-v2-hero">
    <div className="home-v2-hero-copy">
