@@ -42,9 +42,6 @@ export default function Admin() {
   const [wagerOneStake, setWagerOneStake] = useState("2000");
   const [wagerTwoStake, setWagerTwoStake] = useState("2000");
   const [wagerCustom, setWagerCustom] = useState(false);
-  const [wagerAgreedOne, setWagerAgreedOne] = useState(false);
-  const [wagerAgreedTwo, setWagerAgreedTwo] = useState(false);
-  const [recordErrors, setRecordErrors] = useState<Record<string, string>>({});
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
     { winnerId: "", loserBalls: "0" },
@@ -344,7 +341,6 @@ export default function Admin() {
       setMessage("Check each rack winner and the losing player's balls remaining.");
       return;
     }
-    if (wagerEnabled && (!wagerAgreedOne || !wagerAgreedTwo)) { setMessage("Both players must agree to the wager before saving."); return; }
     if (wagerEnabled) {
       const stakeOne = Number(wagerOneStake), stakeTwo = Number(wagerTwoStake);
       if (!Number.isInteger(stakeOne) || !Number.isInteger(stakeTwo) || stakeOne < 2000 || stakeTwo < 2000 || stakeOne > 1000000 || stakeTwo > 1000000) {
@@ -364,13 +360,10 @@ export default function Admin() {
     if (error) {
       setMessage(`Match was not published: ${error.message}`);
     } else {
-      const winnerId = rackWins.one > rackWins.two ? one : two;
-      const playerOne = players.find(player => player.id === one);
-      const playerTwo = players.find(player => player.id === two);
-      setMatchConfirmation({ playerOne: playerOne?.username || "Player one", playerTwo: playerTwo?.username || "Player two", scoreOne: rackWins.one, scoreTwo: rackWins.two });
-      setMessage("");
+      setMatchConfirmation(null);
+      setMessage("Match recorded successfully. ELO ratings recalculated. Ready for the next match.");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
-      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000"); setWagerCustom(false); setWagerAgreedOne(false); setWagerAgreedTwo(false); setRecordErrors({});
+      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000"); setWagerCustom(false);
       setOne(""); setTwo("");
       setPlayerOneSearch(""); setPlayerTwoSearch("");
       setPlayerOnePickerOpen(false); setPlayerTwoPickerOpen(false); setPlayerPickerTarget(null);
@@ -454,7 +447,7 @@ export default function Admin() {
               <div><b>{matchConfirmation.playerTwo}</b><strong>{matchConfirmation.scoreTwo}</strong></div>
             </div>
             <p>ELO ratings have been updated.</p>
-            <div className="record-confirm-actions"><button type="button" onClick={() => { setMatchConfirmation(null); setActiveSection("matches"); }}>View match history</button><div className="record-confirm-actions"><button type="button" onClick={() => { setMatchConfirmation(null); setActiveSection("matches"); }}>View match history</button><button type="button" onClick={() => setMatchConfirmation(null)}>Done</button></div></div>
+            <button type="button" onClick={() => setMatchConfirmation(null)}>Done</button>
           </section>
         </div>
       )}
@@ -501,80 +494,69 @@ export default function Admin() {
         </section>
 
         <section className="admin-card record-match-shell" style={{display:activeSection==="match"?"block":"none"}}>
-          <form className="record-match-form record-v3" onSubmit={addMatch}>
-            <div className="record-match-header"><button type="button" className="record-back" onClick={()=>setActiveSection("overview")} aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6M9 12h12"/></svg></button><h2>Record match</h2><span className="record-admin-tag">ADMIN</span></div>
+          <form className="record-match-form" onSubmit={addMatch}>
+            <div className="record-match-header"><button type="button" className="record-back" onClick={()=>setActiveSection("overview")} aria-label="Back">←</button><h2>Record match</h2><span /></div>
             <div className="record-format-switch" role="group" aria-label="Match format">
-              <button type="button" className={matchFormat==="single"?"selected":""} onClick={()=>{setMatchFormat("single");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);setRecordErrors({});}}>One rack</button>
-              <button type="button" className={matchFormat==="best_of_3"?"selected":""} onClick={()=>{setMatchFormat("best_of_3");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);setRecordErrors({});}}>Best of 3</button>
+              <button type="button" className={matchFormat==="single"?"selected":""} onClick={()=>{setMatchFormat("single");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>One rack</button>
+              <button type="button" className={matchFormat==="best_of_3"?"selected":""} onClick={()=>{setMatchFormat("best_of_3");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>Best of 3</button>
             </div>
-            <p className="record-format-note">{matchFormat==="best_of_3"?"First to win 2 racks takes the match":"Single rack · one winner"}</p>
-
-            <section className="record-v3-section">
-              <div className="record-v3-section-head"><span>STEP 1</span><h3>Who played?</h3></div>
-              <div className="record-player-pair">
-                {(["one","two"] as const).map((slot,index)=>{
-                  const id=slot==="one"?one:two, player=players.find(p=>p.id===id);
-                  return <div className="record-player-slot-wrap" key={slot}>
-                    <button type="button" className={"record-player-slot record-v3-player"+(player?" filled":"")} onClick={()=>{setPlayerPickerTarget(slot);setPlayerOnePickerOpen(slot==="one");setPlayerTwoPickerOpen(slot==="two");}}>
-                      {player?<><span className="record-player-avatar" style={player.photo_url?{backgroundImage:`url(${player.photo_url})`}:{}}>{player.photo_url?"":player.username.slice(0,1).toUpperCase()}</span><b>@{player.username}</b><small>{Number(player.elo_rating||1000).toLocaleString()} rating</small><em>Change</em></>:<><span className="record-add-circle">＋</span><b>Choose player</b><em>Tap to select</em></>}
-                    </button>
-                    {index===0&&<span className="record-versus">vs</span>}
-                  </div>;
-                })}
-              </div>
-              <div className="record-inline-picker">
-                <label className="record-v3-search"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input aria-label="Search a player" placeholder="Search a player…" value={playerPickerTarget==="two"?playerTwoSearch:playerOneSearch} onFocus={()=>setPlayerPickerTarget(one&&!two?"two":"one")} onChange={e=>{if(one&&!two)setPlayerTwoSearch(e.target.value);else setPlayerOneSearch(e.target.value);}} /></label>
-                <div className="record-recent-row"><span>Recent</span>{recentPlayers.map(player=><button type="button" key={player.id} disabled={player.id===one||player.id===two} onClick={()=>selectMatchPlayer(player.id,!one?"one":"two")}>{player.username}</button>)}</div>
-                {playerPickerTarget&&<div className="record-inline-results">{(playerPickerTarget==="two"?playerTwoOptions:playerOneOptions).slice(0,5).map(player=><button type="button" key={player.id} onClick={()=>selectMatchPlayer(player.id,playerPickerTarget)}><span>{player.username.slice(0,1).toUpperCase()}</span><b>@{player.username}</b><small>{Number(player.elo_rating||1000).toLocaleString()} rating</small></button>)}</div>}
-              </div>
-              {recordErrors.players&&<p className="record-field-error">{recordErrors.players}</p>}
-            </section>
-
-            {matchFormat==="single"?<section className="record-v3-section">
-              <div className="record-v3-section-head"><span>STEP 2</span><h3>Who won the rack?</h3></div>
-              <div className="record-winner-pair record-v3-winners">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>{updateRack(0,"winnerId",player.id);setRecordErrors(current=>({...current,winner:""}));}}>{racks[0].winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
-              {recordErrors.winner&&<p className="record-field-error">{recordErrors.winner}</p>}
-              <div className="record-balls-panel"><div><span>STEP 3</span><b>Balls left on the table</b><small>For losing player · {playerName(racks[0].winnerId?(racks[0].winnerId===one?two:one):"")}</small></div><div className="record-stepper"><button type="button" aria-label="Remove one ball" disabled={!one||!two||Number(racks[0].loserBalls)<=0} onClick={()=>updateRack(0,"loserBalls",String(Math.max(0,Number(racks[0].loserBalls)-1)))}>−</button><strong>{racks[0].loserBalls}</strong><button type="button" aria-label="Add one ball" disabled={!one||!two||Number(racks[0].loserBalls)>=7} onClick={()=>updateRack(0,"loserBalls",String(Math.min(7,Number(racks[0].loserBalls)+1)))}>＋</button></div></div>
-            </section>:<section className="record-v3-section">
-              <div className="record-v3-section-head"><span>STEP 2</span><h3>Rack results</h3></div>
-              <div className="record-scoreboard record-v3-score"><div><small>{one?playerName(one):"Player one"}</small><strong>{rackWins.one}</strong></div><span>—</span><div><small>{two?playerName(two):"Player two"}</small><strong>{rackWins.two}</strong></div></div>
-              {Array.from({length:thirdRackNeeded?3:2},(_,index)=>index).map(index=>{
-                const rack=racks[index], loser=rack.winnerId?(rack.winnerId===one?two:one):"";
-                return <div className="record-rack-card record-v3-rack" key={index}>
-                  <div className="record-rack-title"><b>Rack {index+1}</b>{index===2&&<small>DECIDING RACK</small>}</div>
-                  <div className="record-winner-pair record-v3-winners">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
-                  <div className="record-rack-balls"><span>Balls left · {loser?playerName(loser):"losing player"}</span><div className="record-stepper"><button type="button" aria-label="Remove one ball" disabled={!one||!two||Number(rack.loserBalls)<=0} onClick={()=>updateRack(index,"loserBalls",String(Math.max(0,Number(rack.loserBalls)-1)))}>−</button><strong>{rack.loserBalls}</strong><button type="button" aria-label="Add one ball" disabled={!one||!two||Number(rack.loserBalls)>=7} onClick={()=>updateRack(index,"loserBalls",String(Math.min(7,Number(rack.loserBalls)+1)))}>＋</button></div></div>
+            {matchFormat==="single"?<p className="record-format-note">Default format</p>:<p className="record-format-note">First to win 2 racks takes the match</p>}
+            <div className="record-step-label">1. Who played?</div>
+            <div className="record-player-pair">
+              {(["one","two"] as const).map((slot,index)=>{
+                const id=slot==="one"?one:two, player=players.find(p=>p.id===id);
+                return <div className="record-player-slot-wrap" key={slot}>
+                  <button type="button" className={"record-player-slot"+(player?" filled":"")+(playerPickerTarget===slot?" active":"")} onClick={()=>{setPlayerPickerTarget(slot);setPlayerOnePickerOpen(slot==="one");setPlayerTwoPickerOpen(slot==="two");}}>
+                    {player?<><span className="record-player-avatar" style={player.photo_url?{backgroundImage:`url(${player.photo_url})`}:{}}>{player.photo_url?"":player.username.slice(0,1).toUpperCase()}</span><b>@{player.username}</b><small>{Number(player.elo_rating||1000).toLocaleString()} rating</small><em>Change</em></>:<><span className="record-add-circle">＋</span><b>Player {slot==="one"?"one":"two"}</b><em>Tap to choose</em></>}
+                  </button>
+                  {index===0&&<span className="record-versus">vs</span>}
                 </div>;
               })}
-              <p className="record-rack-hint">Rack 3 only appears when the score is tied 1–1. If one player wins the first two racks, the match ends 2–0.</p>
-            </section>}
-
-            <section className="record-v3-section record-wager-card">
-              <button type="button" className="record-wager-toggle" aria-expanded={wagerEnabled} onClick={()=>{setWagerEnabled(v=>!v);setWagerAgreedOne(false);setWagerAgreedTwo(false);}}>
-                <span><b>Wager (optional)</b><small>Both players must agree to the stake</small></span><i className={wagerEnabled?"on":""}><em/></i>
+            </div>
+            <p className="record-player-hint">{!one?"Tap a card to choose each player.":!two?"Now choose player two.":"Both players set. Next, choose the winner."}</p>
+            <div className={"record-step-section"+(!one||!two?" is-dimmed":"")}>
+              {matchFormat==="single"?<>
+                <div className="record-step-label">2. Who won the rack?</div>
+                <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>updateRack(0,"winnerId",player.id)}>{racks[0].winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
+                <div className="record-step-label record-balls-label">3. Balls left on the table ({playerName(racks[0].winnerId&&racks[0].winnerId===one?two:one)})</div>
+                <div className="record-stepper"><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)<=0} onClick={()=>updateRack(0,"loserBalls",String(Math.max(0,Number(racks[0].loserBalls)-1)))}>−</button><strong>{racks[0].loserBalls}</strong><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)>=7} onClick={()=>updateRack(0,"loserBalls",String(Math.min(7,Number(racks[0].loserBalls)+1)))}>＋</button></div>
+              </>:<>
+                <div className="record-step-label">2. Rack results</div>
+                <div className="record-scoreboard"><div><small>{playerName(one)}</small><strong>{rackWins.one}</strong></div><span>–</span><div><small>{playerName(two)}</small><strong>{rackWins.two}</strong></div></div>
+                {Array.from({length:thirdRackNeeded?3:2},(_,index)=>index).map(index=>{
+                  const rack=racks[index], loser=rack.winnerId?(rack.winnerId===one?two:one):"";
+                  return <div className="record-rack-card" key={index}>
+                    <div className="record-rack-title"><b>Rack {index+1}</b>{index===2&&<small>DECIDING RACK</small>}</div>
+                    <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
+                    <div className="record-rack-balls"><span>Balls left ({playerName(loser)})</span><div className="record-stepper"><button type="button" disabled={!one||!two||Number(rack.loserBalls)<=0} onClick={()=>updateRack(index,"loserBalls",String(Math.max(0,Number(rack.loserBalls)-1)))}>−</button><strong>{rack.loserBalls}</strong><button type="button" disabled={!one||!two||Number(rack.loserBalls)>=7} onClick={()=>updateRack(index,"loserBalls",String(Math.min(7,Number(rack.loserBalls)+1)))}>＋</button></div></div>
+                  </div>;
+                })}
+                <p className="record-rack-hint">Rack 3 only appears when the score is tied 1–1. If one player wins the first two racks, the match ends 2–0.</p>
+              </>}
+            </div>
+            {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-result-card"><small>Result</small><div className="record-result-heading"><b>{playerName(rackWins.one>rackWins.two?one:two)} beats {playerName(rackWins.one>rackWins.two?two:one)}</b><strong>{rackWins.one}–{rackWins.two}</strong></div><div className="record-estimates"><div><small>{playerName(one)}</small><b>{rackWins.one>rackWins.two?"+ rating":"− rating"}</b></div><div><small>{playerName(two)}</small><b>{rackWins.two>rackWins.one?"+ rating":"− rating"}</b></div></div><p>Estimated rating change. Final values are calculated when you save.</p></div>}
+            <section className={"record-wager-card"+(wagerEnabled?" expanded":"")}>
+              <button type="button" className="record-wager-toggle" aria-expanded={wagerEnabled} onClick={()=>setWagerEnabled(v=>!v)}>
+                <span><b>Wager on this match</b><small>Optional · winner takes the pot</small></span>
+                <i className={wagerEnabled?"on":""}><em/></i>
               </button>
-              {wagerEnabled&&<div className="record-wager-content record-v3-wager">
-                {([{slot:"one",name:one?playerName(one):"Player one",value:wagerOneStake,set:setWagerOneStake,custom:wagerCustom},{slot:"two",name:two?playerName(two):"Player two",value:wagerTwoStake,set:setWagerTwoStake,custom:wagerCustom}] as const).map((item,index)=><div className="record-stake-card" key={item.slot}>
-                  <label>{item.name} stakes<input type="number" inputMode="numeric" min="2000" max="1000000" step="1" placeholder="₦ Enter amount" value={item.value} onChange={e=>{item.set(e.target.value);setWagerAgreedOne(false);setWagerAgreedTwo(false);}} /></label>
-                  <div className="record-stake-chips">{[2000,5000].map(amount=><button type="button" key={amount} className={Number(item.value)===amount?"selected":""} onClick={()=>{item.set(String(amount));setWagerAgreedOne(false);setWagerAgreedTwo(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={item.custom?"selected":""} onClick={()=>setWagerCustom(true)}>Custom</button></div>
-                  <label className="record-agree"><input type="checkbox" checked={index===0?wagerAgreedOne:wagerAgreedTwo} onChange={e=>index===0?setWagerAgreedOne(e.target.checked):setWagerAgreedTwo(e.target.checked)}/><span>I agree to this stake</span><b>AGREED</b></label>
-                </div>)}
+              {wagerEnabled&&<div className="record-wager-content">
+                {!wagerCustom ? <div className="record-wager-selected-stakes">
+                  <div><span>{playerName(one)||"Player one"} stake</span><b>₦{Number(wagerOneStake||0).toLocaleString("en-NG")}</b></div>
+                  <div><span>{playerName(two)||"Player two"} stake</span><b>₦{Number(wagerTwoStake||0).toLocaleString("en-NG")}</b></div>
+                </div> : <div className="record-wager-fields record-wager-shared-field">
+                  <label>Stake per player<input type="number" inputMode="numeric" min="2000" max="1000000" step="1" placeholder="Enter amount (₦)" value={wagerOneStake} onChange={e=>{setWagerOneStake(e.target.value);setWagerTwoStake(e.target.value);}} /></label>
+                  <p>Both {playerName(one)||"Player one"} and {playerName(two)||"Player two"} will stake the same amount.</p>
+                </div>}
+                <div className="record-wager-presets">{[2000,5000].map(amount=><button type="button" key={amount} className={!wagerCustom&&Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));setWagerCustom(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={wagerCustom?"selected":""} onClick={()=>{setWagerCustom(true);setWagerOneStake("");setWagerTwoStake("");}}>Custom amount</button></div>
+                {wagerCustom&&<div className="record-wager-custom">Enter one amount. It applies to both players. Minimum ₦2,000 each.</div>}
                 <div className="record-wager-pot"><span>Total pot · winner takes all</span><strong>₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</strong></div>
-                <p className="record-wager-minimum">Minimum ₦2,000 per player · Maximum ₦1,000,000</p>
+                {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-wager-result"><span>{playerName(rackWins.one>rackWins.two?one:two)} wins</span><b>+₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</b></div>}
               </div>}
             </section>
-
-            <section className="record-v3-result">
-              <div className="record-v3-result-head"><span>LIVE RESULT</span><b>{one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))? "CONFIRMED SCORE":"AWAITING RESULT"}</b></div>
-              <h3>{one&&two&&rackWins.one!==rackWins.two? `${playerName(rackWins.one>rackWins.two?one:two)} beats ${playerName(rackWins.one>rackWins.two?two:one)}`:"Select players and rack winners"}</h3>
-              <div className="record-v3-result-score">{rackWins.one} <span>–</span> {rackWins.two}</div>
-              <div className="record-v3-result-players"><div><b>{one?playerName(one):"Player one"}</b><strong className={rackWins.one>rackWins.two?"positive":rackWins.one<rackWins.two?"negative":""}>{rackWins.one>rackWins.two?"Winner":rackWins.one<rackWins.two?"Loser":"Pending"}</strong><small>Rating estimate: calculated on save</small>{wagerEnabled&&<small className={rackWins.one>rackWins.two?"positive":rackWins.one<rackWins.two?"negative":""}>Wager {rackWins.one>rackWins.two?"+":rackWins.one<rackWins.two?"−":""}₦{Number(wagerOneStake||0).toLocaleString("en-NG")}</small>}</div><div><b>{two?playerName(two):"Player two"}</b><strong className={rackWins.two>rackWins.one?"positive":rackWins.two<rackWins.one?"negative":""}>{rackWins.two>rackWins.one?"Winner":rackWins.two<rackWins.one?"Loser":"Pending"}</strong><small>Rating estimate: calculated on save</small>{wagerEnabled&&<small className={rackWins.two>rackWins.one?"positive":rackWins.two<rackWins.one?"negative":""}>Wager {rackWins.two>rackWins.one?"+":rackWins.two<rackWins.one?"−":""}₦{Number(wagerTwoStake||0).toLocaleString("en-NG")}</small>}</div></div>
-              <p>Estimated rating change. Final values are calculated when you save.</p><p>This match adds ₦100 to the King's Pot.</p>
-            </section>
             <div className="record-footer-venue"><span>Ranked · BASE25 table</span><button type="button" onClick={()=>setVenue(venue==="BASE25"?"BASE25 Table 2":"BASE25")}>Change</button></div>
-            {message&&<p className="record-field-error" role="alert">{message}</p>}
-            <button className="record-save-button record-v3-save" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))||(wagerEnabled&&(!wagerAgreedOne||!wagerAgreedTwo||!Number.isInteger(Number(wagerOneStake))||!Number.isInteger(Number(wagerTwoStake))||Number(wagerOneStake)<2000||Number(wagerTwoStake)<2000||Number(wagerOneStake)>1000000||Number(wagerTwoStake)>1000000))}>{busy?"Saving match...":wagerEnabled?"Save match & wager":"Save match"}</button>
-            <button type="button" className="record-cancel-button record-v3-cancel" onClick={()=>setActiveSection("overview")}>Cancel</button>
+            <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":wagerEnabled?"✓  Save match & wager":"✓  Save match"}</button>
+            <button type="button" className="record-cancel-button" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
         </section>
       </div>
