@@ -4,7 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
 
-type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null };
+type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type Rack = { winnerId: string; loserBalls: string };
@@ -108,8 +108,11 @@ export default function Admin() {
   async function refresh() {
     if (!supabase) return;
     const { data, error } = await supabase.rpc("admin_list_players");
-    if (error) setMessage(error.message);
-    setPlayers(data || []);
+    if (error) { setMessage(error.message); return; }
+    const { data: designations, error: designationError } = await supabase.from("players").select("id,designation");
+    if (designationError) { setMessage(`Could not load player roles: ${designationError.message}`); return; }
+    const roleById = new Map((designations || []).map((row: any) => [row.id, row.designation]));
+    setPlayers((data || []).map((player: Player) => ({ ...player, designation: (roleById.get(player.id) as Player["designation"]) || "regular" })));
   }
 
   async function refreshPlayerAccountStatuses() {
@@ -265,6 +268,14 @@ export default function Admin() {
 
 
   function startEditPlayer(player: Player) { setEditingPlayer(player.id); setEditFullName(player.full_name); setEditUsername(player.username); setEditPhoto(player.photo_url || ""); }
+  async function updatePlayerDesignation(player: Player, designation: "regular" | "house_ghost" | "boardman") {
+    if (!supabase || staffRole !== "owner" || busy || designation === player.designation) return;
+    setBusy(true);
+    const { error } = await supabase.from("players").update({ designation }).eq("id", player.id);
+    if (error) setMessage(`Player role update failed: ${error.message}`);
+    else { setMessage(`@${player.username} is now ${designation === "house_ghost" ? "a House Ghost" : designation === "boardman" ? "a Boardman" : "a Regular player"}.`); await refresh(); }
+    setBusy(false);
+  }
   async function savePlayerEdit(event: FormEvent) {
     event.preventDefault(); if (!supabase || !editingPlayer) return; setBusy(true);
     const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: players.find(item => item.id === editingPlayer)?.username || "", p_photo_url: editPhoto.trim() || null });
@@ -571,7 +582,7 @@ export default function Admin() {
             <div className="eyebrow">USERNAME · @{players.find(item=>item.id===editingPlayer)?.username || "—"} (LOCKED)</div>
             <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
             <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginTop:10}}><label style={{fontSize:12,color:"#aab6aa"}}>Player role<select aria-label={`Player role for ${player.username}`} value={player.designation || "regular"} disabled={busy} onChange={e=>updatePlayerDesignation(player,e.target.value as "regular" | "house_ghost" | "boardman")} style={{marginLeft:8,minWidth:145}}><option value="regular">Regular</option><option value="house_ghost">House Ghost</option><option value="boardman">Boardman</option></select></label></div>
           <div className="form" style={{marginTop:14}}><label>Player email<input type="email" value={emailDrafts[player.id] || ""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={account?.account_status === "Verified"} /></label><label>{account?.account_status === "Verified" ? "Set new password" : "Choose password"}<div style={{display:"flex",width:"100%",minWidth:0,alignItems:"stretch",gap:8}}><input style={{flex:"1 1 0%",width:0,minWidth:0,boxSizing:"border-box"}} type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id] || ""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters" /><button type="button" className="secondary" style={{flex:"0 0 76px",width:76,minWidth:76,paddingLeft:8,paddingRight:8}} aria-label={showPlayerPasswords[player.id]?"Hide password":"Show password"} onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label><div className="eyebrow">ACCOUNT STATUS · {account?.account_status || "Not Assigned"}</div>{account?.account_status === "Verified" ? <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8} onClick={()=>resetPlayerPassword(player)}>Update player password</button> : <button type="button" className="secondary" disabled={busy || (playerPasswordDrafts[player.id] || "").length < 8 || !(emailDrafts[player.id] || "").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}</div>
         </div>})}
       </section>
