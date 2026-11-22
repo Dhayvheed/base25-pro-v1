@@ -64,7 +64,7 @@ export default function PublicPlayerProfile() {
         { data: wagerTotal }
       ] = await Promise.all([
         supabase.from("player_public_leaderboard")
-          .select("id,username,player_code,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage")
+          .select("id,username,player_code,photo_url,elo_rating,highest_elo,matches_played,wins,losses,win_percentage,designation")
           .eq("id", id).single(),
         supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating", { ascending: false }),
         supabase.rpc("get_period_leaderboard", { p_period: "this_week" }),
@@ -214,7 +214,7 @@ export default function PublicPlayerProfile() {
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
-              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1><p>“Play smart. Clear tables.”</p></div>
+              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation && player.designation !== "regular" && <span className={`public-designation-tag ${player.designation === "boardman" ? "is-boardman" : "is-ghost"}`}>{player.designation === "boardman" ? "BOARDMAN 💀" : "HOUSE GHOSTS 👻"}</span>}<p>“Play smart. Clear tables.”</p></div>
           </div>
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
@@ -375,7 +375,7 @@ export default function PublicPlayerProfile() {
         .public-avatar{width:108px;height:108px;border:4px solid #b9f52d;border-radius:50%;background:#1a2c1c;display:grid;place-items:center;overflow:hidden;color:#d4f77b;font-size:38px;font-weight:900;box-shadow:0 0 25px #b9f52d44}
         .public-avatar img{width:100%;height:100%;object-fit:cover}
         .public-player-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.public-player-meta span{font:11px monospace;color:#c2cdbb}.public-player-meta b{font:700 9px monospace;color:#c5f36a;border:1px solid #527b2d;background:#14220f;border-radius:20px;padding:5px 8px;letter-spacing:.08em}
-        .public-identity h1{font-size:clamp(28px,5vw,42px);line-height:1.1;letter-spacing:-.04em;margin:10px 0 5px;overflow-wrap:anywhere}.public-identity p{margin:0;color:#b9c5b3;font-size:13px}
+        .public-identity h1{font-size:clamp(28px,5vw,42px);line-height:1.1;letter-spacing:-.04em;margin:10px 0 5px;overflow-wrap:anywhere}.public-designation-tag{display:inline-flex;align-items:center;margin:4px 0 8px;padding:5px 9px;border:1px solid;border-radius:7px;font:900 9px/1.2 monospace;letter-spacing:.08em}.public-designation-tag.is-boardman{color:#f0c56a;border-color:#8b632d;background:#3b2915}.public-designation-tag.is-ghost{color:#d6b6ff;border-color:#72519a;background:#291d3a}.public-identity p{margin:0;color:#b9c5b3;font-size:13px}
         .public-global-rank{border-left:1px solid #627257;display:grid;justify-items:center;align-content:center;min-height:100px;color:#e9cf4a}.public-global-rank span{font-size:27px}.public-global-rank strong{font:900 34px monospace}.public-global-rank small{font:700 9px monospace;letter-spacing:.12em;color:#d5ddce}
         .public-hero-bottom{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #ffffff17;padding-top:12px;font:700 9px monospace;letter-spacing:.12em;color:#8e9b88}
         .public-rating-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:13px;margin:14px 0}

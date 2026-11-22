@@ -15,6 +15,7 @@ type Player = {
   wins: number;
   losses: number;
   win_percentage: number;
+  designation?: "regular" | "house_ghost" | "boardman" | null;
 };
 
 function Avatar({ player }: { player: Player }) {
@@ -50,7 +51,13 @@ export default function LeaderboardPage() {
         setError(requestError.message);
       } else {
         setError("");
-        setPlayers((data || []) as Player[]);
+        const rows = (data || []) as Player[];
+        const ids = rows.map((player) => player.id);
+        const { data: designationRows } = ids.length
+          ? await supabase.from("players").select("id,designation").in("id", ids)
+          : { data: [] as { id: string; designation: Player["designation"] }[] };
+        const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
+        setPlayers(rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular" })));
       }
       setLoading(false);
     }
@@ -118,7 +125,7 @@ export default function LeaderboardPage() {
                 return (
                   <Link href={`/players/${player.id}`} className={`weekly-player-row ${rank <= 5 ? "is-qualifying" : ""} ${rank === 1 ? "is-leader" : ""}`} key={player.id}>
                     <span className="weekly-rank">{rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : String(rank).padStart(2, "0")}</span>
-                    <span className="weekly-player"><Avatar player={player} /><span><b>{player.username}</b><small>{player.player_code}</small></span></span>
+                    <span className="weekly-player"><Avatar player={player} /><span><b>{player.username} {player.designation === "boardman" && <span className="weekly-designation is-boardman">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="weekly-designation is-ghost">HOUSE GHOSTS 👻</span>}</b><small>{player.player_code}</small></span></span>
                     <strong>{player.wins}</strong>
                     <strong>{player.losses}</strong>
                     <b className="weekly-rating">{Number(player.elo_rating || 0).toLocaleString("en-NG")}</b>
@@ -164,7 +171,7 @@ export default function LeaderboardPage() {
         .weekly-player{display:flex;align-items:center;gap:11px;min-width:0;text-align:left}
         .weekly-avatar{width:42px;height:42px;flex:none;display:grid;place-items:center;overflow:hidden;border:1px solid #526a3e;border-radius:50%;background:#1b2b1b;color:#d5f36a;font-size:15px;font-weight:900}
         .weekly-avatar img{width:100%;height:100%;object-fit:cover}
-        .weekly-player>span:last-child{display:grid;gap:3px;min-width:0}.weekly-player b{overflow:hidden;color:#f4f6ef;font-size:13px;text-overflow:ellipsis;white-space:nowrap}.weekly-player small{color:#91a191;font:9px monospace}
+        .weekly-player>span:last-child{display:grid;gap:3px;min-width:0}.weekly-player b{overflow:hidden;color:#f4f6ef;font-size:13px;text-overflow:ellipsis;white-space:nowrap}.weekly-designation{display:inline-block;margin-left:5px;padding:3px 5px;border:1px solid;border-radius:5px;font:900 7px/1.2 monospace;letter-spacing:.04em;vertical-align:middle;white-space:nowrap}.weekly-designation.is-boardman{color:#f0c56a;border-color:#8b632d;background:#3b2915}.weekly-designation.is-ghost{color:#d6b6ff;border-color:#72519a;background:#291d3a}.weekly-player small{color:#91a191;font:9px monospace}
         .weekly-player-row>strong{font-size:13px}.weekly-rating{color:#d4f36a;font-size:17px!important}
         .weekly-board-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:13px;color:#819282;font:9px monospace;letter-spacing:.04em}
         .weekly-board-foot span:first-child{color:#c5f36a}.weekly-board-foot i{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#c5f32d}
