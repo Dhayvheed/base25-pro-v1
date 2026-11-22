@@ -1276,3 +1276,8 @@
 
 /* Homepage designation badges: match competition-page outlined tag */
 .home-v2-designation-tag{display:inline-block;width:max-content;max-width:100%;margin-top:3px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}
+
+/* Shared weekly leaderboard designation styling */
+.home-v2-designation-tag.is-boardman,.competition-designation-tag.is-boardman{background:#3a1717!important;border:1px solid #b94444!important;color:#ff7777!important}
+
+.home-v2-designation-tag.is-boardman-slayer,.competition-designation-tag.is-boardman-slayer{background:#382713!important;border:1px solid #a87932!important;color:#f0c36b!important}

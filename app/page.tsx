@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 
-type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman" };
+type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman"; hasBoardmanSlayerBadge?: boolean };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
 type Champion = { id:string; week_start:string; week_end:string; player_id:string; prize_amount?:number|null; players?:{username:string;player_code:string;photo_url:string|null}|null };
 type KingsPot = { week_start:string; pot_amount:number; contributor_count:number };
@@ -41,7 +42,8 @@ export default function Home(){
   ]);
   if(!active)return;
   if(pe||we||me||ce||potError||matchCountError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
-  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
+  const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers(((w||[]) as Player[]).map(player=>({...player,hasBoardmanSlayerBadge:slayerIds.has(player.id)})));setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
@@ -51,7 +53,9 @@ export default function Home(){
    .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
    .home-v2-player-row.is-first .home-v2-player-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px}
    .home-v2-player-row.is-first .home-v2-player small{margin-top:0;line-height:1.25}
-  `}</style>
+   .home-v2-designation-tag.is-boardman-slayer,.competition-designation-tag.is-boardman-slayer{background:#382713!important;border:1px solid #a87932!important;color:#f0c36b!important}
+  `}
+  </style>
   <SiteNavigation onHomeAccountChange={setAccount} />
   <header className="home-header">
    <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
@@ -94,17 +98,12 @@ export default function Home(){
     <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
     <span className="home-v2-live-pill"><i/> LIVE</span>
    </div>
-   <p className="home-v2-subtitle">Top 5 qualify for the Saturday final. Points and the pot reset every Saturday.</p>
+   <p className="home-v2-subtitle">Top 5 real players qualify for the Saturday final. Boardman and House players rank but can’t qualify for finals or prizes. Points and the pot reset every Saturday.</p>
    {error&&<p className="notice">{error}</p>}
    {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
     <div className="home-v2-table">
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
-     {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
-      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
-      <span className="home-v2-player"><Avatar player={p}/><span className="home-v2-player-copy"><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"&&<span className="home-v2-designation-tag">BOARDMAN 💀</span>}{p.designation==="house_ghost"&&<span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>}<small>{p.player_code}</small></span></span>
-      <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
-      <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
-     </Link>})}
+     <WeeklyLeaderboardRows players={visiblePlayers} variant="home" />
     </div>}
    <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
   </section>
