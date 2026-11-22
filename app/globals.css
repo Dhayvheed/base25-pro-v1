@@ -1261,3 +1261,15 @@
 .admin-shell .admin-v2-menu-button:focus-visible,.admin-shell button:focus-visible{outline:2px solid #c8f169;outline-offset:2px}
 @media(min-width:761px){.admin-shell{max-width:520px;padding-left:22px;padding-right:22px}.admin-shell .admin-v2-heading h1{font-size:40px}}
 @media(max-width:390px){.admin-shell{padding-left:12px;padding-right:12px}.admin-v2-heading h1{font-size:34px}.admin-v2-pot{padding:13px 12px}.admin-v2-pot-top>div:first-child strong{font-size:27px}.admin-v2-pot-count strong{font-size:21px}}
+
+
+.admin-skeleton-block{display:inline-block;width:46px;height:22px;border-radius:7px;background:linear-gradient(90deg,#1a241e,#29362d,#1a241e);background-size:200% 100%;animation:admin-skeleton 1.25s ease-in-out infinite;vertical-align:middle}
+.admin-skeleton-line{display:inline-block;width:105px;height:10px;border-radius:5px;background:linear-gradient(90deg,#1a241e,#29362d,#1a241e);background-size:200% 100%;animation:admin-skeleton 1.25s ease-in-out infinite;vertical-align:middle}
+.admin-v2-pot-count strong{font-variant-numeric:tabular-nums}
+.admin-v2-match>button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.admin-v2-manage>button{min-height:72px}
+.admin-v2-manage>button small{white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.admin-shell .site-mobile-bottom{height:calc(72px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+.admin-shell .site-mobile-bottom a{min-height:60px}
+.admin-shell .site-mobile-bottom .site-mobile-record{min-height:72px}
+@media(prefers-reduced-motion:reduce){.admin-v2-skeleton-list i,.admin-skeleton-block,.admin-skeleton-line{animation:none}}
