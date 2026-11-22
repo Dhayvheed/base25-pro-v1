@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
-import WeeklyLeaderboardRows from "@/components/WeeklyLeaderboardRows";
+import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 
 type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman" };
 type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
@@ -52,7 +52,9 @@ export default function Home(){
    .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
    .home-v2-player-row.is-first .home-v2-player-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px}
    .home-v2-player-row.is-first .home-v2-player small{margin-top:0;line-height:1.25}
-  `}</style>
+  `}
+.home-v2-designation-tag.is-boardman-slayer,.competition-designation-tag.is-boardman-slayer{background:#382713!important;border:1px solid #a87932!important;color:#f0c36b!important}
+  </style>
   <SiteNavigation onHomeAccountChange={setAccount} />
   <header className="home-header">
    <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
