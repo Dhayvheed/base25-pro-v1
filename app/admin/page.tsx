@@ -454,7 +454,7 @@ export default function Admin() {
               <div><b>{matchConfirmation.playerTwo}</b><strong>{matchConfirmation.scoreTwo}</strong></div>
             </div>
             <p>ELO ratings have been updated.</p>
-            <button type="button" onClick={() => setMatchConfirmation(null)}>Done</button>
+            <div className="record-confirm-actions"><button type="button" onClick={() => { setMatchConfirmation(null); setActiveSection("matches"); }}>View match history</button><button type="button" onClick={() => setMatchConfirmation(null)}>Done</button></div>
           </section>
         </div>
       )}
@@ -573,7 +573,7 @@ export default function Admin() {
             </section>
             <div className="record-footer-venue"><span>Ranked · BASE25 table</span><button type="button" onClick={()=>setVenue(venue==="BASE25"?"BASE25 Table 2":"BASE25")}>Change</button></div>
             {message&&<p className="record-field-error" role="alert">{message}</p>}
-            <button className="record-save-button record-v3-save" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))||(wagerEnabled&&(!wagerAgreedOne||!wagerAgreedTwo||Number(wagerOneStake)<2000||Number(wagerTwoStake)<2000||Number(wagerOneStake)>1000000||Number(wagerTwoStake)>1000000))}>{busy?"Saving match...":wagerEnabled?"Save match & wager":"Save match"}</button>
+            <button className="record-save-button record-v3-save" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))||(wagerEnabled&&(!wagerAgreedOne||!wagerAgreedTwo||!Number.isInteger(Number(wagerOneStake))||!Number.isInteger(Number(wagerTwoStake))||Number(wagerOneStake)<2000||Number(wagerTwoStake)<2000||Number(wagerOneStake)>1000000||Number(wagerTwoStake)>1000000))}>{busy?"Saving match...":wagerEnabled?"Save match & wager":"Save match"}</button>
             <button type="button" className="record-cancel-button record-v3-cancel" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
         </section>t { FormEvent, useEffect, useMemo, useState } from "react";
