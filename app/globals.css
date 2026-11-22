@@ -928,7 +928,7 @@
 .record-winner-pair button:disabled{opacity:.5}
 .record-balls-label{margin-top:20px}
 .record-stepper{display:flex;align-items:center;justify-content:center;gap:16px}
-.record-stepper button{width:40px;height:40px;border:1px solid #2b3a31;border-radius:11px;background:#101512;color:#f4f5f2;font-size:22px}
+.record-stepper button{width:40px;height:40px;border:1px solid #2b3a31;border-radius:11px;background:#101512;color:#f4f5f2;font-size:22px;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .record-stepper button:disabled{opacity:.35}
 .record-stepper strong{min-width:22px;color:#f4f5f2;text-align:center;font-size:24px}
 .record-scoreboard{display:grid;grid-template-columns:1fr 18px 1fr;align-items:center;margin:0 0 8px;padding:12px;border:1px solid #25402f;border-radius:14px;background:#101512;text-align:center}
