@@ -4,6 +4,7 @@ export type BoardmanBonusMatch = {
   player_one_id: string;
   player_two_id: string;
   winner_id: string;
+  created_at?: string;
 };
 
 export type BoardmanBonusData = {
@@ -28,7 +29,7 @@ export async function getBoardmanBonusData(client: any): Promise<BoardmanBonusDa
 
   const [{ data: players, error: playersError }, { data: matches, error: matchesError }] = await Promise.all([
     client.from("players").select("id,designation"),
-    client.from("matches").select("id,played_at,player_one_id,player_two_id,winner_id").order("played_at", { ascending: true }),
+    client.from("matches").select("id,played_at,created_at,player_one_id,player_two_id,winner_id").order("played_at", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }),
   ]);
   if (playersError || matchesError || !players?.length || !matches?.length) return { bonusByMatchId, bonusByPlayerId };
 
