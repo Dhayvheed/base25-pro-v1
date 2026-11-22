@@ -1165,3 +1165,5 @@
 }
 @media (min-width: 761px) { .site-mobile-bottom { display: none !important; } }
 @media (prefers-reduced-motion: reduce) { .site-mobile-bottom { transition: none !important; } }
+
+@media (max-width: 760px) { .admin-shell > .site-header { display: none !important; } }
