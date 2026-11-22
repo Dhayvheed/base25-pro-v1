@@ -17,7 +17,8 @@ function Avatar({player,className=""}:{player:{username:string;photo_url?:string
 function isHouse(player:Player){ return player.designation==="boardman"||player.designation==="house_ghost"; }
 
 export default function Home(){
- const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});\n const [openMenu,setOpenMenu]=useState<(()=>void)|null>(null);
+ const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
+ const [openMenu,setOpenMenu]=useState<(()=>void)|null>(null);
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState("");
