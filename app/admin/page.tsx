@@ -56,6 +56,7 @@ export default function Admin() {
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [matchCount, setMatchCount] = useState<number | null>(null);
   const [kingsPot, setKingsPot] = useState<{ pot_amount: number; contributor_count: number } | null>(null);
+  const [potMatchCount, setPotMatchCount] = useState<number | null>(null);
   const [potLoaded, setPotLoaded] = useState(false);
   const [matchWagers, setMatchWagers] = useState<Record<string, number>>({});
   const [playersLoaded, setPlayersLoaded] = useState(false);
@@ -213,6 +214,16 @@ export default function Admin() {
         refresh(); refreshMatches();
         const { data: potData, error: potError } = await supabase.rpc("get_current_kings_pot");
         if (!potError && Array.isArray(potData) && potData[0]) setKingsPot(potData[0]);
+        const lagosToday = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+        const [lagosYear, lagosMonth, lagosDay] = lagosToday.split("-").map(Number);
+        const lagosDate = new Date(Date.UTC(lagosYear, lagosMonth - 1, lagosDay));
+        lagosDate.setUTCDate(lagosDate.getUTCDate() - ((lagosDate.getUTCDay() + 1) % 7));
+        const currentWeekStart = lagosDate.toISOString().slice(0, 10);
+        const { count: contributionMatchCount, error: contributionCountError } = await supabase
+          .from("kings_pot_match_contributions")
+          .select("match_id", { count: "exact", head: true })
+          .eq("week_start", currentWeekStart);
+        if (!contributionCountError) setPotMatchCount(contributionMatchCount ?? 0);
         setPotLoaded(true);
         const { data: snapshot } = await supabase.from("weekly_leaderboard_archives").select("week_end,snapshot_at").order("snapshot_at", { ascending: false }).limit(1).maybeSingle();
         const localToday = new Date();
@@ -492,7 +503,7 @@ export default function Admin() {
         <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
         <div className="admin-v2-quick-actions">{staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/></svg></span><b>Register player</b></button>}{staffRole==="owner"&&<button type="button" className="admin-v2-champion-action" disabled={!snapshotReady} onClick={()=>setActiveSection("champion")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 7 5 4 5-7 5 7 5-4-2 13H4L2 7Z"/></svg></span><b>Crown Saturday champion<small>{snapshotReady?"Weekly snapshot saved":"Available Saturday"}</small></b></button>}</div>
         
-        <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING&#39;S POT · THIS WEEK</small><strong>{!potLoaded?<i className="admin-skeleton-block"/>:kingsPot?"₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG"):"—"}</strong><span>{!potLoaded?<i className="admin-skeleton-line"/>:kingsPot?Number(kingsPot.contributor_count).toLocaleString("en-NG")+" matches × ₦100":"Pot data unavailable"}</span></div><div className="admin-v2-pot-count"><strong>{daysToSaturday===0?"Final day":saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
+        <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING&#39;S POT · THIS WEEK</small><strong>{!potLoaded?<i className="admin-skeleton-block"/>:kingsPot?"₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG"):"—"}</strong><span>{!potLoaded?<i className="admin-skeleton-line"/>:kingsPot?potMatchCount===null?"Match count unavailable":potMatchCount.toLocaleString("en-NG")+" matches × ₦100":"Pot data unavailable"}</span></div><div className="admin-v2-pot-count"><strong>{daysToSaturday===0?"Final day":saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
         <div className="admin-v2-stats"><div><strong>{playersLoaded?players.length.toLocaleString("en-NG"):<i className="admin-skeleton-block"/>}</strong><span>Players</span></div><div><strong>{matchCount===null?<i className="admin-skeleton-block"/>:matchCount.toLocaleString("en-NG")}</strong><span>Matches</span></div><div><strong>{staffRole==="owner"?(playersLoaded&&accountStatusesLoaded?noLoginProfileCount.toLocaleString("en-NG"):<i className="admin-skeleton-block"/>):"—"}</strong><span>No login yet</span></div></div>
         {staffRole==="owner"&&playersLoaded&&accountStatusesLoaded&&noLoginProfileCount>0&&<button type="button" className="admin-v2-attention" onClick={()=>setActiveSection("players")}><span className="admin-v2-attention-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></span><span><b>{noLoginProfileCount.toLocaleString("en-NG")} players can&#39;t log in yet.</b><small>Create their logins in Manage profiles.</small></span><i>›</i></button>}
         
