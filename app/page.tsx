@@ -2,19 +2,127 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number };
+import SiteNavigation from "@/components/SiteNavigation";
+
+type Player = { id:string; player_code:string; username:string; photo_url:string|null; elo_rating:number; matches_played:number; wins:number; losses:number; win_percentage:number; designation?: "regular" | "house_ghost" | "boardman" };
+type Match = { id:string; played_at:string; player_one_score:number; player_two_score:number; one?:{username:string;player_code:string}|null; two?:{username:string;player_code:string}|null };
+type Champion = { id:string; week_start:string; week_end:string; player_id:string; prize_amount?:number|null; players?:{username:string;player_code:string;photo_url:string|null}|null };
+type KingsPot = { week_start:string; pot_amount:number; contributor_count:number };
+
+function Avatar({player}:{player:{username:string;photo_url?:string|null}}){
+ return <span className="home-v2-avatar">{player.photo_url?<img src={player.photo_url} alt="" />:player.username?.[0]?.toUpperCase()||"?"}</span>;
+}
+function money(value:number){return "₦"+Number(value||0).toLocaleString("en-NG");}
+function getLagosWeekStartIso(){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const part=(type:string)=>Number(parts.find(p=>p.type===type)?.value||0);
+ const todayUtc=Date.UTC(part("year"),part("month")-1,part("day"));
+ const weekday=new Date(todayUtc).getUTCDay();
+ const daysSinceSaturday=(weekday+1)%7;
+ return new Date(todayUtc-daysSinceSaturday*86400000-3600000).toISOString();
+}
+
+type HomeAccount = { signedIn:boolean; authReady:boolean; profile:any; accountName:string };
 export default function Home(){
- const [players,setPlayers]=useState<Player[]>([]); const [matches,setMatches]=useState<any[]>([]); const [search,setSearch]=useState(""); const [loading,setLoading]=useState(true); const [error,setError]=useState("");
- useEffect(()=>{async function load(){if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
- const [{data:p,error:pe},{data:m,error:me}]=await Promise.all([supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),supabase.from("matches").select("id,played_at,player_one_score,player_two_score,winner_id,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(8)]);
- if(pe||me)setError(pe?.message||me?.message||"Unable to load records.");setPlayers((p||[]) as Player[]);setMatches(m||[]);setLoading(false);}load();},[]);
- const filtered=players.filter(p=>(p.username+" "+p.player_code).toLowerCase().includes(search.toLowerCase()));
- const total=players.reduce((n,p)=>n+p.matches_played,0)/2;
- return <main className="shell"><header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><nav><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><Link href="/how-it-works">How it works</Link><Link href="/admin">Admin</Link></nav></header>
- <section className="hero"><div className="eyebrow">THE OFFICIAL COMPETITION BOARD</div><h1>Every match<br/><span>counts.</span></h1><p>Track the players. Follow the results. See who really owns the table.</p><a className="primary" href="#leaderboard">View leaderboard ↘</a><div className="hero-stamp">B25<br/>RANKED</div></section>
- <section className="stats"><div><small>REGISTERED PLAYERS</small><strong>{players.length}</strong></div><div><small>RECORDED MATCHES</small><strong>{total}</strong></div><div><small>STARTING RATING</small><strong>1,000</strong></div></section>
- <section id="leaderboard" className="section"><div className="section-head"><div><div className="eyebrow">01 / THE RANKINGS</div><h2>Leaderboard<span>.</span></h2></div><input className="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a player..."/></div>
- {error&&<p className="notice">{error}</p>}{loading?<p className="muted">Loading rankings...</p>:filtered.length===0?<p className="muted">No players registered yet. The leaderboard will appear here.</p>:<div className="table-wrap"><table><thead><tr><th>RANK</th><th>PLAYER</th><th>RATING</th><th>MATCHES</th><th>W / L</th><th>WIN RATE</th></tr></thead><tbody>{filtered.map((p,i)=><tr key={p.id}><td className="rank"><span className={`leaderboard-rank rank-${players.findIndex((player)=>player.id===p.id)+1}`}>{players.findIndex((player)=>player.id===p.id)<3&&<svg className="rank-crown" viewBox="0 0 24 24" role="img" aria-label={`Rank ${players.findIndex((player)=>player.id===p.id)+1} crown`}><path d="M3 8.5 7.5 13 12 5l4.5 8L21 8.5 19 19H5L3 8.5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><path d="M5 21h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>}{String(players.findIndex((player)=>player.id===p.id)+1).padStart(2,"0")}</span></td><td><Link className="player-link" href={`/players/${p.id}`}><span className="avatar">{p.photo_url?<img src={p.photo_url} alt=""/>:p.username[0]}</span><span><b>@{p.username}</b><small>{p.player_code}</small></span></Link></td><td className="rating">{p.elo_rating}</td><td>{p.matches_played}</td><td>{p.wins} / {p.losses}</td><td>{p.win_percentage}%</td></tr>)}</tbody></table></div>}</section>
- <section id="results" className="section"><div className="eyebrow">02 / RECENT ACTION</div><h2>Latest matches<span>.</span></h2>{matches.length===0?<p className="muted">No match results recorded yet.</p>:<div className="match-list">{matches.map(m=><div className="match" key={m.id}><div><b>@{m.one?.username}</b><small>{m.one?.player_code}</small></div><strong>{m.player_one_score} — {m.player_two_score}</strong><div className="right"><b>@{m.two?.username}</b><small>{m.two?.player_code}</small></div><time>{new Date(m.played_at).toLocaleDateString()}</time></div>)}</div>}</section>
- <footer><b>BASE25 PRO</b><span>Built for competition. Powered by performance.</span><Link href="/admin">Admin access ↗</Link></footer></main>;
+ const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
+ const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
+ const [champion,setChampion]=useState<Champion|null>(null),[kingsPot,setKingsPot]=useState<KingsPot|null>(null),[matchesSinceSaturday,setMatchesSinceSaturday]=useState(0);
+ const [loading,setLoading]=useState(true),[error,setError]=useState("");
+ const [showAllWeekly,setShowAllWeekly]=useState(false);
+ useEffect(()=>{let active=true;async function load(){
+  if(!supabase){setError("Supabase environment variables are not configured.");setLoading(false);return;}
+  const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:pot,error:potError},{count:weeklyMatchCount,error:matchCountError}]=await Promise.all([
+   supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
+   supabase.rpc("get_period_leaderboard_with_designation",{p_period:"this_week"}),
+   supabase.from("matches").select("id,played_at,player_one_score,player_two_score,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").order("played_at",{ascending:false}).limit(3),
+   supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,player_code,photo_url)").order("week_start",{ascending:false}).limit(1),
+   supabase.rpc("get_current_kings_pot"),
+   supabase.from("matches").select("id",{count:"exact",head:true}).gte("played_at",getLagosWeekStartIso())
+  ]);
+  if(!active)return;
+  if(pe||we||me||ce||potError||matchCountError)setError(pe?.message||we?.message||me?.message||ce?.message||potError?.message||"Unable to load records.");
+  setPlayers((p||[]) as Player[]);setWeeklyPlayers((w||[]) as Player[]);setMatches((m||[]) as unknown as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setKingsPot(((pot||[]) as KingsPot[])[0]||null);setMatchesSinceSaturday(weeklyMatchCount||0);setLoading(false);
+ }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
+ const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
+ const totalWins=players.reduce((n,p)=>n+p.wins,0);
+ const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
+ return <main className="shell redesign-shell home-v2">
+  <style jsx global>{`
+   .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
+   .home-v2-player-row.is-first .home-v2-player-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px}
+   .home-v2-player-row.is-first .home-v2-player small{margin-top:0;line-height:1.25}
+  `}</style>
+  <SiteNavigation onHomeAccountChange={setAccount} />
+  <header className="home-header">
+   <Link href="/" className="home-header-brand"><span className="home-header-ball">8</span><span><strong>BASE25 <b>PRO</b></strong><small>The Official Billiards Competition</small></span></Link>
+   {account.signedIn ? <div className="home-header-actions"><Link href="/account" className="home-header-bell" aria-label="Notifications">♧</Link><Link href="/account" className="home-header-avatar" aria-label="My profile">{account.profile?.photo_url ? <img src={account.profile.photo_url} alt="" /> : (account.profile?.username || account.accountName || "P").charAt(0).toUpperCase()}</Link></div> : <Link href="/login" className="home-header-login">Log in</Link>}
+  </header>
+  <div className="home-v2-glow" aria-hidden="true"/>
+  <section className="home-v2-hero">
+   <div className="home-v2-hero-copy">
+    <div className="home-v2-eyebrow">THE OFFICIAL BILLIARDS COMPETITION</div>
+    <h1>Every match<br/><span>counts.</span></h1>
+    <p>Your game. Your ranking. Your crown.</p>
+    <div className="home-v2-actions">
+     <Link className="home-v2-primary" href="/competition?leaderboard=full#weekly-leaderboard"><span className="home-v2-action-icon" aria-hidden="true">▥</span>View Leaderboard</Link>
+     <Link className="home-v2-secondary" href="/hall-of-fame">Hall of Fame</Link>
+    </div>
+   </div>
+   <div className="home-v2-ball-art" aria-hidden="true">
+    <div className="home-v2-cue"/>
+    <div className="home-v2-eight"><span>8</span></div>
+   </div>
+  </section>
+  <section className="home-v2-stats">
+   <div><strong>{players.length}</strong><span>Registered players</span></div>
+   <div><strong>{totalMatches}</strong><span>Recorded matches</span></div>
+   <div><strong>₦26,000</strong><span>Paid out</span></div>
+  </section>
+  <section className="home-v2-pot" aria-label="King's Pot">
+   <div className="home-v2-pot-title"><span>♛</span> THE KING'S POT</div>
+   <div className="home-v2-live"><i/> LIVE POT</div>
+   <div className="home-v2-pot-amount">{money(kingsPot?.pot_amount||0)}</div>
+   <div className="home-v2-pot-meta"><strong>+₦100</strong> <span>{matchesSinceSaturday} matches since last Saturday · ₦100 each</span></div>
+   <p>Every recorded match adds ₦100. The full pool goes to the Saturday champion, then the pot resets to ₦0.</p>
+   <Link href="/how-it-works">How it works <span>→</span></Link>
+  </section>
+  <section className="home-personal-card">
+   {account.signedIn ? <><div className="home-v2-eyebrow">MY STANDING · {account.profile?.player_code || "BASE25 PRO"}</div><div className="home-personal-main"><Avatar player={{username:account.profile?.username||account.accountName,photo_url:account.profile?.photo_url}}/><div><strong>{account.profile?.username||account.accountName||"Player"}</strong><span>{account.profile?.globalRank ? "Global rank #"+account.profile.globalRank : "Unranked"}</span></div></div><div className="home-personal-ratings"><div><strong>{account.profile?.elo_rating ? Number(account.profile.elo_rating).toLocaleString("en-NG") : "—"}</strong><span>ALL-TIME RATING</span></div><div><strong>{account.profile?.weeklyElo ? Number(account.profile.weeklyElo).toLocaleString("en-NG") : "—"}</strong><span>WEEKLY RATING</span></div></div>{!account.profile?.matches_played&&<p>Play your first match to get a rating.</p>}<Link href="/account">View my profile →</Link></> : <><div className="home-v2-eyebrow">PLAYER ACCOUNT</div><h2>Welcome, player</h2><p>Log in to see your rank and rating.</p><Link className="home-personal-login" href="/login">Player login</Link><small>No login yet? Ask the admin at the base.</small></>}
+  </section>
+  <section className="home-v2-weekly">
+   <div className="home-v2-section-head">
+    <div><div className="home-v2-eyebrow">THIS WEEK'S RACE</div><h2>Saturday Top 5</h2></div>
+    <span className="home-v2-live-pill"><i/> LIVE</span>
+   </div>
+   <p className="home-v2-subtitle">Top 5 qualify for the Saturday final. Points and the pot reset every Saturday.</p>
+   {error&&<p className="notice">{error}</p>}
+   {loading?<p className="home-v2-empty">Loading weekly standings...</p>:visiblePlayers.length===0?<p className="home-v2-empty">No weekly rankings yet. Players appear after their first ranked match.</p>:
+    <div className="home-v2-table">
+     <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
+     {visiblePlayers.map((p,index)=>{const rank=index+1;const rankColors=["#F2C230","#2F5FD0","#D9402F","#7B3FA0","#E8782A"];return <Link className={"home-v2-player-row "+(rank===1?"is-first":"")} href={"/players/"+p.id} key={p.id}>
+      <span className={"home-v2-rank rank-"+rank}><span className="home-v2-rank-ball" style={{background:rankColors[index]||"#52634b"}}><i>{rank}</i></span></span>
+      <span className="home-v2-player"><Avatar player={p}/><span className="home-v2-player-copy"><strong>{p.username}{rank===1&&<span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>{p.designation==="boardman"&&<span className="home-v2-designation-tag">BOARDMAN 💀</span>}{p.designation==="house_ghost"&&<span className="home-v2-designation-tag">HOUSE GHOSTS 👻</span>}<small>{p.player_code}</small></span></span>
+      <strong className="home-v2-record">{p.wins}W / {p.losses}L</strong>
+      <strong className="home-v2-rating">{p.elo_rating.toLocaleString("en-NG")}</strong>
+     </Link>})}
+    </div>}
+   <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
+  </section>
+  {champion&&<section className="home-v2-champion">
+   <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
+   <div className="home-v2-champion-copy"><div className="home-v2-eyebrow">LATEST CHAMPION</div><strong>{champion.players?.username||"Saturday Champion"}</strong><Link href="/hall-of-fame">Hall of Fame <span>→</span></Link></div>
+   {champion.prize_amount!=null&&<div className="home-v2-champion-prize"><small>PRIZE WON</small><strong>₦{Number(champion.prize_amount).toLocaleString("en-NG")}</strong></div>}
+  </section>}
+  <section className="home-v2-matches">
+   <div className="home-v2-section-head"><div><div className="home-v2-eyebrow">MATCH HISTORY</div><h2>Latest matches</h2></div></div>
+   {matches.length===0?<p className="home-v2-empty">Matches will appear here once recorded.</p>:<div className="home-v2-match-list">
+    {matches.map((m,i)=>{const date=new Date(m.played_at);const previous=i>0?new Date(matches[i-1].played_at):null;const dateKey=date.toLocaleDateString("en-CA");const previousKey=previous?.toLocaleDateString("en-CA");return <div key={m.id}>
+     {dateKey!==previousKey&&<div className="home-v2-match-date">{date.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase()}<span/></div>}
+     <div className="home-v2-match-card"><span className="home-v2-match-accent"/><div className="home-v2-match-names"><strong>{m.player_one_score>=m.player_two_score?(m.one?.username||"Player 1"):(m.two?.username||"Player 2")} beat</strong><span>{m.player_one_score>=m.player_two_score?(m.two?.username||"Player 2"):(m.one?.username||"Player 1")}</span></div><b className="home-v2-match-score">{m.player_one_score} - {m.player_two_score}</b></div>
+    </div>})}
+   </div>}
+   <Link className="home-v2-all-matches" href="/matches">View all matches <span>→</span></Link>
+  </section>
+  <footer className="home-v2-footer"><strong>BASE25 PRO</strong><span>Built for competition. Powered by performance.</span></footer>
+ </main>;
 }

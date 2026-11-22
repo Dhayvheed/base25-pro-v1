@@ -1,0 +1,4 @@
+"use client";
+import Link from "next/link";
+import SiteNavigation from "@/components/SiteNavigation";
+export default function RegisterPage(){return <main className="shell redesign-shell"><SiteNavigation/><section className="auth-wrap"><div className="eyebrow">BASE25 PRO / PLAYER ACCESS</div><h1>Account access<span>.</span></h1><p className="muted">Player accounts are created and authorized by BASE25 management. If BASE25 has assigned an email address to your player profile, use Forgot Password to set your password and activate your login.</p><div className="auth-card form"><Link className="button" href="/login">Sign in</Link><Link href="/forgot-password">Set or reset password</Link></div></section></main>}

@@ -2,15 +2,29 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
+import SiteNavigation from "@/components/SiteNavigation";
 
-type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null };
+type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
+type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
+type MatchWager = { match_id: string; player_one_stake: number | string; player_two_stake: number | string };
 type Rack = { winnerId: string; loserBalls: string };
+type StaffMember = { user_id: string; email: string; role: "owner" | "manager" | "attendant"; is_active: boolean; created_at: string };
 
 export default function Admin() {
   const [session, setSession] = useState<any>(null);
   const [staffRole, setStaffRole] = useState<string | null>(null);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
+  const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
+  const [recentPlayerIds, setRecentPlayerIds] = useState<string[]>([]);
+  const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
+  const [playerPasswordDrafts, setPlayerPasswordDrafts] = useState<Record<string, string>>({});
+  const [showPlayerPasswords, setShowPlayerPasswords] = useState<Record<string, boolean>>({});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +37,13 @@ export default function Admin() {
   const [playerTwoSearch, setPlayerTwoSearch] = useState("");
   const [playerOnePickerOpen, setPlayerOnePickerOpen] = useState(false);
   const [playerTwoPickerOpen, setPlayerTwoPickerOpen] = useState(false);
+  const [playerPickerTarget, setPlayerPickerTarget] = useState<"one" | "two" | null>(null);
   const [venue, setVenue] = useState("BASE25");
+  const [matchFormat, setMatchFormat] = useState<"single" | "best_of_3">("single");
+  const [wagerEnabled, setWagerEnabled] = useState(false);
+  const [wagerOneStake, setWagerOneStake] = useState("2000");
+  const [wagerTwoStake, setWagerTwoStake] = useState("2000");
+  const [wagerCustom, setWagerCustom] = useState(false);
   const [racks, setRacks] = useState<Rack[]>([
     { winnerId: "", loserBalls: "0" },
     { winnerId: "", loserBalls: "0" },
@@ -34,11 +54,66 @@ export default function Admin() {
   const [matchConfirmation, setMatchConfirmation] = useState<{ playerOne: string; playerTwo: string; scoreOne: number; scoreTwo: number } | null>(null);
   const [playerConfirmation, setPlayerConfirmation] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchRecord[]>([]);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
+  const [kingsPot, setKingsPot] = useState<{ pot_amount: number; contributor_count: number } | null>(null);
+  const [potMatchCount, setPotMatchCount] = useState<number | null>(null);
+  const [potLoaded, setPotLoaded] = useState(false);
+  const [matchWagers, setMatchWagers] = useState<Record<string, number>>({});
+  const [playersLoaded, setPlayersLoaded] = useState(false);
+  const [matchesLoaded, setMatchesLoaded] = useState(false);
+  const [accountStatusesLoaded, setAccountStatusesLoaded] = useState(false);
+  const [snapshotReady, setSnapshotReady] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editFullName, setEditFullName] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editPhoto, setEditPhoto] = useState("");
   const [editingMatch, setEditingMatch] = useState<{id:string;one:string;two:string;venue:string;racks:Rack[]}|null>(null);
+  const [championWeek, setChampionWeek] = useState("");
+  const [championPlayer, setChampionPlayer] = useState("");
+  const [championNotice, setChampionNotice] = useState("");
+  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions">("overview");
+  const [profileSearch, setProfileSearch] = useState("");
+  const [profileFilter, setProfileFilter] = useState<"all" | "no-login" | "active">("all");
+  const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
+
+
+  async function refreshStaff() {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_list_staff");
+    if (error) { setMessage(`Could not load staff: ${error.message}`); return; }
+    const rows = (data || []) as StaffMember[];
+    setStaffMembers(rows);
+    setStaffRoleDrafts(Object.fromEntries(rows.filter((row) => row.role !== "owner").map((row) => [row.user_id, row.role as "manager" | "attendant"])));
+  }
+
+  useEffect(() => {
+    if (!playerPickerTarget) return;
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const updatePickerViewport = () => {
+      document.documentElement.style.setProperty("--record-picker-vh", `${viewport.height}px`);
+      document.documentElement.style.setProperty("--record-picker-top", `${viewport.offsetTop}px`);
+    };
+    updatePickerViewport();
+    viewport.addEventListener("resize", updatePickerViewport);
+    viewport.addEventListener("scroll", updatePickerViewport);
+    window.addEventListener("orientationchange", updatePickerViewport);
+    return () => {
+      viewport.removeEventListener("resize", updatePickerViewport);
+      viewport.removeEventListener("scroll", updatePickerViewport);
+      window.removeEventListener("orientationchange", updatePickerViewport);
+      document.documentElement.style.removeProperty("--record-picker-vh");
+      document.documentElement.style.removeProperty("--record-picker-top");
+    };
+  }, [playerPickerTarget]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("base25-record-match-recent-players");
+      if (saved) setRecentPlayerIds(JSON.parse(saved).filter((id: unknown) => typeof id === "string").slice(0, 3));
+    } catch { /* Ignore unavailable or invalid local recent-player history. */ }
+  }, []);
 
   useEffect(() => {
     if (!message) return;
@@ -49,19 +124,75 @@ export default function Admin() {
   async function refresh() {
     if (!supabase) return;
     const { data, error } = await supabase.rpc("admin_list_players");
-    if (error) setMessage(error.message);
-    setPlayers(data || []);
+    if (error) { setMessage(error.message); return; }
+    const { data: designations, error: designationError } = await supabase.from("players").select("id,designation");
+    if (designationError) { setMessage(`Could not load player roles: ${designationError.message}`); return; }
+    const roleById = new Map((designations || []).map((row: any) => [row.id, row.designation]));
+    setPlayers((data || []).map((player: Player) => ({ ...player, designation: (roleById.get(player.id) as Player["designation"]) || "regular" })));
+    setPlayersLoaded(true);
+  }
+
+  async function refreshPlayerAccountStatuses() {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_list_player_account_status");
+    if (error) { setMessage(`Could not load account assignments: ${error.message}`); return; }
+    const rows = (data || []) as PlayerAccountStatus[];
+    setPlayerAccountStatuses(rows);
+    setAccountStatusesLoaded(true);
+    setEmailDrafts(Object.fromEntries(rows.map(row => [row.player_id, row.assigned_email || ""])));
+  }
+
+  async function assignPlayerEmail(player: Player) {
+    if (!supabase || staffRole !== "owner") return;
+    const emailValue = (emailDrafts[player.id] || "").trim().toLowerCase();
+    const passwordValue = playerPasswordDrafts[player.id] || "";
+    if (!emailValue) { setMessage("Enter an email address first."); return; }
+    if (passwordValue.length < 8) { setMessage("Choose a password with at least 8 characters."); return; }
+    setBusy(true);
+    const { data: loginResult, error } = await supabase.functions.invoke("owner-assign-player-login", { body: { player_id: player.id, email: emailValue, password: passwordValue } });
+    if (error || loginResult?.error) setMessage(`Player login setup failed: ${loginResult?.error || error?.message || "Unknown error"}`);
+    else {
+      setMessage(`Player login created for @${player.username}. Give them the email and password you entered.`);
+      setPlayerPasswordDrafts(current => ({ ...current, [player.id]: "" }));
+      await refreshPlayerAccountStatuses();
+    }
+    setBusy(false);
+  }
+
+  async function resetPlayerPassword(player: Player) {
+    if (!supabase || staffRole !== "owner") return;
+    const passwordValue = playerPasswordDrafts[player.id] || "";
+    if (passwordValue.length < 8) { setMessage("Choose a password with at least 8 characters."); return; }
+    setBusy(true);
+    const { data: resetResult, error } = await supabase.functions.invoke("owner-reset-player-password", {
+      body: { player_id: player.id, password: passwordValue },
+    });
+    if (error || resetResult?.error) {
+      setMessage(`Password update failed: ${resetResult?.error || error?.message || "Unknown error"}`);
+    } else {
+      setMessage(`Password updated for @${player.username}. Share the new password with the player.`);
+      setPlayerPasswordDrafts(current => ({ ...current, [player.id]: "" }));
+      setShowPlayerPasswords(current => ({ ...current, [player.id]: false }));
+    }
+    setBusy(false);
   }
 
   async function refreshMatches() {
     if (!supabase) return;
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("matches")
-      .select("id,played_at,venue,player_one_id,player_two_id,player_one_score,player_two_score,winner_id")
+      .select("id,played_at,venue,player_one_id,player_two_id,player_one_score,player_two_score,winner_id", { count: "exact" })
       .order("played_at", { ascending: false })
       .limit(50);
     if (error) setMessage(`Could not load match history: ${error.message}`);
-    setMatches(data || []);
+    const rows = data || [];
+    setMatches(rows);
+    setMatchCount(count ?? null);
+    setMatchesLoaded(true);
+    if (rows.length) {
+      const { data: wagerRows, error: wagerError } = await supabase.from("match_wagers").select("match_id,player_one_stake,player_two_stake").in("match_id", rows.map((row: MatchRecord) => row.id));
+      if (!wagerError) setMatchWagers(Object.fromEntries(((wagerRows || []) as MatchWager[]).map(row => [row.match_id, Number(row.player_one_stake || 0) + Number(row.player_two_stake || 0)])));
+    } else setMatchWagers({});
   }
 
   useEffect(() => {
@@ -79,19 +210,43 @@ export default function Admin() {
       const role = access?.is_active ? access.role : null;
       setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
-      if (role) { refresh(); refreshMatches(); }
+      if (role) {
+        refresh(); refreshMatches();
+        const { data: potData, error: potError } = await supabase.rpc("get_current_kings_pot");
+        if (!potError && Array.isArray(potData) && potData[0]) setKingsPot(potData[0]);
+        const lagosToday = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+        const [lagosYear, lagosMonth, lagosDay] = lagosToday.split("-").map(Number);
+        const lagosDate = new Date(Date.UTC(lagosYear, lagosMonth - 1, lagosDay));
+        lagosDate.setUTCDate(lagosDate.getUTCDate() - ((lagosDate.getUTCDay() + 1) % 7));
+        const currentWeekStart = lagosDate.toISOString().slice(0, 10);
+        const { count: contributionMatchCount, error: contributionCountError } = await supabase
+          .from("kings_pot_match_contributions")
+          .select("match_id", { count: "exact", head: true })
+          .eq("week_start", currentWeekStart);
+        if (!contributionCountError) setPotMatchCount(contributionMatchCount ?? 0);
+        setPotLoaded(true);
+        const { data: snapshot } = await supabase.from("weekly_leaderboard_archives").select("week_end,snapshot_at").order("snapshot_at", { ascending: false }).limit(1).maybeSingle();
+        const localToday = new Date();
+        const todayKey = [localToday.getFullYear(), String(localToday.getMonth()+1).padStart(2,"0"), String(localToday.getDate()).padStart(2,"0")].join("-");
+        setSnapshotReady(Boolean(snapshot?.snapshot_at && snapshot?.week_end === todayKey));
+      }
+      if (role === "owner") { refreshStaff(); refreshPlayerAccountStatuses(); }
     }
     checkAdmin();
   }, [session]);
 
-  const thirdRackNeeded = !!racks[0].winnerId && !!racks[1].winnerId && racks[0].winnerId !== racks[1].winnerId;
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("section") === "match") setActiveSection("match");
+  }, []);
+
+  const thirdRackNeeded = matchFormat === "best_of_3" && !!racks[0].winnerId && !!racks[1].winnerId && racks[0].winnerId !== racks[1].winnerId;
   const rackWins = useMemo(() => {
-    const completed = thirdRackNeeded ? racks.slice(0, 3) : racks.slice(0, 2);
+    const completed = matchFormat === "single" ? racks.slice(0, 1) : thirdRackNeeded ? racks.slice(0, 3) : racks.slice(0, 2);
     return {
       one: completed.filter((rack) => rack.winnerId === one).length,
       two: completed.filter((rack) => rack.winnerId === two).length,
     };
-  }, [racks, one, two, thirdRackNeeded]);
+  }, [racks, one, two, thirdRackNeeded, matchFormat]);
 
   function updateRack(index: number, field: keyof Rack, value: string) {
     setRacks((current) => current.map((rack, i) => i === index ? { ...rack, [field]: value } : rack));
@@ -106,9 +261,45 @@ export default function Admin() {
     setBusy(false);
   }
 
+  async function addStaff(event: FormEvent) {
+    event.preventDefault();
+    if (!supabase || staffRole !== "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_add_staff_by_email", { p_email: newStaffEmail.trim(), p_role: newStaffRole });
+    if (error) setMessage(`Staff member was not added: ${error.message}`);
+    else { setMessage("Staff access granted. The member can now sign in."); setNewStaffEmail(""); await refreshStaff(); }
+    setBusy(false);
+  }
+
+  async function saveStaffMember(member: StaffMember) {
+    if (!supabase || staffRole !== "owner" || member.role === "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_update_staff", {
+      p_user_id: member.user_id,
+      p_role: staffRoleDrafts[member.user_id] || member.role,
+      p_is_active: member.is_active,
+    });
+    if (error) setMessage(`Staff update failed: ${error.message}`);
+    else { setMessage("Staff permissions updated."); await refreshStaff(); }
+    setBusy(false);
+  }
+
+  async function toggleStaffAccess(member: StaffMember) {
+    if (!supabase || staffRole !== "owner" || member.role === "owner") return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_update_staff", {
+      p_user_id: member.user_id,
+      p_role: staffRoleDrafts[member.user_id] || member.role,
+      p_is_active: !member.is_active,
+    });
+    if (error) setMessage(`Staff access update failed: ${error.message}`);
+    else { setMessage(member.is_active ? "Staff access deactivated." : "Staff access reactivated."); await refreshStaff(); }
+    setBusy(false);
+  }
+
   async function addPlayer(event: FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || staffRole !== "owner") { setMessage("Owner access required to register players."); return; }
     setBusy(true);
     const { error } = await supabase.rpc("admin_create_player", { p_full_name: fullName.trim(), p_username: username.trim(), p_photo_url: photo.trim() || null });
     if (error) {
@@ -125,9 +316,17 @@ export default function Admin() {
 
 
   function startEditPlayer(player: Player) { setEditingPlayer(player.id); setEditFullName(player.full_name); setEditUsername(player.username); setEditPhoto(player.photo_url || ""); }
+  async function updatePlayerDesignation(player: Player, designation: "regular" | "house_ghost" | "boardman") {
+    if (!supabase || staffRole !== "owner" || busy || designation === player.designation) return;
+    setBusy(true);
+    const { error } = await supabase.from("players").update({ designation }).eq("id", player.id);
+    if (error) setMessage(`Player role update failed: ${error.message}`);
+    else { setMessage(`@${player.username} is now ${designation === "house_ghost" ? "a House Ghost" : designation === "boardman" ? "a Boardman" : "a Regular player"}.`); await refresh(); }
+    setBusy(false);
+  }
   async function savePlayerEdit(event: FormEvent) {
     event.preventDefault(); if (!supabase || !editingPlayer) return; setBusy(true);
-    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: editUsername.trim().replace(/^@/, ""), p_photo_url: editPhoto.trim() || null });
+    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: players.find(item => item.id === editingPlayer)?.username || "", p_photo_url: editPhoto.trim() || null });
     if (error) setMessage(`Player update failed: ${error.message}`); else { setMessage("Player profile updated."); setEditingPlayer(null); await refresh(); }
     setBusy(false);
   }
@@ -139,6 +338,7 @@ export default function Admin() {
   function updateEditingRack(index:number,field:keyof Rack,value:string) { setEditingMatch(cur=>cur?({...cur,racks:cur.racks.map((r,i)=>i===index?{...r,[field]:value}:r)}):cur); }
   async function saveMatchEdit(event:FormEvent) {
     event.preventDefault(); if(!supabase||!editingMatch)return;
+    if(!window.confirm("Save these changes to the match result? ELO ratings will be recalculated.")) return;
     const payload=editingMatch.racks.map(r=>({winner_id:r.winnerId,loser_balls_remaining:Number(r.loserBalls),black_ball_finish:false}));
     if(payload.some(r=>![editingMatch.one,editingMatch.two].includes(r.winner_id)||!Number.isInteger(r.loser_balls_remaining)||r.loser_balls_remaining<0||r.loser_balls_remaining>7)){setMessage("Check every rack winner and balls remaining (0–7).");return;}
     setBusy(true); const {error}=await supabase.rpc("admin_update_match",{p_match_id:editingMatch.id,p_racks:payload,p_venue:editingMatch.venue.trim()||"BASE25"});
@@ -152,18 +352,31 @@ export default function Admin() {
     setBusy(false);
   }
 
+  async function saveWeeklyChampion(event: FormEvent) {
+    event.preventDefault();
+    if (!supabase || staffRole !== "owner" || !championWeek || !championPlayer) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_record_weekly_champion", { p_week_start: championWeek, p_player_id: championPlayer });
+    if (error) setChampionNotice("Champion was not saved: " + error.message);
+    else {
+      const { data: saved } = await supabase.from("weekly_champions").select("prize_amount,payout_confirmed_at").eq("week_start", championWeek).maybeSingle();
+      setChampionNotice("Champion published. ₦" + Number(saved?.prize_amount || 0).toLocaleString("en-NG") + " King's Pot recorded as prize and payout automatically marked paid.");
+    }
+    setBusy(false);
+  }
+
   async function addMatch(event: FormEvent) {
     event.preventDefault();
     if (!supabase || !one || !two || one === two) return;
-    if (!racks[0].winnerId || !racks[1].winnerId) {
-      setMessage("Select a winner and balls remaining for racks 1 and 2.");
+    if (!racks[0].winnerId || (matchFormat === "best_of_3" && !racks[1].winnerId)) {
+      setMessage(matchFormat === "single" ? "Select the winner and balls remaining for the rack." : "Select a winner and balls remaining for racks 1 and 2.");
       return;
     }
     if (thirdRackNeeded && !racks[2].winnerId) {
       setMessage("The match is tied 1–1. Complete rack 3.");
       return;
     }
-    const rackCount = thirdRackNeeded ? 3 : 2;
+    const rackCount = matchFormat === "single" ? 1 : thirdRackNeeded ? 3 : 2;
     const payload = racks.slice(0, rackCount).map((rack) => ({
       winner_id: rack.winnerId,
       loser_balls_remaining: Number(rack.loserBalls),
@@ -173,26 +386,34 @@ export default function Admin() {
       setMessage("Check each rack winner and the losing player's balls remaining.");
       return;
     }
+    if (wagerEnabled) {
+      const stakeOne = Number(wagerOneStake), stakeTwo = Number(wagerTwoStake);
+      if (!Number.isInteger(stakeOne) || !Number.isInteger(stakeTwo) || stakeOne < 2000 || stakeTwo < 2000 || stakeOne > 1000000 || stakeTwo > 1000000) {
+        setMessage("The minimum wager is ₦2,000 per player. Maximum is ₦1,000,000.");
+        return;
+      }
+    }
     setBusy(true);
-    const { data, error } = await supabase.rpc("record_match_with_racks", {
+    const { data, error } = await supabase.rpc("record_match_with_racks_and_wager", {
       p_player_one_id: one,
       p_player_two_id: two,
       p_racks: payload,
       p_venue: venue.trim() || "BASE25",
+      p_player_one_stake: wagerEnabled ? Number(wagerOneStake) : null,
+      p_player_two_stake: wagerEnabled ? Number(wagerTwoStake) : null,
     });
     if (error) {
       setMessage(`Match was not published: ${error.message}`);
     } else {
-      setMatchConfirmation({
-        playerOne: playerName(one),
-        playerTwo: playerName(two),
-        scoreOne: rackWins.one,
-        scoreTwo: rackWins.two,
-      });
-      setMessage("");
+      setMatchConfirmation(null);
+      setMessage("Match recorded successfully. ELO ratings recalculated. Ready for the next match.");
       setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]);
+      setWagerEnabled(false); setWagerOneStake("2000"); setWagerTwoStake("2000"); setWagerCustom(false);
       setOne(""); setTwo("");
-      await refreshMatches();
+      setPlayerOneSearch(""); setPlayerTwoSearch("");
+      setPlayerOnePickerOpen(false); setPlayerTwoPickerOpen(false); setPlayerPickerTarget(null);
+      setActiveSection("match");
+      await Promise.all([refreshMatches(), refresh()]);
     }
     setBusy(false);
   }
@@ -201,6 +422,7 @@ export default function Admin() {
 
   if (!session) return (
     <main className="shell admin-shell">
+      <SiteNavigation />
       <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><Link href="/">← Public site</Link></header>
       <div className="admin-card"><div className="eyebrow">RESTRICTED ACCESS</div><h1>Admin login<span>.</span></h1>
         <form className="form" onSubmit={login}>
@@ -214,15 +436,39 @@ export default function Admin() {
 
   if (!staffRole) return <main className="shell"><h1>Access not authorised</h1><p>This account does not have an active BASE25 staff role.</p><button onClick={() => supabase!.auth.signOut()}>Sign out</button></main>;
 
-  const playerName = (id: string) => players.find((player) => player.id === id)?.full_name || "Select player";
+  const playerName = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username}` : "Select player"; };
+  const recentPlayers = recentPlayerIds.map((id) => players.find((player) => player.id === id)).filter((player): player is Player => Boolean(player));
+  function selectMatchPlayer(id: string, target: "one" | "two") {
+    if (target === "one") { setOne(id); setPlayerOneSearch(""); setPlayerPickerTarget("two"); }
+    else { setTwo(id); setPlayerTwoSearch(""); setPlayerPickerTarget(null); }
+    const next = [id, ...recentPlayerIds.filter((recentId) => recentId !== id)].slice(0, 3);
+    setRecentPlayerIds(next);
+    try { window.localStorage.setItem("base25-record-match-recent-players", JSON.stringify(next)); } catch { /* Recent history remains available for this session. */ }
+  }
+  const playerMatchLabel = (id: string) => { const player = players.find((item) => item.id === id); return player ? `@${player.username} · ${player.player_code}` : "Unknown player"; };
   const playerLabel = (player: Player) => `@${player.username} — ${player.full_name} (${player.player_code})`;
   const playerOneOptions = players.filter((player) => player.id !== two && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerOneSearch.trim().toLowerCase()));
   const playerTwoOptions = players.filter((player) => player.id !== one && `${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(playerTwoSearch.trim().toLowerCase()));
   const winnerOptions = players.filter((player) => player.id === one || player.id === two);
 
+  const activeProfileCount = playerAccountStatuses.filter(row => row.account_status === "Verified").length;
+  const noLoginProfileCount = Math.max(0, players.length - activeProfileCount);
+  const visibleProfilePlayers = players.filter(player => {
+    const account = playerAccountStatuses.find(row => row.player_id === player.id);
+    const active = account?.account_status === "Verified";
+    const matchesFilter = profileFilter === "all" || (profileFilter === "active" ? active : !active);
+    const query = profileSearch.trim().toLowerCase();
+    const matchesSearch = !query || `${player.full_name} @${player.username} ${player.player_code}`.toLowerCase().includes(query);
+    return matchesFilter && matchesSearch;
+  });
+
+  const today = new Date();
+  const daysToSaturday = (6 - today.getDay() + 7) % 7;
+  const saturdayCountdown = daysToSaturday === 0 ? "Final day" : daysToSaturday === 1 ? "1 day" : `${daysToSaturday} days`;
+
   return (
     <main className="shell admin-shell">
-      <header className="topbar"><Link className="brand" href="/">BASE<span>25</span> PRO</Link><button className="secondary" onClick={() => supabase!.auth.signOut()}>Sign out</button></header>
+      <header className="topbar admin-v2-topbar"><Link className="brand" href="/"><span className="admin-v2-ball">8</span><span className="admin-v2-wordmark">BASE25 <b>PRO</b></span></Link><span className="admin-v2-owner">{staffRole==="owner"?"Owner":"Admin"}</span><button type="button" className="admin-v2-menu-button" aria-label="Open admin menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></header>{menuOpen&&<div className="admin-v2-menu"><button type="button" onClick={()=>{setMenuOpen(false);supabase!.auth.signOut();}}>Log out</button></div>}
       {playerConfirmation && (
         <div className="confirmation-backdrop" role="presentation">
           <section className="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="player-confirmation-title">
@@ -251,10 +497,39 @@ export default function Admin() {
           </section>
         </div>
       )}
-      <div className="eyebrow">CONTROL ROOM · {staffRole.toUpperCase()}</div><h1>Admin desk<span>.</span></h1>
+      {activeSection!=="overview"&&<button type="button" className="admin-v2-back" onClick={()=>setActiveSection("overview")}>← Admin desk</button>}
+      {activeSection==="overview"&&<section className="admin-v2-overview">
+        <div className="admin-v2-heading"><div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1><p>Signed in as {session?.user?.email?.split("@")[0] || "staff"}</p></div>
+        <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
+        <div className="admin-v2-quick-actions">{staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/></svg></span><b>Register player</b></button>}{staffRole==="owner"&&<button type="button" className="admin-v2-champion-action" disabled={!snapshotReady} onClick={()=>setActiveSection("champion")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 7 5 4 5-7 5 7 5-4-2 13H4L2 7Z"/></svg></span><b>Crown Saturday champion<small>{snapshotReady?"Weekly snapshot saved":"Available Saturday"}</small></b></button>}</div>
+        
+        <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING&#39;S POT · THIS WEEK</small><strong>{!potLoaded?<i className="admin-skeleton-block"/>:kingsPot?"₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG"):"—"}</strong><span>{!potLoaded?<i className="admin-skeleton-line"/>:kingsPot?potMatchCount===null?"Match count unavailable":potMatchCount.toLocaleString("en-NG")+" matches × ₦100":"Pot data unavailable"}</span></div><div className="admin-v2-pot-count"><strong>{daysToSaturday===0?"Final day":saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
+        <div className="admin-v2-stats"><div><strong>{playersLoaded?players.length.toLocaleString("en-NG"):<i className="admin-skeleton-block"/>}</strong><span>Players</span></div><div><strong>{matchCount===null?<i className="admin-skeleton-block"/>:matchCount.toLocaleString("en-NG")}</strong><span>Matches</span></div><div><strong>{staffRole==="owner"?(playersLoaded&&accountStatusesLoaded?noLoginProfileCount.toLocaleString("en-NG"):<i className="admin-skeleton-block"/>):"—"}</strong><span>No login yet</span></div></div>
+        {staffRole==="owner"&&playersLoaded&&accountStatusesLoaded&&noLoginProfileCount>0&&<button type="button" className="admin-v2-attention" onClick={()=>setActiveSection("players")}><span className="admin-v2-attention-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></span><span><b>{noLoginProfileCount.toLocaleString("en-NG")} players can&#39;t log in yet.</b><small>Create their logins in Manage profiles.</small></span><i>›</i></button>}
+        
+        <h2 className="admin-v2-manage-title">Manage</h2><div className="admin-v2-manage">
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("predictions")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h5M8 16h8"/></svg></span><div><b>Prediction questions</b><small>Weekly questions, points and schedules</small></div><i>›</i></button>}
+          <button type="button" onClick={()=>setActiveSection("matches")} style={{display:staffRole==="owner"?"flex":"none"}}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg></span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M6 16c.7-1.7 1.7-2.5 3-2.5s2.3.8 3 2.5M15 9h3M15 13h3"/></svg></span><div><b>Manage profiles</b><small>Photos, names, bios and logins</small></div><i>›</i></button>}
+          <button type="button" onClick={()=>setActiveSection("directory")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3.1 2.5-4.8 5.5-4.8s5 1.7 5.5 4.8M16 5.5a3 3 0 0 1 0 5.8M17 14.5c2.1.6 3.3 2.1 3.6 4.5"/></svg></span><div><b>Player directory</b><small>{playersLoaded?"All "+players.length.toLocaleString("en-NG")+" registered players":"Loading player list"}</small></div><i>›</i></button>
+          {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("staff")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5.5c0 4.6-3.2 7.7-8 9.5-4.8-1.8-8-4.9-8-9.5V6l8-3Z"/><rect x="9" y="10.5" width="6" height="5" rx="1"/><path d="M10.5 10.5V9a1.5 1.5 0 0 1 3 0v1.5"/></svg></span><div><b>Staff management</b><small>Add or remove staff</small><em>OWNER ONLY</em></div><i>›</i></button>}
+        </div>
+        <div className="admin-v2-section-head admin-v2-recent-head"><h2>Recent matches</h2>{staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("matches")}>Manage all →</button>}</div>
+        <div className="admin-v2-recent">
+          {!matchesLoaded?<div className="admin-v2-skeleton-list"><i/><i/><i/></div>:matches.length===0?<p className="admin-v2-empty">No matches recorded yet. <button type="button" onClick={()=>setActiveSection("match")}>Record a match →</button></p>:matches.slice(0,3).map(match=><div className="admin-v2-match" key={match.id}>
+            <span className="admin-v2-win">W</span><div className="admin-v2-match-copy"><strong>{playerName(match.winner_id)} beat {playerName(match.winner_id===match.player_one_id?match.player_two_id:match.player_one_id)}</strong><small>{new Date(match.played_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · {match.player_one_score} – {match.player_two_score}</small>{(matchWagers[match.id]||0)>0&&<em className="admin-v2-wager-tag">Wager ₦{matchWagers[match.id].toLocaleString("en-NG")}</em>}</div>
+            {staffRole==="owner"&&<button type="button" aria-label="Edit match result" onClick={()=>{if(window.confirm("Open this match for editing?")){startEditMatch(match);setActiveSection("matches");}}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button>}
+          </div>)}
+        </div>
+        <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
+        
+      </section>}
+
+      {activeSection==="predictions"&&staffRole==="owner"&&<PredictionQuestionsAdmin onBack={()=>setActiveSection("overview")} setNotice={setMessage}/>}
+
       {message && <div className="toast" role="status" aria-live="polite"><span>{message}</span><button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => setMessage("")}>×</button></div>}
       <div className="admin-grid">
-        <section className="admin-card">
+        <section className="admin-card" style={{display:staffRole==="owner"&&activeSection==="register"?"block":"none"}}>
           <h2>Register player</h2>
           <form className="form" onSubmit={addPlayer}>
             <label>Full name<input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></label>
@@ -264,102 +539,172 @@ export default function Admin() {
           </form>
         </section>
 
-        <section className="admin-card">
-          <h2>Record match</h2>
-          <p className="eyebrow">OFFICIAL RANKED FORMAT · BEST OF 3 RACKS</p>
-          <form className="form" onSubmit={addMatch}>
-            <label>Player one
-              <div className="player-picker">
-                <input type="text" autoComplete="off" placeholder="Search or select player one..." value={playerOneSearch} onFocus={() => setPlayerOnePickerOpen(true)} onChange={(e) => { setPlayerOneSearch(e.target.value); setOne(""); setPlayerOnePickerOpen(true); }} />
-                {playerOnePickerOpen && <div className="player-picker-options">
-                  {playerOneOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setOne(player.id); setPlayerOneSearch(playerLabel(player)); setPlayerOnePickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
-                  {playerOneOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
-                </div>}
-              </div>
-            </label>
-            <label>Player two
-              <div className="player-picker">
-                <input type="text" autoComplete="off" placeholder="Search or select player two..." value={playerTwoSearch} onFocus={() => setPlayerTwoPickerOpen(true)} onChange={(e) => { setPlayerTwoSearch(e.target.value); setTwo(""); setPlayerTwoPickerOpen(true); }} />
-                {playerTwoPickerOpen && <div className="player-picker-options">
-                  {playerTwoOptions.map((player) => <button type="button" key={player.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setTwo(player.id); setPlayerTwoSearch(playerLabel(player)); setPlayerTwoPickerOpen(false); setRacks([{ winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }, { winnerId: "", loserBalls: "0" }]); }}>{playerLabel(player)}</button>)}
-                  {playerTwoOptions.length === 0 && <div className="player-picker-empty">No matching players</div>}
-                </div>}
-              </div>
-            </label>
-            <label>Venue / table<input value={venue} onChange={(e) => setVenue(e.target.value)} /></label>
-
-            {[0, 1].map((index) => (
-              <div className="admin-card" key={index}>
-                <h3>Rack {index + 1}</h3>
-                <label>Rack winner
-                  <select required value={racks[index].winnerId} onChange={(e) => updateRack(index, "winnerId", e.target.value)}>
-                    <option value="">Select rack winner</option>
-                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}
-                  </select>
-                </label>
-                <label>Balls left on table by losing player
-                  <input type="number" min="0" step="1" required value={racks[index].loserBalls} onChange={(e) => updateRack(index, "loserBalls", e.target.value)} />
-                </label>
-                {racks[index].winnerId && <p className="eyebrow">{playerName(racks[index].winnerId)} won · {playerName(racks[index].winnerId === one ? two : one)} left {racks[index].loserBalls || "0"} balls</p>}
-              </div>
-            ))}
-
-            {thirdRackNeeded && (
-              <div className="admin-card">
-                <h3>Rack 3 · Decider</h3>
-                <p className="eyebrow">The first two racks are tied 1–1. This rack decides the match.</p>
-                <label>Rack winner
-                  <select required value={racks[2].winnerId} onChange={(e) => updateRack(2, "winnerId", e.target.value)}>
-                    <option value="">Select rack winner</option>
-                    {winnerOptions.map((player) => <option key={player.id} value={player.id}>{player.full_name}</option>)}
-                  </select>
-                </label>
-                <label>Balls left on table by losing player
-                  <input type="number" min="0" step="1" required value={racks[2].loserBalls} onChange={(e) => updateRack(2, "loserBalls", e.target.value)} />
-                </label>
-                {racks[2].winnerId && <p className="eyebrow">{playerName(racks[2].winnerId)} won · {playerName(racks[2].winnerId === one ? two : one)} left {racks[2].loserBalls || "0"} balls</p>}
-              </div>
-            )}
-
-            <div className="admin-card">
-              <h3>Match score</h3>
-              <div className="two-fields"><p>{playerName(one)}<br /><strong>{rackWins.one}</strong></p><p>{playerName(two)}<br /><strong>{rackWins.two}</strong></p></div>
-              <p className="eyebrow">{rackWins.one === 2 ? `Match winner: ${playerName(one)}` : rackWins.two === 2 ? `Match winner: ${playerName(two)}` : thirdRackNeeded ? "Decider required" : "Complete rack 1 and rack 2"}</p>
+        <section className="admin-card record-match-shell" style={{display:activeSection==="match"?"block":"none"}}>
+          <form className="record-match-form" onSubmit={addMatch}>
+            <div className="record-match-header"><button type="button" className="record-back" onClick={()=>setActiveSection("overview")} aria-label="Back">←</button><h2>Record match</h2><span /></div>
+            <div className="record-format-switch" role="group" aria-label="Match format">
+              <button type="button" className={matchFormat==="single"?"selected":""} onClick={()=>{setMatchFormat("single");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>One rack</button>
+              <button type="button" className={matchFormat==="best_of_3"?"selected":""} onClick={()=>{setMatchFormat("best_of_3");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>Best of 3</button>
             </div>
-            <button disabled={busy || !one || !two || one === two || !racks[0].winnerId || !racks[1].winnerId || (thirdRackNeeded && !racks[2].winnerId) || (rackWins.one !== 2 && rackWins.two !== 2)}>
-              {busy ? "Saving match..." : "Save match"}
-            </button>
+            {matchFormat==="single"?<p className="record-format-note">Default format</p>:<p className="record-format-note">First to win 2 racks takes the match</p>}
+            <div className="record-step-label">1. Who played?</div>
+            <div className="record-player-pair">
+              {(["one","two"] as const).map((slot,index)=>{
+                const id=slot==="one"?one:two, player=players.find(p=>p.id===id);
+                return <div className="record-player-slot-wrap" key={slot}>
+                  <button type="button" className={"record-player-slot"+(player?" filled":"")+(playerPickerTarget===slot?" active":"")} onClick={()=>{setPlayerPickerTarget(slot);setPlayerOnePickerOpen(slot==="one");setPlayerTwoPickerOpen(slot==="two");}}>
+                    {player?<><span className="record-player-avatar" style={player.photo_url?{backgroundImage:`url(${player.photo_url})`}:{}}>{player.photo_url?"":player.username.slice(0,1).toUpperCase()}</span><b>@{player.username}</b><small>{Number(player.elo_rating||1000).toLocaleString()} rating</small><em>Change</em></>:<><span className="record-add-circle">＋</span><b>Player {slot==="one"?"one":"two"}</b><em>Tap to choose</em></>}
+                  </button>
+                  {index===0&&<span className="record-versus">vs</span>}
+                </div>;
+              })}
+            </div>
+            <p className="record-player-hint">{!one?"Tap a card to choose each player.":!two?"Now choose player two.":"Both players set. Next, choose the winner."}</p>
+            <div className={"record-step-section"+(!one||!two?" is-dimmed":"")}>
+              {matchFormat==="single"?<>
+                <div className="record-step-label">2. Who won the rack?</div>
+                <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={racks[0].winnerId===player.id?"selected":""} onClick={()=>updateRack(0,"winnerId",player.id)}>{racks[0].winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
+                <div className="record-step-label record-balls-label">3. Balls left on the table ({playerName(racks[0].winnerId&&racks[0].winnerId===one?two:one)})</div>
+                <div className="record-stepper"><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)<=0} onClick={()=>updateRack(0,"loserBalls",String(Math.max(0,Number(racks[0].loserBalls)-1)))}>−</button><strong>{racks[0].loserBalls}</strong><button type="button" disabled={!one||!two||Number(racks[0].loserBalls)>=7} onClick={()=>updateRack(0,"loserBalls",String(Math.min(7,Number(racks[0].loserBalls)+1)))}>＋</button></div>
+              </>:<>
+                <div className="record-step-label">2. Rack results</div>
+                <div className="record-scoreboard"><div><small>{playerName(one)}</small><strong>{rackWins.one}</strong></div><span>–</span><div><small>{playerName(two)}</small><strong>{rackWins.two}</strong></div></div>
+                {Array.from({length:thirdRackNeeded?3:2},(_,index)=>index).map(index=>{
+                  const rack=racks[index], loser=rack.winnerId?(rack.winnerId===one?two:one):"";
+                  return <div className="record-rack-card" key={index}>
+                    <div className="record-rack-title"><b>Rack {index+1}</b>{index===2&&<small>DECIDING RACK</small>}</div>
+                    <div className="record-winner-pair">{winnerOptions.map(player=><button type="button" key={player.id} disabled={!one||!two} className={rack.winnerId===player.id?"selected":""} onClick={()=>updateRack(index,"winnerId",player.id)}>{rack.winnerId===player.id?"✓ ":""}@{player.username}</button>)}</div>
+                    <div className="record-rack-balls"><span>Balls left ({playerName(loser)})</span><div className="record-stepper"><button type="button" disabled={!one||!two||Number(rack.loserBalls)<=0} onClick={()=>updateRack(index,"loserBalls",String(Math.max(0,Number(rack.loserBalls)-1)))}>−</button><strong>{rack.loserBalls}</strong><button type="button" disabled={!one||!two||Number(rack.loserBalls)>=7} onClick={()=>updateRack(index,"loserBalls",String(Math.min(7,Number(rack.loserBalls)+1)))}>＋</button></div></div>
+                  </div>;
+                })}
+                <p className="record-rack-hint">Rack 3 only appears when the score is tied 1–1. If one player wins the first two racks, the match ends 2–0.</p>
+              </>}
+            </div>
+            {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-result-card"><small>Result</small><div className="record-result-heading"><b>{playerName(rackWins.one>rackWins.two?one:two)} beats {playerName(rackWins.one>rackWins.two?two:one)}</b><strong>{rackWins.one}–{rackWins.two}</strong></div><div className="record-estimates"><div><small>{playerName(one)}</small><b>{rackWins.one>rackWins.two?"+ rating":"− rating"}</b></div><div><small>{playerName(two)}</small><b>{rackWins.two>rackWins.one?"+ rating":"− rating"}</b></div></div><p>Estimated rating change. Final values are calculated when you save.</p></div>}
+            <section className={"record-wager-card"+(wagerEnabled?" expanded":"")}>
+              <button type="button" className="record-wager-toggle" aria-expanded={wagerEnabled} onClick={()=>setWagerEnabled(v=>!v)}>
+                <span><b>Wager on this match</b><small>Optional · winner takes the pot</small></span>
+                <i className={wagerEnabled?"on":""}><em/></i>
+              </button>
+              {wagerEnabled&&<div className="record-wager-content">
+                {!wagerCustom ? <div className="record-wager-selected-stakes">
+                  <div><span>{playerName(one)||"Player one"} stake</span><b>₦{Number(wagerOneStake||0).toLocaleString("en-NG")}</b></div>
+                  <div><span>{playerName(two)||"Player two"} stake</span><b>₦{Number(wagerTwoStake||0).toLocaleString("en-NG")}</b></div>
+                </div> : <div className="record-wager-fields record-wager-shared-field">
+                  <label>Stake per player<input type="number" inputMode="numeric" min="2000" max="1000000" step="1" placeholder="Enter amount (₦)" value={wagerOneStake} onChange={e=>{setWagerOneStake(e.target.value);setWagerTwoStake(e.target.value);}} /></label>
+                  <p>Both {playerName(one)||"Player one"} and {playerName(two)||"Player two"} will stake the same amount.</p>
+                </div>}
+                <div className="record-wager-presets">{[2000,5000].map(amount=><button type="button" key={amount} className={!wagerCustom&&Number(wagerOneStake)===amount&&Number(wagerTwoStake)===amount?"selected":""} onClick={()=>{setWagerOneStake(String(amount));setWagerTwoStake(String(amount));setWagerCustom(false);}}>₦{amount.toLocaleString("en-NG")}</button>)}<button type="button" className={wagerCustom?"selected":""} onClick={()=>{setWagerCustom(true);setWagerOneStake("");setWagerTwoStake("");}}>Custom amount</button></div>
+                {wagerCustom&&<div className="record-wager-custom">Enter one amount. It applies to both players. Minimum ₦2,000 each.</div>}
+                <div className="record-wager-pot"><span>Total pot · winner takes all</span><strong>₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</strong></div>
+                {one&&two&&((matchFormat==="single"&&racks[0].winnerId)||(matchFormat==="best_of_3"&&(rackWins.one===2||rackWins.two===2)))&&<div className="record-wager-result"><span>{playerName(rackWins.one>rackWins.two?one:two)} wins</span><b>+₦{(Math.max(0,Number(wagerOneStake)||0)+Math.max(0,Number(wagerTwoStake)||0)).toLocaleString("en-NG")}</b></div>}
+              </div>}
+            </section>
+            <div className="record-footer-venue"><span>Ranked · BASE25 table</span><button type="button" onClick={()=>setVenue(venue==="BASE25"?"BASE25 Table 2":"BASE25")}>Change</button></div>
+            <button className="record-save-button" disabled={busy||!one||!two||one===two||!racks[0].winnerId||(matchFormat==="best_of_3"&&(!racks[1].winnerId||(thirdRackNeeded&&!racks[2].winnerId)))||(matchFormat==="single"?(rackWins.one!==1&&rackWins.two!==1):(rackWins.one!==2&&rackWins.two!==2))}>{busy?"Saving match...":wagerEnabled?"✓  Save match & wager":"✓  Save match"}</button>
+            <button type="button" className="record-cancel-button" onClick={()=>setActiveSection("overview")}>Cancel</button>
           </form>
         </section>
       </div>
 
+      {playerPickerTarget && <div className="record-picker-backdrop" onClick={()=>{setPlayerPickerTarget(null);setPlayerOnePickerOpen(false);setPlayerTwoPickerOpen(false);}}>
+        <section className="record-picker-sheet" role="dialog" aria-modal="true" aria-label={`Choose player ${playerPickerTarget}`} onClick={event=>event.stopPropagation()}>
+          <div className="record-picker-handle" />
+          <div className="record-picker-heading"><h3>Choose player {playerPickerTarget}</h3><button type="button" onClick={()=>{setPlayerPickerTarget(null);setPlayerOnePickerOpen(false);setPlayerTwoPickerOpen(false);}}>Close</button></div>
+          <input className="record-picker-search" autoFocus placeholder="Search username or player ID" value={playerPickerTarget==="one"?playerOneSearch:playerTwoSearch} onChange={event=>playerPickerTarget==="one"?setPlayerOneSearch(event.target.value):setPlayerTwoSearch(event.target.value)} />
+          <div className="record-picker-recent"><span>Recent</span>{recentPlayers.map(player=><button type="button" key={player.id} disabled={player.id===(playerPickerTarget==="one"?two:one)} onClick={()=>selectMatchPlayer(player.id,playerPickerTarget)}>@{player.username}</button>)}</div>
+          <div className="record-picker-list">{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).slice(0,5).map(player=><button type="button" key={player.id} onClick={()=>selectMatchPlayer(player.id,playerPickerTarget)}><span className="record-picker-avatar">{player.username.slice(0,1).toUpperCase()}</span><span><b>@{player.username}</b><small>{player.player_code} · {Number(player.elo_rating||1000).toLocaleString()}</small></span>{player.id===(playerPickerTarget==="one"?one:two)&&<strong>✓</strong>}</button>)}{(playerPickerTarget==="one"?playerOneOptions:playerTwoOptions).length===0&&<p className="record-picker-empty">No matching players</p>}</div>
+        </section>
+      </div>}
       {staffRole === "owner" && <>
-      <section className="admin-card"><h2>Manage player profiles</h2>
-        {players.map(player=><div key={player.id} className="player-row" style={{display:"block"}}>
-          {editingPlayer===player.id?<form className="form" onSubmit={savePlayerEdit}>
-            <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
-            <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value)}/></label>
-            <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
-            <div className="two-fields"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
-          </form>:<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><div><b>{player.full_name}</b><div className="eyebrow">@{player.username} · {player.player_code}</div></div><button type="button" className="secondary" onClick={()=>startEditPlayer(player)}>Edit</button></div>}
+      <section className="admin-card" style={{display:activeSection==="champion"?"block":"none"}}><h2>Record Saturday Champion</h2><p className="muted">Publishing the official winner automatically awards the full accumulated King’s Pot and records the payout. Only publish after the cash has been paid at BASE25.</p><form className="form" onSubmit={saveWeeklyChampion}><label>Competition week starting (Saturday)<input type="date" required value={championWeek} onChange={e=>{setChampionWeek(e.target.value);setChampionNotice("");}}/></label><label>Saturday final champion<select required value={championPlayer} onChange={e=>{setChampionPlayer(e.target.value);setChampionNotice("");}}><option value="">Select champion</option>{players.map(p=><option key={p.id} value={p.id}>@{p.username} · {p.player_code}</option>)}</select></label><button disabled={busy || !championWeek || !championPlayer}>{busy ? "Publishing champion..." : "Publish Champion & Record Payout"}</button></form>{championNotice&&<div className="champion-save-notice" role="status" aria-live="polite"><strong>{championNotice}</strong><button type="button" className="secondary" onClick={()=>setChampionNotice("")}>Dismiss</button></div>}</section>
+            <section className="admin-card" style={{display:activeSection==="staff"?"block":"none"}}><h2>Staff management</h2>
+        <p className="muted">Only the Owner can grant, change or deactivate staff access. Staff must already have a Supabase login using the email below.</p>
+        <form className="form" onSubmit={addStaff}>
+          <label>Staff email<input type="email" required value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder="staff@example.com" /></label>
+          <label>Access level<select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value as "manager" | "attendant")}><option value="manager">Manager</option><option value="attendant">Attendant</option></select></label>
+          <button disabled={busy || !newStaffEmail.trim()}>Grant staff access</button>
+        </form>
+        <h3>Current staff ({staffMembers.length})</h3>
+        {staffMembers.length === 0 ? <p className="muted">No staff accounts found.</p> : staffMembers.map((member) => <div className="player-row" key={member.user_id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div style={{flex:"1 1 180px"}}><b>{member.email}</b><div className="eyebrow">{member.role.toUpperCase()} · {member.role === "owner" ? "FULL CONTROL" : member.is_active ? "ACTIVE" : "DEACTIVATED"}</div></div>
+          {member.role === "owner" ? <span className="muted">Protected owner account</span> : <>
+            <label style={{minWidth:130}}>Role<select value={staffRoleDrafts[member.user_id] || member.role} onChange={(e) => setStaffRoleDrafts((current) => ({...current,[member.user_id]:e.target.value as "manager" | "attendant"}))}><option value="manager">Manager</option><option value="attendant">Attendant</option></select></label>
+            <button type="button" className="secondary" disabled={busy} onClick={() => saveStaffMember(member)}>Save role</button>
+            <button type="button" className="secondary" disabled={busy} onClick={() => toggleStaffAccess(member)}>{member.is_active ? "Deactivate" : "Reactivate"}</button>
+          </>}
         </div>)}
       </section>
-      <section className="admin-card"><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
-        {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerName(editingMatch.one)} vs {playerName(editingMatch.two)}</h3>
+
+      <section className="admin-card manage-profiles-panel" style={{display:activeSection==="players"?"block":"none"}}>
+        <div className="manage-profiles-heading">
+          <div className="eyebrow">ADMIN · PLAYERS</div>
+          <h1>Manage player profiles</h1>
+          <p>Create logins for players and hand the details to them in person.</p>
+        </div>
+        <div className="manage-profile-stats">
+          <div><strong>{players.length}</strong><span>Players</span></div>
+          <div><strong>{activeProfileCount}</strong><span>Have login</span></div>
+          <div><strong>{noLoginProfileCount}</strong><span>No login</span></div>
+        </div>
+        <label className="manage-profile-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input type="search" value={profileSearch} onChange={e=>setProfileSearch(e.target.value)} placeholder="Search name, @username or B25-ID" aria-label="Search players"/></label>
+        <div className="manage-profile-filters" role="group" aria-label="Filter players">
+          <button type="button" className={profileFilter==="all"?"selected":""} onClick={()=>setProfileFilter("all")}>All {players.length}</button>
+          <button type="button" className={profileFilter==="no-login"?"selected":""} onClick={()=>setProfileFilter("no-login")}>No login {noLoginProfileCount}</button>
+          <button type="button" className={profileFilter==="active"?"selected":""} onClick={()=>setProfileFilter("active")}>Active {activeProfileCount}</button>
+        </div>
+        <div className="manage-profile-list">
+          {visibleProfilePlayers.map(player=>{
+            const account=playerAccountStatuses.find(row=>row.player_id===player.id);
+            const active=account?.account_status==="Verified";
+            const expanded=expandedProfileId===player.id;
+            return <article key={player.id} className={"manage-profile-card"+(expanded?" expanded":"")}>
+              <button type="button" className="manage-profile-row" aria-expanded={expanded} onClick={()=>setExpandedProfileId(expanded?null:player.id)}>
+                <span className="manage-profile-avatar">{player.full_name?.trim()?.[0]?.toUpperCase()||player.username?.[0]?.toUpperCase()||"?"}</span>
+                <span className="manage-profile-identity"><strong>{player.full_name}</strong><small>@{player.username} · {player.player_code}</small></span>
+                <span className={"manage-profile-status"+(active?" active":"")}>{active?"ACTIVE":"NO LOGIN"}</span>
+                <svg className="manage-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              </button>
+              {expanded&&<div className="manage-profile-details">
+                {editingPlayer===player.id?<form className="form manage-profile-edit" onSubmit={savePlayerEdit}>
+                  <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
+                  <div className="eyebrow">USERNAME · @{player.username} (LOCKED)</div>
+                  <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
+                  <div className="manage-profile-actions"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
+                </form>:<>
+                  <label>Player role<select aria-label={`Player role for ${player.username}`} value={player.designation||"regular"} disabled={busy} onChange={e=>updatePlayerDesignation(player,e.target.value as "regular"|"house_ghost"|"boardman")}><option value="regular">Regular</option><option value="house_ghost">House Ghost</option><option value="boardman">Boardman</option></select></label>
+                  <label>Player email<input type="email" value={emailDrafts[player.id]||""} onChange={e=>setEmailDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="player@example.com" readOnly={active}/></label>
+                  <label>Temporary password<div className="manage-profile-password"><input type={showPlayerPasswords[player.id]?"text":"password"} autoComplete="new-password" minLength={8} value={playerPasswordDrafts[player.id]||""} onChange={e=>setPlayerPasswordDrafts(current=>({...current,[player.id]:e.target.value}))} placeholder="At least 8 characters"/><button type="button" className="secondary" onClick={()=>setShowPlayerPasswords(current=>({...current,[player.id]:!current[player.id]}))}>{showPlayerPasswords[player.id]?"Hide":"Show"}</button></div></label>
+                  <button type="button" className="manage-profile-generate" onClick={()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";const values=new Uint32Array(14);window.crypto.getRandomValues(values);setPlayerPasswordDrafts(current=>({...current,[player.id]:Array.from(values,v=>chars[v%chars.length]).join("")}));setShowPlayerPasswords(current=>({...current,[player.id]:true}));}}>Generate password</button>
+                  <p className="manage-profile-help">Give these details to the player directly. They can change the password after first login.</p>
+                  {active?<button type="button" className="manage-profile-primary" disabled={busy||(playerPasswordDrafts[player.id]||"").length<8} onClick={()=>resetPlayerPassword(player)}>Reset password</button>:<button type="button" className="manage-profile-primary" disabled={busy||(playerPasswordDrafts[player.id]||"").length<8||!(emailDrafts[player.id]||"").trim()} onClick={()=>assignPlayerEmail(player)}>Create player login</button>}
+                  <button type="button" className="manage-profile-edit-button" onClick={()=>startEditPlayer(player)}>Edit profile</button>
+                </>}
+              </div>}
+            </article>;
+          })}
+          {visibleProfilePlayers.length===0&&<div className="manage-profile-empty">No players match this search or filter.</div>}
+        </div>
+        <p className="manage-profile-count">Showing {visibleProfilePlayers.length} of {players.length} · Scroll to browse</p>
+      </section>
+      <section className="admin-card" style={{display:activeSection==="matches"?"block":"none"}}><h2>Manage match results</h2><p className="muted">Edit rack winners, balls remaining and venue. Deleting a match also deletes its rack records.</p>
+        {editingMatch&&<form className="form" onSubmit={saveMatchEdit}><h3>Edit match · {playerMatchLabel(editingMatch.one)} vs {playerMatchLabel(editingMatch.two)}</h3>
           <label>Venue<input value={editingMatch.venue} onChange={e=>setEditingMatch({...editingMatch,venue:e.target.value})}/></label>
           {editingMatch.racks.map((rack,index)=><div className="admin-card" key={index}><h3>Rack {index+1}</h3>
-            <label>Winner<select required value={rack.winnerId} onChange={e=>updateEditingRack(index,"winnerId",e.target.value)}><option value="">Select winner</option><option value={editingMatch.one}>{playerName(editingMatch.one)}</option><option value={editingMatch.two}>{playerName(editingMatch.two)}</option></select></label>
+            <label>Winner<select required value={rack.winnerId} onChange={e=>updateEditingRack(index,"winnerId",e.target.value)}><option value="">Select winner</option><option value={editingMatch.one}>{playerMatchLabel(editingMatch.one)}</option><option value={editingMatch.two}>{playerMatchLabel(editingMatch.two)}</option></select></label>
             <label>Balls left on table<input type="number" min="0" max="7" required value={rack.loserBalls} onChange={e=>updateEditingRack(index,"loserBalls",e.target.value)}/></label>
           </div>)}
           <div className="two-fields"><button disabled={busy}>Save corrected result</button><button type="button" className="secondary" onClick={()=>setEditingMatch(null)}>Cancel</button></div>
         </form>}
         {matches.length===0?<p className="muted">No matches recorded yet.</p>:matches.map(match=><div className="player-row" key={match.id} style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <div style={{flex:"1 1 180px"}}><b>{playerName(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerName(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
-          <button type="button" className="secondary" onClick={()=>startEditMatch(match)}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
+          <div style={{flex:"1 1 180px"}}><b>{playerMatchLabel(match.player_one_id)} {match.player_one_score}–{match.player_two_score} {playerMatchLabel(match.player_two_id)}</b><div className="eyebrow">{new Date(match.played_at).toLocaleString()} · {match.venue}</div></div>
+          <button type="button" className="secondary" onClick={()=>{if(window.confirm("Open this match for editing?"))startEditMatch(match);}}>Edit</button><button type="button" className="secondary" disabled={busy} onClick={()=>deleteMatch(match)}>Delete</button>
         </div>)}
       </section>
       </>}
-      <section className="admin-card"><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
+      <section className="admin-card" style={{display:activeSection==="directory"?"block":"none"}}><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
+      <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
+      <SiteNavigation />
     </main>
   );
 }
