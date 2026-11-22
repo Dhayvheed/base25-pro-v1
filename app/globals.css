@@ -1273,3 +1273,6 @@
 .admin-shell .site-mobile-bottom a{min-height:60px}
 .admin-shell .site-mobile-bottom .site-mobile-record{min-height:72px}
 @media(prefers-reduced-motion:reduce){.admin-v2-skeleton-list i,.admin-skeleton-block,.admin-skeleton-line{animation:none}}
+
+/* Homepage designation badges: match competition-page outlined tag */
+.home-v2-designation-tag{display:inline-block;width:max-content;max-width:100%;margin-top:3px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}
