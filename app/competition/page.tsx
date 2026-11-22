@@ -15,6 +15,7 @@ type WeeklyPlayer = {
   wins: number;
   losses: number;
   win_percentage: number;
+  designation?: "regular" | "house_ghost" | "boardman";
 };
 
 type KingsPot = {
@@ -60,6 +61,7 @@ function Avatar({ player, rank }: { player: WeeklyPlayer; rank: number }) {
 export default function CompetitionPage() {
   const [players, setPlayers] = useState<WeeklyPlayer[]>([]);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
+  const [showHouseGhosts, setShowHouseGhosts] = useState(false);
   const [kingsPot, setKingsPot] = useState<KingsPot | null>(null);
   const [potIncreaseKey, setPotIncreaseKey] = useState(0);
   const previousPotAmount = useRef<number | null>(null);
@@ -100,7 +102,13 @@ export default function CompetitionPage() {
         setError("Could not load the weekly leaderboard. Please try again shortly.");
       } else {
         const rows = (leaderboardResult.data || []) as WeeklyPlayer[];
-        setPlayers(rows.slice().sort((a, b) => Number(b.elo_rating || 0) - Number(a.elo_rating || 0)));
+        const playerIds = rows.map((player) => player.id);
+        const { data: designationRows } = playerIds.length
+          ? await supabase.from("players").select("id,designation").in("id", playerIds)
+          : { data: [] as { id: string; designation: WeeklyPlayer["designation"] }[] };
+        const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
+        const enrichedRows = rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular" }));
+        setPlayers(enrichedRows.sort((a, b) => Number(b.elo_rating || 0) - Number(a.elo_rating || 0)));
         setError("");
       }
       setLoading(false);
@@ -136,7 +144,8 @@ export default function CompetitionPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const visiblePlayers = useMemo(() => showAllPlayers ? players : players.slice(0, 5), [players, showAllPlayers]);
+  const eligiblePlayers = useMemo(() => showHouseGhosts ? players : players.filter((player) => player.designation !== "house_ghost"), [players, showHouseGhosts]);
+  const visiblePlayers = useMemo(() => showAllPlayers ? eligiblePlayers : eligiblePlayers.slice(0, 5), [eligiblePlayers, showAllPlayers]);
   const potAmount = kingsPot ? Math.max(0, Number(kingsPot.pot_amount || 0)) : null;
   const nextMilestone = potAmount === null ? 3000 : (Math.floor(potAmount / 3000) + 1) * 3000;
   const progress = potAmount === null ? 0 : Math.min(100, (potAmount / nextMilestone) * 100);
@@ -218,7 +227,7 @@ export default function CompetitionPage() {
         </nav>
 
         <section className="competition-ref-leaderboard" id="weekly-leaderboard">
-          <div className="competition-ref-leaderboard-heading">
+          <div className="competition-ref-leaderboard-heading"><label className="competition-ref-house-toggle"><input type="checkbox" checked={showHouseGhosts} onChange={(event) => setShowHouseGhosts(event.target.checked)} /> Show House Ghosts</label>
             <h2>This week's leaderboard</h2>
           </div>
           <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
@@ -241,7 +250,7 @@ export default function CompetitionPage() {
                     <span className={"competition-ref-rank rank-" + rank} style={{width:26,height:26,display:"grid",placeItems:"center",borderRadius:"50%",background:rank===1?"#f2c230":rank===2?"#2f5fd0":rank===3?"#d9402f":rank===4?"#7b3fa0":"#e8782a",color:"#111",fontSize:10,fontWeight:900,lineHeight:1,flexShrink:0,boxShadow:"inset -2px -2px 4px rgba(0,0,0,.35)"}}><b style={{width:16,height:16,borderRadius:"50%",background:"#fff",display:"grid",placeItems:"center",color:"#111"}}>{rank}</b></span>
                     <Avatar player={player} rank={rank} />
                     <span className="competition-ref-player-name" style={{minWidth:0,display:"grid",gap:4}}>
-                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username}</strong>
+                      <strong style={{display:"block",minWidth:0,overflow:"visible",textOverflow:"clip",whiteSpace:"normal",overflowWrap:"break-word",lineHeight:1.2,fontSize:15,fontWeight:600,color:"#f4f5f2"}}>{player.username} {player.designation === "boardman" && <span className="competition-designation-tag">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="competition-designation-tag">HOUSE GHOSTS 👻</span>}</strong>
                       <small style={{display:"block",font:"10px 'JetBrains Mono',monospace",letterSpacing:"0",color:"#9aa69f"}}>{player.player_code}</small>
                     </span>
                     <span className="competition-ref-record" style={{display:"block",textAlign:"right",whiteSpace:"nowrap",fontSize:12,color:"#d5dad6"}}>{player.wins}W / {player.losses}L</span>
@@ -352,7 +361,8 @@ export default function CompetitionPage() {
           .competition-ref-rating{font-size:13px!important}
         }
         @media(max-width:520px){.competition-ref-chip{right:-68px;top:-4px;padding:7px 12px;font-size:13px}}\n        @media(prefers-reduced-motion:reduce){.competition-ref-chip{animation:none;opacity:1;transform:none}.competition-ref-progress span{transition:none}}
-      `}</style>
+      `} .competition-designation-tag{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid #52634f;border-radius:4px;color:#c8f169;font:700 9px/1.3 monospace;white-space:nowrap;vertical-align:middle}.competition-ref-house-toggle{display:inline-flex;align-items:center;gap:7px;color:#aeb9b0;font-size:11px}.competition-ref-house-toggle input{accent-color:#c8f169}
+</style>
     </main>
   );
 }
