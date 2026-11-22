@@ -30,7 +30,7 @@ const competitionLinks = [
   { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
 ];
 
-export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void } = {}) {
+export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void; onHomeMenuReady?: (openMenu:()=>void) => void } = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -41,7 +41,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
   const [playerSummary, setPlayerSummary] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
-  useEffect(() => { onHomeAccountChange?.({ signedIn, authReady, profile: playerSummary, accountName }); }, [signedIn, authReady, playerSummary, accountName, onHomeAccountChange]);
+  useEffect(() => { onHomeAccountChange?.({ signedIn, authReady, profile: playerSummary, accountName }); }, [signedIn, authReady, playerSummary, accountName, onHomeAccountChange]);\n  useEffect(() => { onHomeMenuReady?.(() => setOpen(true)); }, [onHomeMenuReady]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
