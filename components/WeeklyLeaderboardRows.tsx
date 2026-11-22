@@ -11,6 +11,7 @@ export type WeeklyLeaderboardPlayer = {
   wins: number;
   losses: number;
   designation?: "regular" | "house_ghost" | "boardman";
+  hasBoardmanSlayerBadge?: boolean;
 };
 
 function DesignationBadge({ designation, variant }: { designation?: WeeklyLeaderboardPlayer["designation"]; variant: "home" | "competition" }) {
@@ -34,6 +35,7 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
         <span className="home-v2-player-copy">
           <strong>{player.username}{rank === 1 && <span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>
           <DesignationBadge designation={player.designation} variant="home" />
+          {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
           <small>{player.player_code}</small>
         </span>
       </span>
@@ -55,7 +57,7 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
       </span>
       <span className="competition-ref-player-name" style={{ minWidth: 0, display: "grid", gap: 4 }}>
         <strong style={{ display: "block", minWidth: 0, overflow: "visible", textOverflow: "clip", whiteSpace: "normal", overflowWrap: "break-word", lineHeight: 1.2, fontSize: 15, fontWeight: 600, color: "#f4f5f2" }}>
-          {player.username} <DesignationBadge designation={player.designation} variant="competition" />
+          {player.username} <DesignationBadge designation={player.designation} variant="competition" />{player.hasBoardmanSlayerBadge && <span className="competition-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
         </strong>
         <small style={{ display: "block", font: "10px 'JetBrains Mono',monospace", letterSpacing: 0, color: "#9aa69f" }}>{player.player_code}</small>
       </span>
@@ -63,6 +65,37 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
       <strong className="competition-ref-rating" style={{ display: "block", textAlign: "right", whiteSpace: "nowrap", fontSize: 17, fontWeight: 800, color: "#c8f169", fontVariantNumeric: "tabular-nums" }}>{Number(player.elo_rating || 0).toLocaleString("en-NG")}</strong>
     </Link>;
   })}</>;
+}
+
+export async function getBoardmanSlayerPlayerIds(client: any): Promise<Set<string>> {
+  const { data: boardmen, error: boardmenError } = await client
+    .from("players")
+    .select("id")
+    .eq("designation", "boardman");
+
+  if (boardmenError || !boardmen?.length) return new Set<string>();
+
+  const boardmanIds = boardmen.map((player: { id: string }) => player.id).filter(Boolean);
+  if (!boardmanIds.length) return new Set<string>();
+
+  const idList = boardmanIds.join(",");
+  const { data: matches, error: matchesError } = await client
+    .from("matches")
+    .select("player_one_id,player_two_id,player_one_score,player_two_score")
+    .or(`player_one_id.in.(${idList}),player_two_id.in.(${idList})`);
+
+  if (matchesError || !matches?.length) return new Set<string>();
+
+  const boardmanSet = new Set(boardmanIds);
+  const slayers = new Set<string>();
+  for (const match of matches) {
+    const oneIsBoardman = boardmanSet.has(match.player_one_id);
+    const twoIsBoardman = boardmanSet.has(match.player_two_id);
+    if (oneIsBoardman === twoIsBoardman) continue;
+    if (Number(match.player_one_score) > Number(match.player_two_score) && !oneIsBoardman) slayers.add(match.player_one_id);
+    if (Number(match.player_two_score) > Number(match.player_one_score) && !twoIsBoardman) slayers.add(match.player_two_id);
+  }
+  return slayers;
 }
 
 export default function WeeklyLeaderboardRows({ players, variant }: { players: WeeklyLeaderboardPlayer[]; variant: "home" | "competition" }) {
