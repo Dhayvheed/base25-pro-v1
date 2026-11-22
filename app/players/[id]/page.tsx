@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 
 type MatchRow = {
   id: string;
@@ -31,6 +32,7 @@ function relationPlayer(value: MatchRow["one"] | MatchRow["two"]) {
 export default function PublicPlayerProfile() {
   const { id } = useParams<{ id: string }>();
   const [player, setPlayer] = useState<any>(null);
+  const [hasBoardmanSlayerBadge, setHasBoardmanSlayerBadge] = useState(false);
   const [rank, setRank] = useState(0);
   const [weeklyRank, setWeeklyRank] = useState(0);
   const [weeklyElo, setWeeklyElo] = useState<number | null>(null);
@@ -79,6 +81,9 @@ export default function PublicPlayerProfile() {
         supabase.rpc("get_player_wager_winnings", { p_player_id: id })
       ]);
       if (!active) return;
+      const slayerIds = await getBoardmanSlayerPlayerIds(supabase);
+      if (!active) return;
+      setHasBoardmanSlayerBadge(slayerIds.has(id));
       setPlayer(profile || null);
       setRank((board || []).findIndex((p: any) => p.id === id) + 1);
       const weekly = weekBoard || [];
@@ -214,7 +219,7 @@ export default function PublicPlayerProfile() {
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
-              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation && player.designation !== "regular" && <span className={`public-designation-tag ${player.designation === "boardman" ? "is-boardman" : "is-ghost"}`}>{player.designation === "boardman" ? "BOARDMAN 💀" : "HOUSE GHOSTS 👻"}</span>}<p>“Play smart. Clear tables.”</p></div>
+              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation && player.designation !== "regular" && <span className={`public-designation-tag ${player.designation === "boardman" ? "is-boardman" : "is-ghost"}`}>{player.designation === "boardman" ? "BOARDMAN 💀" : "HOUSE GHOSTS 👻"}</span>}{hasBoardmanSlayerBadge && <span className="public-designation-tag is-slayer">BOARDMAN SLAYER ⚔</span>}<p>“Play smart. Clear tables.”</p></div>
           </div>
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
