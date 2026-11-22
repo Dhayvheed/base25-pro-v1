@@ -38,7 +38,8 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
   const [open, setOpen] = useState(false);
   const [competitionOpen, setCompetitionOpen] = useState(true);
   const [authReady, setAuthReady] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);\n  const [staffRole, setStaffRole] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  const [staffRole, setStaffRole] = useState<string | null>(null);
   const [accountName, setAccountName] = useState("");
   const [playerSummary, setPlayerSummary] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -61,12 +62,17 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
       if (!active) return;
       if (!user) {
         setSignedIn(false);
+        setStaffRole(null);
         setAccountName("");
         setPlayerSummary(null);
         setAuthReady(true);
         return;
       }
       setSignedIn(true);
+      const { data: staffAccessData } = await supabase.rpc("get_my_staff_access");
+      if (!active) return;
+      const staffAccess = Array.isArray(staffAccessData) ? staffAccessData[0] : staffAccessData;
+      setStaffRole(staffAccess?.is_active ? staffAccess.role : null);
       const metadataName = user.user_metadata?.username || user.user_metadata?.prediction_nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
       setAccountName(metadataName);
       setAuthReady(true);
