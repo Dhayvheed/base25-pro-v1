@@ -17,9 +17,11 @@ function MenuIcon({ name }: { name: string }) {
     help: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.7c-1.1 1.1-1.9 1.4-1.9 3M12 17h.01" /></>,
     file: <><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h7M9 16h7" /></>,
     user: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></>,
-    logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" /></>
+    logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" /></>,
+    login: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h7a2 2 0 0 1 2 2v16h-7" /></>,
+    plus: <><path d="M12 5v14M5 12h14" /></>
   };
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">{paths[name] || paths.target}</svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">{paths[name] || paths.target}</svg>;
 }
 
 const competitionLinks = [
@@ -30,19 +32,19 @@ const competitionLinks = [
   { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
 ];
 
-export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void; onHomeMenuReady?: (openMenu:()=>void) => void } = {}) {
+export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void } = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [competitionOpen, setCompetitionOpen] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [staffRole, setStaffRole] = useState<string | null>(null);
   const [accountName, setAccountName] = useState("");
   const [playerSummary, setPlayerSummary] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => { onHomeAccountChange?.({ signedIn, authReady, profile: playerSummary, accountName }); }, [signedIn, authReady, playerSummary, accountName, onHomeAccountChange]);
-  useEffect(() => { onHomeMenuReady?.(() => setOpen(true)); }, [onHomeMenuReady]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
@@ -60,12 +62,17 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
       if (!active) return;
       if (!user) {
         setSignedIn(false);
+        setStaffRole(null);
         setAccountName("");
         setPlayerSummary(null);
         setAuthReady(true);
         return;
       }
       setSignedIn(true);
+      const { data: staffAccessData } = await supabase!.rpc("get_my_staff_access");
+      if (!active) return;
+      const staffAccess = Array.isArray(staffAccessData) ? staffAccessData[0] : staffAccessData;
+      setStaffRole(staffAccess?.is_active ? staffAccess.role : null);
       const metadataName = user.user_metadata?.username || user.user_metadata?.prediction_nickname || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
       setAccountName(metadataName);
       setAuthReady(true);
@@ -108,7 +115,11 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
     }
   };
 
-  const active = (href: string) => pathname === href || (href === "/leaderboard" && pathname === "/");
+  const isCompetitionPage = pathname.startsWith("/competition") || ["/leaderboard", "/matches", "/weekly-archive", "/hall-of-fame", "/snapshots"].some((path) => pathname === path || pathname.startsWith(path + "/"));
+  const ownPublicProfile = Boolean(playerSummary?.id && pathname === `/players/${playerSummary.id}`);
+  const isOwnProfile = pathname === "/account" || ownPublicProfile;
+  const isPlayersPage = (pathname === "/players" || pathname.startsWith("/players/")) && !ownPublicProfile;
+  const isStaff = Boolean(staffRole);
   const brand = (drawer = false) => <Link className="site-brand" href="/" aria-label="BASE25 PRO home" tabIndex={!drawer || open ? 0 : -1}>
     <span className="site-brand-mark">8</span>
     <span className="site-brand-copy"><strong>BASE<span>25</span> <em>PRO</em></strong><small>The Official Billiards Competition</small>
@@ -122,7 +133,7 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
       <nav className="site-desktop-nav" aria-label="Main navigation">
         <Link className={pathname === "/" ? "active" : ""} href="/">Home</Link>
         <div className="site-desktop-group">
-          <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition">Competition⌄</Link>
+          <Link className={isCompetitionPage ? "active" : ""} href="/competition">Competition⌄</Link>
           <div className="site-desktop-dropdown">{competitionLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</div>
         </div>
         <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players">Players</Link>
@@ -186,7 +197,7 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
         <div className="menu-v2-section-label">MENU</div>
         <nav className="menu-v2-nav" aria-label="Menu">
           <Link className={pathname === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="home" /></span>Home</Link>
-          <button className={"menu-v2-competition-toggle" + (pathname.startsWith("/competition") || competitionLinks.some(x => pathname === x.href) ? " active" : "")} type="button" aria-expanded={competitionOpen} onClick={() => setCompetitionOpen(value => !value)} tabIndex={open ? 0 : -1}>
+          <button className={"menu-v2-competition-toggle" + (isCompetitionPage ? " active" : "")} type="button" aria-expanded={competitionOpen} onClick={() => setCompetitionOpen(value => !value)} tabIndex={open ? 0 : -1}>
             <span><MenuIcon name="trophy" /></span>Competition<i className={competitionOpen ? "is-open" : ""}>⌄</i>
           </button>
           {competitionOpen && <div className="menu-v2-subnav" aria-label="Competition pages">
@@ -197,7 +208,7 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
             <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="crown" /></span>Hall of Fame</Link>
           </div>}
           <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="players" /></span>Players</Link>
-          <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Predictions League</Link>
+          {isStaff && <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Predictions League</Link>}
         </nav>
         <div className="menu-v2-section-label menu-v2-about-label">ABOUT</div>
         <nav className="menu-v2-nav" aria-label="About BASE25">
@@ -211,12 +222,23 @@ export default function SiteNavigation({ onHomeAccountChange, onHomeMenuReady }:
         <div className="menu-v2-tagline">COMPETITION · PERFORMANCE · LEGACY</div>
       </div>
     </aside>
-    <nav className="site-mobile-bottom" aria-label="Mobile navigation">
-      <Link className={pathname === "/" ? "active" : ""} href="/"><span>⌂</span>Home</Link>
-      <Link className={competitionLinks.some(x => pathname === x.href) ? "active" : ""} href="/competition"><span>♜</span>Competition</Link>
-      <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players"><span>♧</span>Players</Link>
-      <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions"><span>◎</span>Predictions</Link>
-      <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame"><span>♛</span>Hall of Fame</Link>
+    <nav className="site-mobile-bottom" aria-label="Primary navigation">
+      <Link className={pathname === "/" ? "active" : ""} href="/" aria-current={pathname === "/" ? "page" : undefined}><MenuIcon name="home" /><span>Home</span></Link>
+      <Link className={isCompetitionPage ? "active" : ""} href="/competition" aria-current={isCompetitionPage ? "page" : undefined}><MenuIcon name="trophy" /><span>Competition</span></Link>
+      {isStaff ? (
+        <Link className={"site-mobile-record" + (pathname === "/admin" ? " active" : "")} href="/admin?section=match" aria-label="Record match"><span className="site-mobile-record-icon"><MenuIcon name="plus" /></span><span>Record</span></Link>
+      ) : (
+        <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" aria-current={pathname === "/predictions" ? "page" : undefined}><MenuIcon name="target" /><span>Predictions</span></Link>
+      )}
+      <Link className={isPlayersPage ? "active" : ""} href="/players" aria-current={isPlayersPage ? "page" : undefined}><MenuIcon name="players" /><span>Players</span></Link>
+      {signedIn ? (
+        <Link className={isOwnProfile ? "active" : ""} href="/account" aria-current={isOwnProfile ? "page" : undefined}>
+          {playerSummary?.photo_url ? <span className="site-mobile-me-avatar"><img src={playerSummary.photo_url} alt="" /></span> : <MenuIcon name="user" />}
+          <span>Me</span>
+        </Link>
+      ) : (
+        <Link className={pathname === "/login" ? "active" : ""} href="/login" aria-current={pathname === "/login" ? "page" : undefined}><MenuIcon name="login" /><span>Log in</span></Link>
+      )}
     </nav>
   </>;
 }
