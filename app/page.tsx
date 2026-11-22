@@ -105,7 +105,7 @@ export default function Home(){
      <div className="home-v2-columns"><span>PLAYER</span><span>RECORD</span><span>RATING</span></div>
      <WeeklyLeaderboardRows players={visiblePlayers} variant="home" />
     </div>}
-   <Link className="home-v2-full-link" href="/competition?leaderboard=full#weekly-leaderboard">View full weekly leaderboard <span>→</span></Link>
+   <button type="button" className="home-v2-full-link" onClick={() => setShowAllWeekly((current) => !current)} aria-expanded={showAllWeekly}>{showAllWeekly ? "Show less" : "View full weekly leaderboard"} <span>{showAllWeekly ? "↑" : "↓"}</span></button>
   </section>
   {champion&&<section className="home-v2-champion">
    <div className="home-v2-champion-sun"><span>{champion.players?.photo_url?<img src={champion.players.photo_url} alt=""/>:champion.players?.username?.[0]?.toUpperCase()||"?"}</span></div>
