@@ -1180,7 +1180,7 @@
 .record-inline-results button b{flex:1;font-size:13px}
 .record-inline-results button small{color:#9aa69f;font-size:11px}
 .record-v3 .record-step-section{padding:16px;border:1px solid #1f2a24;border-radius:19px;background:#101512}
-record-v3 .record-winner-pair{gap:9px}
+.record-v3 .record-winner-pair{gap:9px}
 .record-v3 .record-winner-pair button{min-width:0;min-height:52px;border:1px solid #34483a;border-radius:13px;background:#0b110d;color:#f4f5f2;font-size:13px;font-weight:750}
 .record-v3 .record-winner-pair button.selected{border-color:#c8f169;background:#c8f169;color:#0a0e0c}
 .record-balls-panel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding-top:15px;border-top:1px solid #26352b}
