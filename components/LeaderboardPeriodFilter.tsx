@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 import { calculatePeriodLeaderboard, type PeriodPlayer, type PeriodMatch, type PeriodRack } from "@/lib/leaderboard-period";
 import { supabase } from "@/lib/supabase";
@@ -38,10 +39,13 @@ function rangeLabel(start:Date|null,end:Date|null,key:FilterKey){
   return start.getTime()+86400000===end.getTime()?dayLabel(start):dayLabel(start)+" – "+dayLabel(last);
 }
 
+type BoardmanProfile = { id: string; username: string; player_code: string; photo_url: string | null };
+
 export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers:Row[]}){
   const [filter,setFilter]=useState<FilterKey>("this_week");
   const [open,setOpen]=useState(false);
   const [rows,setRows]=useState<Row[]>(initialPlayers);
+  const [boardman,setBoardman]=useState<BoardmanProfile|null>(null);
   const latestInitialPlayers=useRef(initialPlayers);
   latestInitialPlayers.current=initialPlayers;
   const [busy,setBusy]=useState(false);
@@ -99,8 +103,20 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     if(filter==="this_week")setRows(initialPlayers);
   },[initialPlayers,filter]);
 
+  useEffect(()=>{
+    let alive=true;
+    async function loadBoardman(){
+      if(!supabase)return;
+      const {data}=await supabase.from("players").select("id,username,player_code,photo_url").eq("designation","boardman").limit(1).maybeSingle();
+      if(alive)setBoardman(data as BoardmanProfile|null);
+    }
+    loadBoardman();
+    return()=>{alive=false;};
+  },[]);
+
   const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};
-  const visibleRows=showAll?rows:rows.slice(0,5);
+  const rankedRows=rows.filter(p=>p.designation!=="boardman");
+  const visibleRows=showAll?rankedRows:rankedRows.slice(0,5);
   return <section className="competition-ref-leaderboard" id="weekly-leaderboard">
     <div className="competition-ref-leaderboard-heading">
       <div><h2>{filter==="this_week"?"This week's leaderboard":"Leaderboard"}</h2><small className="period-current-label">{label}</small></div>
@@ -116,13 +132,19 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
         <div className="period-options">{options.map(o=><button type="button" key={o.key} className={filter===o.key?"selected":""} onClick={()=>select(o.key)}>{o.label}{filter===o.key&&<span>✓</span>}</button>)}</div>
       </div>
     </div>}
+    {boardman&&<Link href={"/players/"+boardman.id} className="boardman-challenge-row"><span className="boardman-challenge-avatar">{boardman.photo_url?<img src={boardman.photo_url} alt=""/>:"B"}</span><span className="boardman-challenge-copy"><strong>{boardman.username}<em>BOARDMAN 💀</em></strong><small>OPERATION: TAKE DOWN THE BOARDMAN</small></span><strong className="boardman-challenge-rating">1,500 <small>ELO</small></strong></Link>}
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
       <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
     </div>
-    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows"><WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
-    {rows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
+    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rankedRows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows"><WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
+    {rankedRows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
     <style jsx>{`
       .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .boardman-challenge-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:11px;margin:12px 2px 14px;padding:12px;border:1px solid #98743b;border-radius:15px;background:linear-gradient(100deg,#332515,#171b14 72%);color:#f7f1df;text-decoration:none}
+      .boardman-challenge-avatar{width:40px;height:40px;display:grid;place-items:center;overflow:hidden;border:2px solid #c99a45;border-radius:50%;background:#21190f;color:#e8c547;font-weight:900}.boardman-challenge-avatar img{width:100%;height:100%;object-fit:cover}
+      .boardman-challenge-copy{min-width:0;display:grid;gap:5px}.boardman-challenge-copy strong{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}.boardman-challenge-copy em{padding:3px 5px;border:1px solid #8b632d;border-radius:5px;background:#3b2915;color:#f0c56a;font:900 7px monospace;font-style:normal}.boardman-challenge-copy small{color:#c6a96f;font:800 8px monospace;letter-spacing:.08em}
+      .boardman-challenge-rating{color:#f0cf7a;font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}.boardman-challenge-rating small{display:block;color:#bba16d;font:800 8px monospace;text-align:right;letter-spacing:.12em}
+      @media(max-width:370px){.boardman-challenge-row{grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:10px}.boardman-challenge-avatar{width:34px;height:34px}.boardman-challenge-rating{font-size:15px}.boardman-challenge-copy strong{font-size:11px}.boardman-challenge-copy small{font-size:7px}}
       .competition-ref-leaderboard-heading h2{margin:0}
       .period-current-label{display:block;margin-top:4px;color:#9aa69f;font-size:11px}
       .period-show-all{width:calc(100% - 8px);min-height:58px;display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 4px 0;border:0;border-radius:15px;background:#c8f169;color:#0a0e0c;font-size:17px;font-weight:900;cursor:pointer}\n      .period-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #35483a;border-radius:12px;background:#17221b;color:#c8f169;font-size:12px;font-weight:800;cursor:pointer}
