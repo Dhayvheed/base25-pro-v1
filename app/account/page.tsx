@@ -11,7 +11,7 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
- const [publicPreview,setPublicPreview]=useState(false),[searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
+ const [searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
   const {data:{session}}=await supabase.auth.getSession();
@@ -60,8 +60,6 @@ export default function PlayerProfile(){
   <header className="private-topbar">
    <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
   </header>
-  <div className="private-view-switch"><button className={!publicPreview?"active":""} onClick={()=>setPublicPreview(false)}>My view</button><Link className={publicPreview?"active":""} href={`/players/${player.id}`}>Preview as public</Link></div>
-  {publicPreview ? <div className="private-preview-note">This is the public profile other players see. <Link href={`/players/${player.id}`}>Open public profile →</Link></div> : null}
   <section className="private-identity-card">
    <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
