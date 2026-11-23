@@ -122,6 +122,7 @@ export default function PublicPlayerProfile() {
     return () => { active = false; };
   }, [id]);
 
+  const hasMatches = Number(player?.matches_played ?? matches.length) > 0;
   const elo = Number(player?.elo_rating) || 1000;
   const peak = Number(player?.highest_elo) || elo;
   const tournamentEarnings = champions.reduce((sum, row) => sum + Number(row.prize_amount || 0), 0);
@@ -232,9 +233,9 @@ export default function PublicPlayerProfile() {
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
-              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation && player.designation !== "regular" && <span className={`public-designation-tag ${player.designation === "boardman" ? "is-boardman" : "is-ghost"}`}>{player.designation === "boardman" ? "BOARDMAN 💀" : "HOUSE GHOSTS 👻"}</span>}{hasBoardmanSlayerBadge && <span className="public-designation-tag is-slayer">BOARDMAN SLAYER ⚔</span>}<p>“Play smart. Clear tables.”</p></div>
+              <div className="public-player-meta"><span>{player.player_code}</span><b>COMPETITIVE</b></div><h1>{player.username} <i className="public-verified">✓</i></h1>{player.designation && player.designation !== "regular" && <span className={`public-designation-tag ${player.designation === "boardman" ? "is-boardman" : "is-ghost"}`}>{player.designation === "boardman" ? "BOARDMAN 💀" : "HOUSE GHOSTS 👻"}</span>}{hasBoardmanSlayerBadge && <span className="public-designation-tag is-slayer">BOARDMAN SLAYER ⚔</span>}<p>{player.bio ? "“"+player.bio+"”" : "“Play smart. Clear tables.”"}</p></div>
           </div>
-          <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>#{rank || "—"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
+          <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>{hasMatches && rank ? `#${rank}` : "Unranked"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
 
         {viewer && matchupReady && <section className="public-mutual-card">
@@ -280,17 +281,16 @@ export default function PublicPlayerProfile() {
 
         <section className="public-rating-grid">
           <div className="public-rating-card">
-            <div className="public-card-label">CAREER ELO RATING</div>
-            <strong>{elo.toLocaleString()}</strong>
+            <div className="public-card-label">ALL-TIME RATING</div>
+            <strong>{hasMatches ? elo.toLocaleString() : "Unranked"}</strong>
             <div className="public-rating-foot"><span>PEAK RATING</span><b>{peak.toLocaleString()}</b></div>
             <div className="public-rating-glow" />
           </div>
           <div className="public-week-card">
-            <div className="public-card-label">THIS WEEK <span>↗</span></div>
-            <strong>#{weeklyRank || "—"}</strong>
-            <div className="public-rating-foot"><span>WEEKLY TOTAL POINTS</span><b>{((weeklyElo ?? elo) + weeklyBoardmanBonus).toLocaleString()}</b></div>
-            <div className="public-rating-foot"><span>ELO + BONUS</span><b>{(weeklyElo ?? elo).toLocaleString()} + {weeklyBoardmanBonus}</b></div>
-            <small>Boardman bonus is added to weekly total points, not ELO</small>
+            <div className="public-card-label">WEEKLY RATING</div>
+            <strong>{hasMatches ? (weeklyElo ?? "—").toLocaleString("en-NG") : "Unranked"}</strong>
+            <div className="public-rating-foot"><span>WEEKLY RANK</span><b>{weeklyRank ? `#${weeklyRank}` : "—"}</b></div>
+            <small>Resets every Saturday.</small>
           </div>
         </section>
 
@@ -309,9 +309,10 @@ export default function PublicPlayerProfile() {
         </section>
 
         <section className="public-wager-card">
-          <div className="public-wager-head"><div className="public-card-label">WAGER WINNINGS</div><span>AT BASE25</span></div>
-          <strong>+₦{wagerWinnings.toLocaleString("en-NG")}</strong>
-          <p>Confirmed player-versus-player wager winnings. Lost stakes are private by default.</p>
+          <div className="public-wager-head"><div className="public-card-label">WAGER EARNINGS</div><span>AT BASE25</span></div>
+          <strong>{wagerWinnings > 0 ? "+" : ""}₦{wagerWinnings.toLocaleString("en-NG")}</strong>
+          <div className="public-wager-breakdown"><div><b>—</b><small>Won</small></div><div><b>—</b><small>Lost</small></div><div><b>—</b><small>Wager record</small></div></div>
+          <p>Detailed wager breakdown is not available in the current data.</p>
         </section>
 
         <section className="public-record-grid">
