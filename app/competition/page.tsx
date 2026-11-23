@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
-import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
+import { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 import LeaderboardPeriodFilter from "@/components/LeaderboardPeriodFilter";
 import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
@@ -72,12 +72,6 @@ export default function CompetitionPage() {
   const [error, setError] = useState("");
   const [potError, setPotError] = useState("");
   const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("leaderboard") === "full") {
-      setShowAllPlayers(true);
-    }
-  }, []);
 
   useEffect(() => {
     let active = true;
