@@ -93,13 +93,11 @@ export default function PlayerProfile(){
    <div className="private-card-top"><small>WAGER EARNINGS</small><span>Public</span></div>
    <strong>{wagerEarnings>0?"+":""}₦{wagerEarnings.toLocaleString("en-NG")}</strong><p>Confirmed player-versus-player wager winnings.</p>
    <div className="private-wager-stats"><div><b>—</b><span>Won</span></div><div><b>—</b><span>Lost</span></div><div><b>—</b><span>Wager record</span></div></div><small className="private-cashout-help">Detailed wager totals are not available in the current data.</small>
-   <div className="private-wager-foot">Money lost is private by default. <button onClick={()=>setShowLosses(v=>!v)}>{showLosses?"Public":"Keep private"}</button></div>
   </section>
 
   <section className="private-section">
    <small>PRIVACY</small><h2>Who sees what</h2><p>Always public: ratings, rank, tournament earnings, confirmed wager winnings, achievements, rating chart and match history.</p>
    <div className="private-setting-row"><div><b>Appear in player search</b><span>Others can find you by name or ID</span></div><button className={searchVisible?"toggle on":"toggle"} onClick={()=>setSearchVisible(v=>!v)} aria-pressed={searchVisible}><i/></button></div>
-   <div className="private-setting-row"><div><b>Show money lost</b><span>Private by default. Turn on only if you want losses public.</span></div><button className={showLosses?"toggle on":"toggle"} onClick={()=>setShowLosses(v=>!v)} aria-pressed={showLosses}><i/></button></div>
   </section>
 
   <section className="private-section private-account-section">
