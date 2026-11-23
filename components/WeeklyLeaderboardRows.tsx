@@ -35,7 +35,7 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
     const isHighlighted = isOdumodu;
     const rankIndex = rank === null ? 0 : rank - 1;
     return <Link className={"home-v2-player-row " + (isHighlighted ? "is-first" : "")} href={"/players/" + player.id} key={player.id}
-      style={isHighlighted ? { background: "linear-gradient(105deg, rgba(212,175,55,.30), rgba(212,175,55,.12))", border: "1px solid rgba(232,196,90,.9)", boxShadow: "0 0 18px rgba(212,175,55,.16), inset 0 0 18px rgba(212,175,55,.08)", borderRadius: 14 } : undefined}>
+      style={isHighlighted ? { background: "linear-gradient(105deg, rgba(190,35,45,.34), rgba(125,18,28,.16))", border: "1px solid rgba(235,75,85,.95)", boxShadow: "0 0 18px rgba(220,40,55,.22), inset 0 0 18px rgba(190,35,45,.10)", borderRadius: 14 } : undefined}>
       <span className={"home-v2-rank " + (rank === null ? "is-empty" : "rank-" + rank)}>{rank !== null && <span className="home-v2-rank-ball" style={{ background: rankColors[rankIndex] || "#52634b" }}><i>{rank}</i></span>}</span>
       <span className="home-v2-player">
         <span className="home-v2-avatar">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.username?.[0]?.toUpperCase() || "?"}</span>
