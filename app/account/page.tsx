@@ -62,14 +62,14 @@ export default function PlayerProfile(){
  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
  <section className="private-profile">
   <header className="private-topbar">
-   <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
+   <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setProfileEditNotice((v)=>!v)}>☷</button>
   </header>
   <div className="private-view-switch" role="group" aria-label="Profile view"><span className="active">My view</span><Link href={"/players/"+id+"?view=public"}>Preview as public</Link></div>
       <section className="private-identity-card">
     <div className="private-identity-main"><div className="private-avatar-wrap"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div><button className="private-avatar-edit" type="button" onClick={()=>setProfileEditNotice(v=>!v)} aria-label="Edit profile photo">✎</button></div>
      <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>{player.bio ? "“"+player.bio+"”" : "“Play smart. Clear tables.”"}</p></div>
     </div>
-    <div className="private-identity-actions"><button type="button" onClick={()=>setProfileEditNotice(v=>!v)}>Edit profile</button><button onClick={shareProfile}>Share</button></div>
+    <div className="private-rank-chip"><strong>{hasMatches&&rank?`#${rank}`:"Unranked"}</strong><span>GLOBAL RANK</span></div><div className="private-identity-actions"><button type="button" onClick={()=>setProfileEditNotice(v=>!v)}>Edit profile</button><button onClick={shareProfile}>Share</button></div>
     {profileEditNotice&&<p className="private-inline-notice">Profile photo, bio and display-detail editing is not connected yet. No profile changes have been made.</p>}
    </section>
    <section className="private-prediction-card">
@@ -195,5 +195,10 @@ export default function PlayerProfile(){
  .private-rating-history>p{color:#9aa69f;font-size:12px}
  .private-signout{width:100%;height:48px;margin:12px 0 0;border:0;background:transparent;color:#9aa69f;font-size:13px;font-weight:700}
  @media(max-width:430px){.private-profile{padding:0 5px}.private-identity-card{padding:16px 14px}.private-avatar{width:88px;height:88px;font-size:32px}.private-identity-copy h2{font-size:25px}.private-identity-copy small{font-size:10px}.private-identity-copy p{font-size:11px}.private-rating-card strong{font-size:35px}}
+
+ .private-profile{font-family:Inter,Arial,sans-serif;background:radial-gradient(ellipse at 98% 0%,#103b26 0%,transparent 34%)}
+ .private-rank-chip{display:flex;align-items:center;gap:9px;margin-top:14px;padding:9px 12px;border:1px solid #354a32;border-radius:13px;background:#0b150e;width:max-content;max-width:100%}
+ .private-rank-chip strong{font:900 17px monospace;color:#e8c547;white-space:nowrap}
+ .private-rank-chip span{font:700 8px monospace;letter-spacing:.12em;color:#b4beb8}
  `}</style></main>;
 }
