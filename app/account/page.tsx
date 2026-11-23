@@ -62,14 +62,14 @@ export default function PlayerProfile(){
    <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
   </header>
   <div className="private-view-switch" role="group" aria-label="Profile view"><span className="active">My view</span><Link href={"/players/"+id+"?view=public"}>Preview as public</Link></div>
-   <section className="private-identity-card">
-   <div className="private-identity-main"><div className="private-avatar-wrap"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
-    <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
-   </div>
-   <div className="private-identity-actions" style={{gridTemplateColumns:"1fr"}}><button onClick={shareProfile}>Share profile</button></div><p style={{margin:"10px 2px 0",fontSize:11,color:"#9eaa9b"}}>Username is managed by BASE25 and cannot be changed by players. Contact an admin if a correction is needed.</p>
-  </section>
-
-  <section className="private-prediction-card">
+      <section className="private-identity-card">
+    <div className="private-identity-main"><div className="private-avatar-wrap"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div><button className="private-avatar-edit" type="button" onClick={()=>setProfileEditNotice(v=>!v)} aria-label="Edit profile photo">✎</button></div>
+     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>{player.bio ? "“"+player.bio+"”" : "“Play smart. Clear tables.”"}</p></div>
+    </div>
+    <div className="private-identity-actions"><button type="button" onClick={()=>setProfileEditNotice(v=>!v)}>Edit profile</button><button onClick={shareProfile}>Share</button></div>
+    {profileEditNotice&&<p className="private-inline-notice">Profile photo, bio and display-detail editing is not connected yet. No profile changes have been made.</p>}
+   </section>
+   <section className="private-prediction-card">
    <div className="private-card-top"><small>NEXT UP · THIS WEEK</small><span>BASE25 PRO</span></div>
    <h3>Prediction questions are open</h3><p>Make your picks before the first rack.</p>
    <Link href="/predictions">Make predictions</Link>
