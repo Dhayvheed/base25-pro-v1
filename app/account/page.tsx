@@ -174,5 +174,26 @@ export default function PlayerProfile(){
  .private-account-section>a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #25332a;text-decoration:none;color:#f0f4ed}.private-account-section>a>div{display:grid;gap:4px}.private-account-section>a b{font-size:13px}.private-account-section>a span{font-size:10px;color:#8e9b90}.private-account-section>a>i{font-size:23px;color:#8e9b90;font-style:normal}
  .private-stat-row{display:grid;grid-template-columns:repeat(4,1fr);margin-top:13px;padding:14px 3px;border:1px solid #252f29;border-radius:18px;background:#0d1510}.private-stat-row>div{display:grid;justify-items:center;gap:5px;border-right:1px solid #2c3a30}.private-stat-row>div:last-child{border:0}.private-stat-row b{font:900 25px monospace;color:#c5f36a}.private-stat-row span{font-size:11px;color:#9ba79c}
  @media(max-width:480px){.private-profile{margin:6px auto 90px}.private-identity-card{padding:17px 14px}.private-avatar{width:100px;height:100px}.private-identity-copy h2{font-size:26px}.private-rating-card{padding:14px 11px}.private-rating-card strong{font-size:35px}.private-earnings-card>strong{font-size:34px}.private-stat-row b{font-size:22px}}
+
+ .private-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 13px;border:1px solid #293b2e;border-radius:14px;background:#080f0b}
+ .private-view-switch span,.private-view-switch a{min-height:44px;display:grid;place-items:center;border-radius:10px;text-decoration:none;color:#c5cec5;font-size:13px;font-weight:700}
+ .private-view-switch .active{background:#c8f169;color:#10170e}
+ .private-avatar-wrap{position:relative;flex:none}
+ .private-avatar-edit{position:absolute;right:-2px;bottom:0;width:31px;height:31px;border:2px solid #0c1a11;border-radius:50%;background:#c8f169;color:#10170e;font-size:15px}
+ .private-identity-copy h2{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ .private-identity-actions button{min-height:48px}
+ .private-wager-card>strong{font:900 32px monospace;white-space:nowrap;color:#c8f169}
+ .private-wager-stats b{color:#c8f169}
+ .private-cashout-button:disabled{opacity:.55;cursor:not-allowed}
+ .private-achievements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:13px}
+ .private-achievements>div{min-height:82px;padding:12px;border:1px solid #293b2e;border-radius:13px;background:#0c1510;display:grid;align-content:center;gap:7px}
+ .private-achievements b{font:800 18px monospace;color:#c8f169}
+ .private-achievements span{font-size:11px;color:#b4beb8}
+ .private-rating-history svg{width:100%;height:145px;margin-top:12px}
+ .private-rating-history .private-card-top h2{font-size:18px;margin:6px 0 0}
+ .private-rating-history select{background:#0b140e;color:#f2f6ed;border:1px solid #52644b;border-radius:9px;padding:9px;font-size:11px}
+ .private-rating-history>p{color:#9aa69f;font-size:12px}
+ .private-signout{width:100%;height:48px;margin:12px 0 0;border:0;background:transparent;color:#9aa69f;font-size:13px;font-weight:700}
+ @media(max-width:430px){.private-profile{padding:0 5px}.private-identity-card{padding:16px 14px}.private-avatar{width:88px;height:88px;font-size:32px}.private-identity-copy h2{font-size:25px}.private-identity-copy small{font-size:10px}.private-identity-copy p{font-size:11px}.private-rating-card strong{font-size:35px}}
  `}</style></main>;
 }
