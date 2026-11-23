@@ -267,11 +267,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
     <nav className="site-mobile-bottom" aria-label="Primary navigation">
       <Link className={pathname === "/" ? "active" : ""} href="/" aria-current={pathname === "/" ? "page" : undefined}><MenuIcon name="home" /><span>Home</span></Link>
       <Link className={isCompetitionPage ? "active" : ""} href="/competition" aria-current={isCompetitionPage ? "page" : undefined}><MenuIcon name="trophy" /><span>Competition</span></Link>
-      {isStaff ? (
-        <Link className={"site-mobile-record" + (pathname === "/admin" ? " active" : "")} href="/admin?section=match" aria-label="Record match"><span className="site-mobile-record-icon"><MenuIcon name="plus" /></span><span>Record</span></Link>
-      ) : (
-        <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" aria-current={pathname === "/predictions" ? "page" : undefined}><MenuIcon name="target" /><span>Predictions</span></Link>
-      )}
+      <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" aria-current={pathname === "/predictions" ? "page" : undefined}><MenuIcon name="target" /><span>Predictions</span></Link>
       <Link className={isPlayersPage ? "active" : ""} href="/players" aria-current={isPlayersPage ? "page" : undefined}><MenuIcon name="players" /><span>Players</span></Link>
       {signedIn ? (
         <Link className={isOwnProfile ? "active" : ""} href="/account" aria-current={isOwnProfile ? "page" : undefined}>

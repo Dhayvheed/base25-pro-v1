@@ -11,7 +11,7 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
- const [searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
+ const [searchVisible,setSearchVisible]=useState(true),[cashoutNotice,setCashoutNotice]=useState(false),[profileEditNotice,setProfileEditNotice]=useState(false),[wagerEarnings,setWagerEarnings]=useState(0);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
   const {data:{session}}=await supabase.auth.getSession();
@@ -21,16 +21,17 @@ export default function PlayerProfile(){
   if(mineError||!own?.id){setLoading(false);return;}
   const playerId=own.id as string;
   setId(playerId);
-  const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
+  const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions},{data:wagerTotal}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",playerId).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${playerId},player_two_id.eq.${playerId}`).order("played_at",{ascending:false}),
    supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("weekly_leaderboard_archive_entries").select("rank,weekly_elo,matches_played,wins,losses,win_percentage,archive:weekly_leaderboard_archives(week_start,week_end)").eq("player_id",playerId).order("rank",{ascending:true}),
-   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount,payout_confirmed_at").eq("player_id",playerId).order("week_start",{ascending:false})
+   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount,payout_confirmed_at").eq("player_id",playerId).order("week_start",{ascending:false}),
+   supabase.rpc("get_player_wager_winnings",{p_player_id:playerId})
   ]);
   if(!active)return;
-  setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
+  setWagerEarnings(Number(wagerTotal||0));setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
   const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===playerId)+1);
   if(rows.length){const {data:rackRows,error:rackError}=await supabase.from("match_racks").select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").in("match_id",rows.map((m:any)=>m.id)).order("rack_number",{ascending:true});
    if(rackError)console.error("Could not load rack details:",rackError);
@@ -54,50 +55,52 @@ export default function PlayerProfile(){
  const elo=Number(player.elo_rating)||1000;
  const readyToCollect=championHistory.filter((w:any)=>!w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
  const paidEarnings=championHistory.filter((w:any)=>w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
+ const topFiveFinishes=weeklyHistory.filter((w:any)=>Number(w.rank)>0&&Number(w.rank)<=5).length;
+ const weeklyLeaderFinishes=weeklyHistory.filter((w:any)=>Number(w.rank)===1).length;
+ const hasMatches=Number(player.matches_played??matches.length)>0;
  const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.origin+`/players/${player.id}`});else if(navigator.clipboard)await navigator.clipboard.writeText(text+"\\n"+location.origin+`/players/${player.id}`);};
  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
  <section className="private-profile">
   <header className="private-topbar">
-   <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
+   <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setProfileEditNotice((v)=>!v)}>☷</button>
   </header>
-  <section className="private-identity-card">
-   <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
-    <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
-   </div>
-   <div className="private-identity-actions" style={{gridTemplateColumns:"1fr"}}><button onClick={shareProfile}>Share profile</button></div><p style={{margin:"10px 2px 0",fontSize:11,color:"#9eaa9b"}}>Username is managed by BASE25 and cannot be changed by players. Contact an admin if a correction is needed.</p>
-  </section>
-
-  <section className="private-prediction-card">
+  <div className="private-view-switch" role="group" aria-label="Profile view"><span className="active">My view</span><Link href={"/players/"+id+"?view=public"}>Preview as public</Link></div>
+      <section className="private-identity-card">
+    <div className="private-identity-main"><div className="private-avatar-wrap"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div><button className="private-avatar-edit" type="button" onClick={()=>setProfileEditNotice(v=>!v)} aria-label="Edit profile photo">✎</button></div>
+     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>{player.bio ? "“"+player.bio+"”" : "“Play smart. Clear tables.”"}</p></div>
+    </div>
+    <div className="private-rank-chip"><strong>{hasMatches&&rank?`#${rank}`:"Unranked"}</strong><span>GLOBAL RANK</span></div><div className="private-identity-actions"><button type="button" onClick={()=>setProfileEditNotice(v=>!v)}>Edit profile</button><button onClick={shareProfile}>Share</button></div>
+    {profileEditNotice&&<p className="private-inline-notice">Profile photo, bio and display-detail editing is not connected yet. No profile changes have been made.</p>}
+   </section>
+   <section className="private-prediction-card">
    <div className="private-card-top"><small>NEXT UP · THIS WEEK</small><span>BASE25 PRO</span></div>
    <h3>Prediction questions are open</h3><p>Make your picks before the first rack.</p>
    <Link href="/predictions">Make predictions</Link>
   </section>
 
   <section className="private-rating-grid">
-   <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{elo.toLocaleString()}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
-   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{Number(currentWeek?.elo_rating??elo).toLocaleString()}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Monday.</p></div>
+   <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{hasMatches?elo.toLocaleString():"Unranked"}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
+   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{hasMatches?Number(currentWeek?.elo_rating??elo).toLocaleString():"Unranked"}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Saturday.</p></div>
   </section>
 
   <section className="private-earnings-card">
    <div className="private-card-top"><small>ALL-TIME TOURNAMENT EARNINGS</small><span>Public</span></div>
    <strong>₦{totalEarnings.toLocaleString("en-NG")}</strong><p>{championHistory.length} championship win{championHistory.length===1?"":"s"}</p>
    <div className="private-cashout-box"><div><small>READY TO COLLECT AT THE BASE</small><b>₦{readyToCollect.toLocaleString("en-NG")}</b></div><span>Show ID<br/>{player.player_code}</span></div>
-   <button className="private-cashout-button" onClick={()=>setCashoutNotice(true)}>Request cashout at base</button>
+   <button className="private-cashout-button" disabled={readyToCollect<=0} onClick={()=>setCashoutNotice(true)}>{readyToCollect>0?"Request cashout at base":"Nothing to collect yet"}</button>
    <small className="private-cashout-help">Paid in person by an admin. No bank details needed.</small>
    {cashoutNotice&&<div className="private-inline-notice">Please show your player ID to the BASE25 admin at the venue to collect confirmed winnings. <button onClick={()=>setCashoutNotice(false)}>×</button></div>}
   </section>
 
   <section className="private-wager-card">
    <div className="private-card-top"><small>WAGER EARNINGS</small><span>Public</span></div>
-   <strong>Wager tracking not active yet</strong><p>Confirmed player-versus-player winnings will appear here.</p>
-   <div className="private-wager-stats"><div><b>—</b><span>Won</span></div><div><b>Private</b><span>Lost</span></div><div><b>—</b><span>Wager record</span></div></div>
-   <div className="private-wager-foot">Money lost is private by default. <button onClick={()=>setShowLosses(v=>!v)}>{showLosses?"Public":"Keep private"}</button></div>
+   <strong>{wagerEarnings>0?"+":""}₦{wagerEarnings.toLocaleString("en-NG")}</strong><p>Confirmed player-versus-player wager winnings.</p>
+   <div className="private-wager-stats"><div><b>—</b><span>Won</span></div><div><b>—</b><span>Lost</span></div><div><b>—</b><span>Wager record</span></div></div><small className="private-cashout-help">Detailed wager totals are not available in the current data.</small>
   </section>
 
   <section className="private-section">
    <small>PRIVACY</small><h2>Who sees what</h2><p>Always public: ratings, rank, tournament earnings, confirmed wager winnings, achievements, rating chart and match history.</p>
    <div className="private-setting-row"><div><b>Appear in player search</b><span>Others can find you by name or ID</span></div><button className={searchVisible?"toggle on":"toggle"} onClick={()=>setSearchVisible(v=>!v)} aria-pressed={searchVisible}><i/></button></div>
-   <div className="private-setting-row"><div><b>Show money lost</b><span>Private by default. Turn on only if you want losses public.</span></div><button className={showLosses?"toggle on":"toggle"} onClick={()=>setShowLosses(v=>!v)} aria-pressed={showLosses}><i/></button></div>
   </section>
 
   <section className="private-section private-account-section">
@@ -108,7 +111,10 @@ export default function PlayerProfile(){
    <Link href="/notifications"><div><b>Notifications</b><span>Match results, predictions, payouts</span></div><i>›</i></Link>
   </section>
 
+  <section className="private-section private-achievement-section"><small>CAREER MILESTONES</small><h2>Achievements</h2><div className="private-achievements"><div><b>♛ {championHistory.length}</b><span>Saturday champion</span></div><div><b>♜ {weeklyLeaderFinishes||"—"}</b><span>Weekly leader</span></div><div><b>★ {topFiveFinishes||"—"}</b><span>Top 5 finishes</span></div><div><b>▥ {Number(player.highest_elo??elo).toLocaleString("en-NG")}</b><span>Peak ELO</span></div></div></section>
+  <section className="private-section private-rating-history"><div className="private-card-top"><div><small>RATING HISTORY</small><h2>Rating progression</h2></div><select aria-label="Rating history range" value={range} onChange={e=>{setRange(e.target.value);setActivePoint(null);}}><option value="10">Last 10</option><option value="5">Last 5</option><option value="all">All</option></select></div>{matches.length?<svg viewBox="0 0 1000 190" preserveAspectRatio="none" role="img" aria-label="Rating progression"><defs><linearGradient id="privateRatingFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#c8f169" stopOpacity=".3"/><stop offset="100%" stopColor="#c8f169" stopOpacity="0"/></linearGradient></defs><path d={area} fill="url(#privateRatingFill)"/><path d={line} fill="none" stroke="#c8f169" strokeWidth="5" strokeLinecap="round"/>{points.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="5" fill="#c8f169"/>)}</svg>:<p>No matches yet</p>}</section>
   <div className="private-stat-row"><div><b>{player.wins??0}</b><span>Wins</span></div><div><b>{player.losses??0}</b><span>Losses</span></div><div><b>{Number(player.win_percentage??0).toFixed(1)}%</b><span>Win rate</span></div><div><b>{player.matches_played??matches.length}</b><span>Matches</span></div></div>
+  <button className="private-signout" type="button" onClick={async()=>{await supabase?.auth.signOut();window.location.replace("/login");}}>Sign out</button>
  </section>
  <style jsx>{`
  .pro-profile{width:100%;max-width:920px;margin:22px auto 110px;min-width:0}
@@ -168,5 +174,31 @@ export default function PlayerProfile(){
  .private-account-section>a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #25332a;text-decoration:none;color:#f0f4ed}.private-account-section>a>div{display:grid;gap:4px}.private-account-section>a b{font-size:13px}.private-account-section>a span{font-size:10px;color:#8e9b90}.private-account-section>a>i{font-size:23px;color:#8e9b90;font-style:normal}
  .private-stat-row{display:grid;grid-template-columns:repeat(4,1fr);margin-top:13px;padding:14px 3px;border:1px solid #252f29;border-radius:18px;background:#0d1510}.private-stat-row>div{display:grid;justify-items:center;gap:5px;border-right:1px solid #2c3a30}.private-stat-row>div:last-child{border:0}.private-stat-row b{font:900 25px monospace;color:#c5f36a}.private-stat-row span{font-size:11px;color:#9ba79c}
  @media(max-width:480px){.private-profile{margin:6px auto 90px}.private-identity-card{padding:17px 14px}.private-avatar{width:100px;height:100px}.private-identity-copy h2{font-size:26px}.private-rating-card{padding:14px 11px}.private-rating-card strong{font-size:35px}.private-earnings-card>strong{font-size:34px}.private-stat-row b{font-size:22px}}
+
+ .private-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 13px;border:1px solid #293b2e;border-radius:14px;background:#080f0b}
+ .private-view-switch span,.private-view-switch a{min-height:44px;display:grid;place-items:center;border-radius:10px;text-decoration:none;color:#c5cec5;font-size:13px;font-weight:700}
+ .private-view-switch .active{background:#c8f169;color:#10170e}
+ .private-avatar-wrap{position:relative;flex:none}
+ .private-avatar-edit{position:absolute;right:-2px;bottom:0;width:31px;height:31px;border:2px solid #0c1a11;border-radius:50%;background:#c8f169;color:#10170e;font-size:15px}
+ .private-identity-copy h2{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ .private-identity-actions button{min-height:48px}
+ .private-wager-card>strong{font:900 32px monospace;white-space:nowrap;color:#c8f169}
+ .private-wager-stats b{color:#c8f169}
+ .private-cashout-button:disabled{opacity:.55;cursor:not-allowed}
+ .private-achievements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:13px}
+ .private-achievements>div{min-height:82px;padding:12px;border:1px solid #293b2e;border-radius:13px;background:#0c1510;display:grid;align-content:center;gap:7px}
+ .private-achievements b{font:800 18px monospace;color:#c8f169}
+ .private-achievements span{font-size:11px;color:#b4beb8}
+ .private-rating-history svg{width:100%;height:145px;margin-top:12px}
+ .private-rating-history .private-card-top h2{font-size:18px;margin:6px 0 0}
+ .private-rating-history select{background:#0b140e;color:#f2f6ed;border:1px solid #52644b;border-radius:9px;padding:9px;font-size:11px}
+ .private-rating-history>p{color:#9aa69f;font-size:12px}
+ .private-signout{width:100%;height:48px;margin:12px 0 0;border:0;background:transparent;color:#9aa69f;font-size:13px;font-weight:700}
+ @media(max-width:430px){.private-profile{padding:0 5px}.private-identity-card{padding:16px 14px}.private-avatar{width:88px;height:88px;font-size:32px}.private-identity-copy h2{font-size:25px}.private-identity-copy small{font-size:10px}.private-identity-copy p{font-size:11px}.private-rating-card strong{font-size:35px}}
+
+ .private-profile{font-family:Inter,Arial,sans-serif;background:radial-gradient(ellipse at 98% 0%,#103b26 0%,transparent 34%)}
+ .private-rank-chip{display:flex;align-items:center;gap:9px;margin-top:14px;padding:9px 12px;border:1px solid #354a32;border-radius:13px;background:#0b150e;width:max-content;max-width:100%}
+ .private-rank-chip strong{font:900 17px monospace;color:#e8c547;white-space:nowrap}
+ .private-rank-chip span{font:700 8px monospace;letter-spacing:.12em;color:#b4beb8}
  `}</style></main>;
 }
