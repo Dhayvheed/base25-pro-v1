@@ -142,6 +142,10 @@ export default function CompetitionPage() {
   }, []);
 
   const visiblePlayers = useMemo(() => showAllPlayers ? players : players.slice(0, 5), [players, showAllPlayers]);
+  const leaderboardInitialPlayers = useMemo(
+    () => players.map((player) => ({ ...player, boardmanBonusPoints: Number((player as any).boardmanBonusPoints || 0) })),
+    [players]
+  );
   const potAmount = kingsPot ? Math.max(0, Number(kingsPot.pot_amount || 0)) : null;
   const nextMilestone = potAmount === null ? 3000 : (Math.floor(potAmount / 3000) + 1) * 3000;
   const progress = potAmount === null ? 0 : Math.min(100, (potAmount / nextMilestone) * 100);
@@ -222,7 +226,7 @@ export default function CompetitionPage() {
           <Link href="/how-it-works"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></svg>How it works</Link>
         </nav>
 
-        <LeaderboardPeriodFilter initialPlayers={players.map((player) => ({ ...player, boardmanBonusPoints: Number((player as any).boardmanBonusPoints || 0) }))} />
+        <LeaderboardPeriodFilter initialPlayers={leaderboardInitialPlayers} />
       </div>
 
       <style jsx>{`
