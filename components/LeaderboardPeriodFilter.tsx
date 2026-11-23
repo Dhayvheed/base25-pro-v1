@@ -107,8 +107,10 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     let alive=true;
     async function loadBoardman(){
       if(!supabase)return;
-      const {data}=await supabase.from("players").select("id,username,player_code,photo_url,elo_rating,wins,losses").eq("designation","boardman").limit(1).maybeSingle();
-      if(alive)setBoardman(data as BoardmanProfile|null);
+      const {data}=await supabase.from("players").select("id,username,player_code,photo_url").eq("designation","boardman").limit(1).maybeSingle();
+      if(!data){if(alive)setBoardman(null);return;}
+      const {data:stats}=await supabase.from("player_public_leaderboard").select("wins,losses").eq("id",data.id).maybeSingle();
+      if(alive)setBoardman({...data,elo_rating:1530,wins:Number(stats?.wins||0),losses:Number(stats?.losses||0)} as BoardmanProfile);
     }
     loadBoardman();
     return()=>{alive=false;};
