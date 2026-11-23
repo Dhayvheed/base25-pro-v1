@@ -61,8 +61,9 @@ export default function PlayerProfile(){
   <header className="private-topbar">
    <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
   </header>
-  <section className="private-identity-card">
-   <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
+  <div className="private-view-switch" role="group" aria-label="Profile view"><span className="active">My view</span><Link href={"/players/"+id+"?view=public"}>Preview as public</Link></div>
+   <section className="private-identity-card">
+   <div className="private-identity-main"><div className="private-avatar-wrap"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
    </div>
    <div className="private-identity-actions" style={{gridTemplateColumns:"1fr"}}><button onClick={shareProfile}>Share profile</button></div><p style={{margin:"10px 2px 0",fontSize:11,color:"#9eaa9b"}}>Username is managed by BASE25 and cannot be changed by players. Contact an admin if a correction is needed.</p>
@@ -76,21 +77,21 @@ export default function PlayerProfile(){
 
   <section className="private-rating-grid">
    <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{elo.toLocaleString()}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
-   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{Number(currentWeek?.elo_rating??elo).toLocaleString()}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Monday.</p></div>
+   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{Number(currentWeek?.elo_rating??elo).toLocaleString()}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Saturday.</p></div>
   </section>
 
   <section className="private-earnings-card">
    <div className="private-card-top"><small>ALL-TIME TOURNAMENT EARNINGS</small><span>Public</span></div>
    <strong>₦{totalEarnings.toLocaleString("en-NG")}</strong><p>{championHistory.length} championship win{championHistory.length===1?"":"s"}</p>
    <div className="private-cashout-box"><div><small>READY TO COLLECT AT THE BASE</small><b>₦{readyToCollect.toLocaleString("en-NG")}</b></div><span>Show ID<br/>{player.player_code}</span></div>
-   <button className="private-cashout-button" onClick={()=>setCashoutNotice(true)}>Request cashout at base</button>
+   <button className="private-cashout-button" disabled={readyToCollect<=0} onClick={()=>setCashoutNotice(true)}>{readyToCollect>0?"Request cashout at base":"Nothing to collect yet"}</button>
    <small className="private-cashout-help">Paid in person by an admin. No bank details needed.</small>
    {cashoutNotice&&<div className="private-inline-notice">Please show your player ID to the BASE25 admin at the venue to collect confirmed winnings. <button onClick={()=>setCashoutNotice(false)}>×</button></div>}
   </section>
 
   <section className="private-wager-card">
    <div className="private-card-top"><small>WAGER EARNINGS</small><span>Public</span></div>
-   <strong>Wager tracking not active yet</strong><p>Confirmed player-versus-player winnings will appear here.</p>
+   <strong>{wagerEarnings>0?"+":""}₦{wagerEarnings.toLocaleString("en-NG")}</strong><p>Confirmed player-versus-player wager winnings.</p>
    <div className="private-wager-stats"><div><b>—</b><span>Won</span></div><div><b>Private</b><span>Lost</span></div><div><b>—</b><span>Wager record</span></div></div>
    <div className="private-wager-foot">Money lost is private by default. <button onClick={()=>setShowLosses(v=>!v)}>{showLosses?"Public":"Keep private"}</button></div>
   </section>
