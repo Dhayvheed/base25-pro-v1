@@ -55,6 +55,9 @@ export default function PlayerProfile(){
  const elo=Number(player.elo_rating)||1000;
  const readyToCollect=championHistory.filter((w:any)=>!w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
  const paidEarnings=championHistory.filter((w:any)=>w.payout_confirmed_at).reduce((sum:number,w:any)=>sum+Number(w.prize_amount||0),0);
+ const topFiveFinishes=weeklyHistory.filter((w:any)=>Number(w.rank)>0&&Number(w.rank)<=5).length;
+ const weeklyLeaderFinishes=weeklyHistory.filter((w:any)=>Number(w.rank)===1).length;
+ const hasMatches=Number(player.matches_played??matches.length)>0;
  const shareProfile=async()=>{const text=`BASE25 PRO PLAYER CARD\\n@${player.username} · ${player.player_code}\\nELO: ${elo.toLocaleString()}\\nCareer record: ${player.wins??0}W / ${player.losses??0}L`;if(navigator.share)await navigator.share({title:"BASE25 PRO Player Profile",text,url:location.origin+`/players/${player.id}`});else if(navigator.clipboard)await navigator.clipboard.writeText(text+"\\n"+location.origin+`/players/${player.id}`);};
  return <main className="shell redesign-shell player-profile-page"><SiteNavigation/>
  <section className="private-profile">
@@ -76,8 +79,8 @@ export default function PlayerProfile(){
   </section>
 
   <section className="private-rating-grid">
-   <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{elo.toLocaleString()}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
-   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{Number(currentWeek?.elo_rating??elo).toLocaleString()}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Saturday.</p></div>
+   <div className="private-rating-card"><small>ALL-TIME RATING</small><strong>{hasMatches?elo.toLocaleString():"Unranked"}</strong><span>Peak {Number(player.highest_elo??elo).toLocaleString()}</span><p>Career rating. Never resets.</p></div>
+   <div className="private-rating-card weekly"><small>WEEKLY RATING</small><strong>{hasMatches?Number(currentWeek?.elo_rating??elo).toLocaleString():"Unranked"}</strong><span><b>#{currentWeekRank||"—"}</b> this week</span><p>Resets every Saturday.</p></div>
   </section>
 
   <section className="private-earnings-card">
@@ -108,6 +111,9 @@ export default function PlayerProfile(){
    <Link href="/notifications"><div><b>Notifications</b><span>Match results, predictions, payouts</span></div><i>›</i></Link>
   </section>
 
+  <section className="private-section private-achievement-section"><small>CAREER MILESTONES</small><h2>Achievements</h2><div className="private-achievements"><div><b>♛ {championHistory.length}</b><span>Saturday champion</span></div><div><b>♜ {weeklyLeaderFinishes||"—"}</b><span>Weekly leader</span></div><div><b>★ {topFiveFinishes||"—"}</b><span>Top 5 finishes</span></div><div><b>▥ {Number(player.highest_elo??elo).toLocaleString("en-NG")}</b><span>Peak ELO</span></div></div></section>
+  <section className="private-section private-rating-history"><div className="private-card-top"><div><small>RATING HISTORY</small><h2>Rating progression</h2></div><select aria-label="Rating history range" value={range} onChange={e=>{setRange(e.target.value);setActivePoint(null);}}><option value="10">Last 10</option><option value="5">Last 5</option><option value="all">All</option></select></div>{matches.length?<svg viewBox="0 0 1000 190" preserveAspectRatio="none" role="img" aria-label="Rating progression"><defs><linearGradient id="privateRatingFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#c8f169" stopOpacity=".3"/><stop offset="100%" stopColor="#c8f169" stopOpacity="0"/></linearGradient></defs><path d={area} fill="url(#privateRatingFill)"/><path d={line} fill="none" stroke="#c8f169" strokeWidth="5" strokeLinecap="round"/>{points.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="5" fill="#c8f169"/>)}</svg>:<p>No matches yet</p>}</section>
+  <button className="private-signout" type="button" onClick={async()=>{await supabase?.auth.signOut();window.location.replace("/login");}}>Sign out</button>
   <div className="private-stat-row"><div><b>{player.wins??0}</b><span>Wins</span></div><div><b>{player.losses??0}</b><span>Losses</span></div><div><b>{Number(player.win_percentage??0).toFixed(1)}%</b><span>Win rate</span></div><div><b>{player.matches_played??matches.length}</b><span>Matches</span></div></div>
  </section>
  <style jsx>{`
