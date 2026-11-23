@@ -121,7 +121,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
       <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
     </div>
-    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rankedRows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows">}<WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
+    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rankedRows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows"><WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
     {rankedRows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
     <style jsx>{`
       .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
