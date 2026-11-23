@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 import { calculatePeriodLeaderboard, type PeriodPlayer, type PeriodMatch, type PeriodRack } from "@/lib/leaderboard-period";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,8 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
   const [filter,setFilter]=useState<FilterKey>("this_week");
   const [open,setOpen]=useState(false);
   const [rows,setRows]=useState<Row[]>(initialPlayers);
+  const latestInitialPlayers=useRef(initialPlayers);
+  latestInitialPlayers.current=initialPlayers;
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   const [showAll,setShowAll]=useState(false);
@@ -53,7 +55,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     let alive=true;
     async function load(){
       if(!supabase)return;
-      if(filter==="this_week"){setRows(initialPlayers);return;}
+      if(filter==="this_week"){setRows(latestInitialPlayers.current);return;}
       setBusy(true);setMessage("");
       try{
         const [playersResult,matchesResult]=await Promise.all([
@@ -91,7 +93,11 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
       finally{if(alive)setBusy(false);}
     }
     load();return()=>{alive=false;};
-  },[filter,range.start?.getTime(),range.end?.getTime(),initialPlayers]);
+  },[filter,range.start?.getTime(),range.end?.getTime()]);
+
+  useEffect(()=>{
+    if(filter==="this_week")setRows(initialPlayers);
+  },[initialPlayers,filter]);
 
   const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};
   const visibleRows=showAll?rows:rows.slice(0,5);
