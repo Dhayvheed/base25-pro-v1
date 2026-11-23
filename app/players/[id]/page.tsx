@@ -229,7 +229,7 @@ export default function PublicPlayerProfile() {
       <SiteNavigation />
       <div className="public-profile">
         <header className="public-hero">
-          <div className="public-hero-top"><Link href="/players" className="public-back" aria-label="Back to players">←</Link><span className="public-page-title">Player profile</span><button type="button" className="public-more" aria-label="More options">•••</button></div><div className="public-view-label">◉ &nbsp; Public view · what other players see</div>
+          <div className="public-hero-top"><Link href={new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").has("view") ? "/account" : "/players"} className="public-back" aria-label="Back">←</Link><span className="public-page-title">Player profile</span><button type="button" className="public-more" aria-label="Report or block player" onClick={() => window.alert("To report or block a player, contact a BASE25 admin.")}>•••</button></div><div className="public-view-label">◉ &nbsp; Public view · what other players see</div>
           <div className="public-hero-main">
             <div className="public-avatar">{player.photo_url ? <img src={player.photo_url} alt={player.username} /> : player.username?.[0]?.toUpperCase()}</div>
             <div className="public-identity">
@@ -238,7 +238,7 @@ export default function PublicPlayerProfile() {
           <div className="public-profile-actions"><div className="public-rank-pill"><span>👑</span><b>{hasMatches && rank ? `#${rank}` : "Unranked"}</b><small>GLOBAL RANK</small></div><button type="button" className="public-share-button" onClick={share}>Share</button></div><button type="button" className="public-matchup-toggle" onClick={openMatchup}>▥ &nbsp; Matchup calculator</button>
         </header>
 
-        {viewer && matchupReady && <section className="public-mutual-card">
+        {viewer && viewer.id !== id && matchupReady && <section className="public-mutual-card">
           <div className="public-mutual-title">YOU VS {player.username?.toUpperCase()}</div>
           <div className="public-mutual-body">
             <div className="public-mutual-record"><strong>{mutualWins} – {mutualLosses}</strong><span>{lastMutualMatch ? "Last met " + new Date(lastMutualMatch.played_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" }) + " · " + (viewer.id === lastMutualMatch.player_one_id ? (relationPlayer(lastMutualMatch.two)?.player_code || "") : (relationPlayer(lastMutualMatch.one)?.player_code || "")) : "No previous meeting"}</span></div>
@@ -283,7 +283,7 @@ export default function PublicPlayerProfile() {
           <div className="public-rating-card">
             <div className="public-card-label">ALL-TIME RATING</div>
             <strong>{hasMatches ? elo.toLocaleString() : "Unranked"}</strong>
-            <div className="public-rating-foot"><span>PEAK RATING</span><b>{peak.toLocaleString()}</b></div>
+            <div className="public-rating-foot"><span>PEAK {hasMatches ? peak.toLocaleString() : "—"}</span><b>Career rating. Never resets.</b></div>
             <div className="public-rating-glow" />
           </div>
           <div className="public-week-card">
@@ -371,6 +371,14 @@ export default function PublicPlayerProfile() {
         <footer className="public-profile-footer"><span>BASE25 PRO</span><span>THE TABLE REMEMBERS.</span><Link href="/players">Explore players →</Link></footer>
       </div>
       <style jsx>{`
+        .public-player-page,.public-profile{font-family:Inter,Arial,sans-serif}
+        .public-profile{background:radial-gradient(ellipse at 96% 0%,#103b26 0%,transparent 38%);padding-top:2px}
+        .public-wager-breakdown{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #ffffff18;border-bottom:1px solid #ffffff18}
+        .public-wager-breakdown>div{display:grid;justify-items:center;gap:4px;padding:10px 2px;border-right:1px solid #ffffff18}
+        .public-wager-breakdown>div:last-child{border:0}
+        .public-wager-breakdown b{font:800 17px monospace}
+        .public-wager-breakdown small{font-size:10px;color:#b4beb8}
+
         .public-profile{width:100%;max-width:780px;margin:22px auto 110px;min-width:0;color:#f3f5ef}
         .public-hero-top{display:grid;grid-template-columns:50px 1fr 50px;align-items:center}.public-back,.public-more{height:48px;width:50px;display:grid;place-items:center;border:1px solid #273b2b;border-radius:14px;background:#09110d;color:#f2f6ef;text-decoration:none;font-size:24px}.public-more{font-size:16px;letter-spacing:2px}.public-page-title{text-align:center;font-size:17px;font-weight:800}.public-view-label{text-align:center;margin-top:14px;color:#9da99a;font-size:12px}.public-hero-main{grid-template-columns:108px minmax(0,1fr);margin:22px 0 18px}.public-identity h1{font-size:clamp(25px,5vw,34px)}.public-identity p{font-style:italic}.public-verified{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#c5f36a;color:#0b150d;font-style:normal;font-size:13px;vertical-align:middle}.public-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;margin-top:8px}
         .public-rank-pill{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #354a32;border-radius:13px;background:#0b150e}.public-rank-pill span{font-size:19px;color:#e8cb36}.public-rank-pill b{font:900 18px monospace;color:#e8cb36}.public-rank-pill small{font:700 8px monospace;letter-spacing:.1em;color:#8f9c88}
