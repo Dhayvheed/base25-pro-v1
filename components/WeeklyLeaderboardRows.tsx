@@ -50,11 +50,14 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
   })}</>;
 }
 function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
-  return <>{players.map((player, index) => {
-    const rank = index + 1;
+  let eligibleRank = 0;
+  return <>{players.map((player) => {
+    const isOdumodu = player.username?.trim().toLowerCase() === "odumodu";
+    const rank = isOdumodu ? null : ++eligibleRank;
+    const rankBackground = rank === 1 ? "#f2c230" : rank === 2 ? "#2f5fd0" : rank === 3 ? "#d9402f" : rank === 4 ? "#7b3fa0" : "#e8782a";
     return <Link href={"/players/" + player.id} className={"competition-ref-player-row " + (rank === 1 ? "is-leader" : "")} key={player.id}
       style={{ display: "grid", gridTemplateColumns: "26px 34px minmax(0,1fr) 48px 46px", alignItems: "center", columnGap: 10, minHeight: 56, padding: "0 10px", border: rank === 1 ? "1px solid rgba(200,241,105,.55)" : "1px solid transparent", borderBottomColor: rank === 1 ? "rgba(200,241,105,.55)" : "#1f2a24", borderRadius: 14, background: rank === 1 ? "linear-gradient(90deg,rgba(200,241,105,.18),rgba(200,241,105,.04))" : "transparent", color: "#f4f5f2", textDecoration: "none", width: "100%", boxSizing: "border-box" }}>
-      <span className={"competition-ref-rank rank-" + rank} style={{ width: 26, height: 26, display: "grid", placeItems: "center", borderRadius: "50%", background: rank === 1 ? "#f2c230" : rank === 2 ? "#2f5fd0" : rank === 3 ? "#d9402f" : rank === 4 ? "#7b3fa0" : "#e8782a", color: "#111", fontSize: 10, fontWeight: 900, lineHeight: 1, flexShrink: 0, boxShadow: "inset -2px -2px 4px rgba(0,0,0,.35)" }}><b style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", color: "#111" }}>{rank}</b></span>
+      <span className={"competition-ref-rank " + (rank === null ? "is-empty" : "rank-" + rank)} style={{ width: 26, height: 26, display: "grid", placeItems: "center", borderRadius: "50%", background: rank === null ? "transparent" : rankBackground, color: "#111", fontSize: 10, fontWeight: 900, lineHeight: 1, flexShrink: 0, boxShadow: rank === null ? "none" : "inset -2px -2px 4px rgba(0,0,0,.35)" }}>{rank !== null && <b style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", color: "#111" }}>{rank}</b>}</span>
       <span className="competition-ref-avatar" style={{ width: 34, height: 34, flex: "0 0 34px", display: "grid", placeItems: "center", position: "relative", overflow: "visible", border: "2px solid #c8f169", borderRadius: "50%", background: "#17251b", color: "#c8f169", fontSize: 14, fontWeight: 900, lineHeight: 1 }}>
         {player.photo_url ? <img src={player.photo_url} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : player.username?.[0]?.toUpperCase() || "?"}
         {rank === 1 && <i aria-label="Weekly leader" style={{ position: "absolute", right: -7, top: -8, color: "#e8c547", fontSize: 14, fontStyle: "normal" }}>♛</i>}
@@ -72,7 +75,6 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
     </Link>;
   })}</>;
 }
-
 export async function getBoardmanSlayerPlayerIds(client: any): Promise<Set<string>> {
   const { data: boardmen, error: boardmenError } = await client
     .from("players")
