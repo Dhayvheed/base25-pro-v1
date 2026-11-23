@@ -57,7 +57,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
   const [customEnd,setCustomEnd]=useState(isoDay(lagosDate()));
   const [rows,setRows]=useState<Row[]>(initialPlayers);
   const [busy,setBusy]=useState(false);
-  const [message,setMessage]=useState("");
+  const [message,setMessage]=useState("");\n  const [showAll,setShowAll]=useState(false);
   const [now]=useState(()=>new Date());
   const range=useMemo(()=>boundaries(filter,now,customStart,customEnd),[filter,now,customStart,customEnd]);
   const label=rangeLabel(range.start,range.end,filter);
@@ -97,7 +97,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
           if(alive)setRows(result);
         }else{
           if(!range.start||!range.end)throw new Error("Choose a valid date range.");
-          const result=calculatePeriodLeaderboard(players,matches,racks,range.start.toISOString());
+          const bonusData=await getBoardmanBonusData(supabase);\n          const result=calculatePeriodLeaderboard(players,matches,racks,range.start.toISOString(),new Set(bonusData.bonusByMatchId.keys()));
           if(alive)setRows(result);
         }
       }catch(e){if(alive)setMessage("Couldn't load this leaderboard period. Please try again.");}
@@ -106,7 +106,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     load();return()=>{alive=false;};
   },[filter,customStart,customEnd,range.start?.getTime(),range.end?.getTime(),initialPlayers]);
 
-  const select=(key:FilterKey)=>{setFilter(key);setOpen(false);};
+  const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};\n  const visibleRows=showAll?rows:rows.slice(0,5);
   return <section className="competition-ref-leaderboard" id="weekly-leaderboard">
     <div className="competition-ref-leaderboard-heading">
       <div><h2>{filter==="this_week"?"This week's leaderboard":"Leaderboard"}</h2><small className="period-current-label">{label}</small></div>
@@ -131,12 +131,12 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
       <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
     </div>
-    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows"><WeeklyLeaderboardRows players={rows.map(p=>({...p,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
+    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows"><WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}\n    {rows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
     <style jsx>{`
       .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
       .competition-ref-leaderboard-heading h2{margin:0}
       .period-current-label{display:block;margin-top:4px;color:#9aa69f;font-size:11px}
-      .period-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #35483a;border-radius:12px;background:#17221b;color:#c8f169;font-size:12px;font-weight:800;cursor:pointer}
+      .period-show-all{width:calc(100% - 8px);min-height:58px;display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 4px 0;border:0;border-radius:15px;background:#c8f169;color:#0a0e0c;font-size:17px;font-weight:900;cursor:pointer}\n      .period-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #35483a;border-radius:12px;background:#17221b;color:#c8f169;font-size:12px;font-weight:800;cursor:pointer}
       .period-filter-trigger.active{background:#c8f169;color:#0a0e0c}
       .period-filter-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:#000a}
       .period-filter-sheet{width:min(100%,560px);max-height:86dvh;overflow:auto;padding:12px 18px calc(24px + env(safe-area-inset-bottom));border:1px solid #304438;border-bottom:0;border-radius:24px 24px 0 0;background:#101813;color:#f4f5f2;box-shadow:0 -16px 50px #0008}
