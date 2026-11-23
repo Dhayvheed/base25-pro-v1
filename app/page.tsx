@@ -48,7 +48,7 @@ export default function Home(){
  }load();const refresh=setInterval(load,15000);return()=>{active=false;clearInterval(refresh);};},[]);
  const totalMatches=Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const totalWins=players.reduce((n,p)=>n+p.wins,0);
- const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,5);
+ const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,6);
  return <main className="shell redesign-shell home-v2">
   <style jsx global>{`
    .home-v2-player-row.is-first{min-height:82px;padding-top:10px;padding-bottom:10px}
