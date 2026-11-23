@@ -2,18 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
-import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 import { calculatePeriodLeaderboard, type PeriodPlayer, type PeriodMatch, type PeriodRack } from "@/lib/leaderboard-period";
 import { supabase } from "@/lib/supabase";
 
-type FilterKey = "this_week" | "last_week" | "last_2_weeks" | "last_3_weeks" | "last_4_weeks" | "last_month" | "last_2_months" | "all_time" | "custom";
+type FilterKey = "this_week" | "last_week" | "last_2_weeks" | "all_time";
 type Row = PeriodPlayer & { elo_rating: number; wins: number; losses: number; matches_played: number; win_percentage: number; boardmanBonusPoints?: number; hasBoardmanSlayerBadge?: boolean };
 
 const options: {key: FilterKey; label: string}[] = [
   {key:"this_week",label:"This Week"},{key:"last_week",label:"Last Week"},
-  {key:"last_2_weeks",label:"Last 2 Weeks"},{key:"last_3_weeks",label:"Last 3 Weeks"},
-  {key:"last_4_weeks",label:"Last 4 Weeks"},{key:"last_month",label:"Last Month"},
-  {key:"last_2_months",label:"Last 2 Months"},{key:"all_time",label:"All Time"},
+  {key:"last_2_weeks",label:"Last 2 Weeks"},{key:"all_time",label:"All Time"},
 ];
 
 function lagosDate(date = new Date()) {
@@ -21,26 +18,17 @@ function lagosDate(date = new Date()) {
   const val=(k:string)=>parts.find(p=>p.type===k)?.value||"";
   return new Date(Number(val("year")),Number(val("month"))-1,Number(val("day")));
 }
-function isoDay(d:Date){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
 function weekStart(d:Date){const x=new Date(d);x.setDate(x.getDate()-((x.getDay()+1)%7));return x;}
-function boundaries(key:FilterKey, now:Date, customStart:string, customEnd:string){
+function boundaries(key:FilterKey, now:Date){
   const today=lagosDate(now), current=weekStart(today);
   if(key==="all_time")return {start:null as Date|null,end:null as Date|null};
-  if(key==="custom"){
-    const start=new Date((customStart||isoDay(today))+"T00:00:00");
-    const end=new Date((customEnd||customStart||isoDay(today))+"T00:00:00");end.setDate(end.getDate()+1);
-    return {start,end};
-  }
   if(key==="this_week")return {start:current,end:new Date(current.getTime()+7*86400000)};
   if(key==="last_week"){const end=current;const start=new Date(end);start.setDate(start.getDate()-7);return {start,end};}
-  if(key==="last_2_weeks"||key==="last_3_weeks"||key==="last_4_weeks"){
-    const weeks=Number(key.split("_")[1]);const start=new Date(current);start.setDate(start.getDate()-(weeks-1)*7);
+  if(key==="last_2_weeks"){
+    const start=new Date(current);start.setDate(start.getDate()-7);
     return {start,end:new Date(current.getTime()+7*86400000)};
   }
-  const monthStart=new Date(today.getFullYear(),today.getMonth(),1);
-  const months=key==="last_month"?1:2;
-  const end=monthStart;const start=new Date(monthStart.getFullYear(),monthStart.getMonth()-months,1);
-  return {start,end};
+  return {start:null as Date|null,end:null as Date|null};
 }
 function dayLabel(d:Date){return d.toLocaleDateString("en-NG",{day:"numeric",month:"short",year:"numeric"});}
 function rangeLabel(start:Date|null,end:Date|null,key:FilterKey){
@@ -53,14 +41,12 @@ function rangeLabel(start:Date|null,end:Date|null,key:FilterKey){
 export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers:Row[]}){
   const [filter,setFilter]=useState<FilterKey>("this_week");
   const [open,setOpen]=useState(false);
-  const [customStart,setCustomStart]=useState(isoDay(lagosDate()));
-  const [customEnd,setCustomEnd]=useState(isoDay(lagosDate()));
   const [rows,setRows]=useState<Row[]>(initialPlayers);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   const [showAll,setShowAll]=useState(false);
   const [now]=useState(()=>new Date());
-  const range=useMemo(()=>boundaries(filter,now,customStart,customEnd),[filter,now,customStart,customEnd]);
+  const range=useMemo(()=>boundaries(filter,now),[filter,now]);
   const label=rangeLabel(range.start,range.end,filter);
 
   useEffect(()=>{
@@ -98,14 +84,14 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
           if(alive)setRows(result);
         }else{
           if(!range.start||!range.end)throw new Error("Choose a valid date range.");
-          const bonusData=await getBoardmanBonusData(supabase);\n          const result=calculatePeriodLeaderboard(players,matches,racks,range.start.toISOString(),new Set(bonusData.bonusByMatchId.keys()));
+          const result=calculatePeriodLeaderboard(players,matches,racks,range.start.toISOString());
           if(alive)setRows(result);
         }
       }catch(e){if(alive)setMessage("Couldn't load this leaderboard period. Please try again.");}
       finally{if(alive)setBusy(false);}
     }
     load();return()=>{alive=false;};
-  },[filter,customStart,customEnd,range.start?.getTime(),range.end?.getTime(),initialPlayers]);
+  },[filter,range.start?.getTime(),range.end?.getTime(),initialPlayers]);
 
   const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};\n  const visibleRows=showAll?rows:rows.slice(0,5);
   return <section className="competition-ref-leaderboard" id="weekly-leaderboard">
@@ -119,14 +105,8 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     {open&&<div className="period-filter-backdrop" onClick={()=>setOpen(false)}>
       <div className="period-filter-sheet" role="dialog" aria-modal="true" aria-label="Filter leaderboard" onClick={e=>e.stopPropagation()}>
         <div className="period-sheet-grabber"/>
-        <div className="period-sheet-heading"><div><strong>Leaderboard filters</strong><small>Choose a period or exact dates</small></div><button type="button" aria-label="Close filters" onClick={()=>setOpen(false)}>×</button></div>
+        <div className="period-sheet-heading"><div><strong>Leaderboard filters</strong><small>Choose a leaderboard period</small></div><button type="button" aria-label="Close filters" onClick={()=>setOpen(false)}>×</button></div>
         <div className="period-options">{options.map(o=><button type="button" key={o.key} className={filter===o.key?"selected":""} onClick={()=>select(o.key)}>{o.label}{filter===o.key&&<span>✓</span>}</button>)}</div>
-        <div className="period-calendar">
-          <strong>Custom date range</strong>
-          <label>From<input type="date" value={customStart} max={customEnd||undefined} onChange={e=>setCustomStart(e.target.value)}/></label>
-          <label>To<input type="date" value={customEnd} min={customStart||undefined} onChange={e=>setCustomEnd(e.target.value)}/></label>
-          <button type="button" className="period-apply" onClick={()=>select("custom")}>Apply dates</button>
-        </div>
       </div>
     </div>}
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
@@ -148,11 +128,6 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
       .period-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
       .period-options button{display:flex;justify-content:space-between;align-items:center;min-height:45px;padding:0 12px;border:1px solid #29392e;border-radius:12px;background:#151f19;color:#dce4dd;font-size:13px;font-weight:650;text-align:left}
       .period-options button.selected{border-color:#c8f169;background:#24351e;color:#c8f169}
-      .period-calendar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:19px;padding-top:16px;border-top:1px solid #29392e}
-      .period-calendar>strong{grid-column:1/-1;font-size:14px}
-      .period-calendar label{display:grid;gap:7px;color:#9eaaa1;font-size:11px}
-      .period-calendar input{width:100%;box-sizing:border-box;padding:11px 8px;border:1px solid #344438;border-radius:10px;background:#18231c;color:#fff;color-scheme:dark;font-size:13px}
-      .period-apply{grid-column:1/-1;min-height:46px;border:0;border-radius:12px;background:#c8f169;color:#0a0e0c;font-weight:900}
       @media(min-width:700px){.period-filter-backdrop{align-items:center;padding:20px}.period-filter-sheet{border:1px solid #304438;border-radius:22px}.period-filter-trigger{padding:10px 14px}}
     `}</style>
   </section>;
