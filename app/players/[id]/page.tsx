@@ -59,6 +59,10 @@ export default function PublicPlayerProfile() {
     let active = true;
     async function load() {
       if (!supabase || !id) { setLoading(false); return; }
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+        const { data: playerByCode } = await supabase.from("player_public_leaderboard").select("id").eq("player_code", id).maybeSingle();
+        if (playerByCode?.id) { window.location.replace("/players/" + playerByCode.id); return; }
+      }
       const { data: { session } } = await supabase.auth.getSession();
       if (session && !new URLSearchParams(window.location.search).has("view")) {
         const { data: own } = await supabase.rpc("get_my_base25_player_profile");
