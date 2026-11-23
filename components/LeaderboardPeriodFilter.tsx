@@ -39,7 +39,7 @@ function rangeLabel(start:Date|null,end:Date|null,key:FilterKey){
   return start.getTime()+86400000===end.getTime()?dayLabel(start):dayLabel(start)+" – "+dayLabel(last);
 }
 
-type BoardmanProfile = { id: string; username: string; player_code: string; photo_url: string | null };
+type BoardmanProfile = { id: string; username: string; player_code: string; photo_url: string | null; elo_rating: number; wins: number; losses: number };
 
 export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers:Row[]}){
   const [filter,setFilter]=useState<FilterKey>("this_week");
@@ -107,7 +107,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     let alive=true;
     async function loadBoardman(){
       if(!supabase)return;
-      const {data}=await supabase.from("players").select("id,username,player_code,photo_url").eq("designation","boardman").limit(1).maybeSingle();
+      const {data}=await supabase.from("players").select("id,username,player_code,photo_url,elo_rating,wins,losses").eq("designation","boardman").limit(1).maybeSingle();
       if(alive)setBoardman(data as BoardmanProfile|null);
     }
     loadBoardman();
@@ -132,7 +132,7 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
         <div className="period-options">{options.map(o=><button type="button" key={o.key} className={filter===o.key?"selected":""} onClick={()=>select(o.key)}>{o.label}{filter===o.key&&<span>✓</span>}</button>)}</div>
       </div>
     </div>}
-    {boardman&&<Link href={"/players/"+boardman.id} className="boardman-challenge-row"><span className="boardman-challenge-avatar">{boardman.photo_url?<img src={boardman.photo_url} alt=""/>:"B"}</span><span className="boardman-challenge-copy"><span className="boardman-challenge-kicker">THE TARGET</span><strong>{boardman.username}<em>BOARDMAN 💀</em></strong><small>BEAT THE BOARDMAN. CLAIM THE CROWN.</small></span><span className="boardman-challenge-rating"><strong>1,530</strong><small>ELO BENCHMARK</small></span></Link>}
+    {boardman&&<Link href={"/players/"+boardman.id} className="competition-ref-player-row is-boardman-row"><span className="competition-ref-rank-spacer"/><span className="competition-ref-avatar">{boardman.photo_url?<img src={boardman.photo_url} alt=""/>:boardman.username?.[0]?.toUpperCase()||"?"}</span><span className="competition-ref-player-name"><strong>{boardman.username} <i aria-label="Boardman">♛</i></strong><span className="competition-ref-boardman-tag">BOARDMAN 💀</span><small>{boardman.player_code}</small></span><span className="competition-ref-record">{Number(boardman.wins||0)}W / {Number(boardman.losses||0)}L</span><strong className="competition-ref-rating">1,530</strong></Link>}
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
       <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
     </div>
@@ -140,12 +140,15 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     {rankedRows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
     <style jsx>{`
       .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
-      .boardman-challenge-row{position:relative;display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;margin:14px 0 18px;padding:14px 15px;overflow:hidden;border:1px solid #a98543;border-radius:16px;background:radial-gradient(ellipse at 0% 50%,#76501f55,transparent 58%),linear-gradient(110deg,#241b10 0%,#171b14 62%,#111710 100%);color:#f7f1df;text-decoration:none;box-shadow:inset 0 1px #fff2,0 8px 22px #0004}
-      .boardman-challenge-row:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#f6d78c,#a87932)}
-      .boardman-challenge-avatar{width:44px;height:44px;display:grid;place-items:center;overflow:hidden;border:2px solid #d4ad5c;border-radius:50%;background:#21190f;color:#f1d17c;font-size:18px;font-weight:950;box-shadow:0 0 0 4px #d4ad5c18}.boardman-challenge-avatar img{width:100%;height:100%;object-fit:cover}
-      .boardman-challenge-copy{min-width:0;display:grid;gap:4px}.boardman-challenge-kicker{color:#d6b875;font:900 8px monospace;letter-spacing:.18em}.boardman-challenge-copy strong{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#fff7e7;font-size:15px;line-height:1.2}.boardman-challenge-copy em{padding:4px 7px;border:1px solid #a77b39;border-radius:5px;background:#3b2915;color:#f2ce7d;font:900 8px monospace;font-style:normal;letter-spacing:.04em}.boardman-challenge-copy small{color:#d5b878;font:900 9px monospace;letter-spacing:.07em}
-      .boardman-challenge-rating{min-width:78px;padding-left:12px;border-left:1px solid #8f6c3b66;text-align:right}.boardman-challenge-rating strong{display:block;color:#f4d27e;font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums}.boardman-challenge-rating small{display:block;margin-top:5px;color:#c4a56b;font:900 8px monospace;letter-spacing:.12em}
-      @media(max-width:370px){.boardman-challenge-row{grid-template-columns:38px minmax(0,1fr) auto;gap:9px;padding:11px 10px}.boardman-challenge-avatar{width:36px;height:36px;font-size:15px}.boardman-challenge-copy strong{font-size:12px}.boardman-challenge-copy small{font-size:7px}.boardman-challenge-rating{min-width:66px;padding-left:8px}.boardman-challenge-rating strong{font-size:18px}.boardman-challenge-rating small{font-size:7px}}
+      .competition-ref-player-row.is-boardman-row{min-height:76px;margin:0 0 4px;border:1px solid rgba(200,241,105,.65);border-radius:17px;background:linear-gradient(90deg,rgba(200,241,105,.22),rgba(200,241,105,.07));box-shadow:inset 0 0 24px rgba(200,241,105,.04)}
+      .competition-ref-player-row.is-boardman-row .competition-ref-rank-spacer{width:26px;height:26px;display:block}
+      .competition-ref-player-row.is-boardman-row .competition-ref-avatar{width:42px;height:42px;border:0;background:#1b2b20;color:#c8f169;font-size:18px}
+      .competition-ref-player-row.is-boardman-row .competition-ref-player-name{gap:5px}
+      .competition-ref-player-row.is-boardman-row .competition-ref-player-name strong{font-size:16px}
+      .competition-ref-player-row.is-boardman-row .competition-ref-player-name strong i{color:#e8c547;font-size:17px;font-style:normal}
+      .competition-ref-boardman-tag{width:max-content;padding:3px 8px;border:1px solid #a94343;border-radius:6px;background:#351b20;color:#ff777d;font-size:10px;font-weight:900}
+      .competition-ref-player-row.is-boardman-row .competition-ref-record{font-size:12px}
+      .competition-ref-player-row.is-boardman-row .competition-ref-rating{font-size:20px;color:#c8f169}
       .competition-ref-leaderboard-heading h2{margin:0}
       .period-current-label{display:block;margin-top:4px;color:#9aa69f;font-size:11px}
       .period-show-all{width:calc(100% - 8px);min-height:58px;display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 4px 0;border:0;border-radius:15px;background:#c8f169;color:#0a0e0c;font-size:17px;font-weight:900;cursor:pointer}\n      .period-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #35483a;border-radius:12px;background:#17221b;color:#c8f169;font-size:12px;font-weight:800;cursor:pointer}
