@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
+import LeaderboardPeriodFilter from "@/components/LeaderboardPeriodFilter";
 import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
 type WeeklyPlayer = {
@@ -227,28 +228,7 @@ export default function CompetitionPage() {
           <Link href="/how-it-works"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></svg>How it works</Link>
         </nav>
 
-        <section className="competition-ref-leaderboard" id="weekly-leaderboard">
-          <div className="competition-ref-leaderboard-heading">
-            <h2>This week's leaderboard</h2>
-          </div>
-          <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
-            <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
-          </div>
-
-          {loading ? (
-            <p className="competition-ref-empty">Loading weekly standings…</p>
-          ) : error ? (
-            <p className="competition-ref-empty">{error}</p>
-          ) : players.length === 0 ? (
-            <p className="competition-ref-empty">No qualifying matches recorded this week yet. Be the first to enter the rankings.</p>
-          ) : (
-            <div className="competition-ref-rows">
-              <WeeklyLeaderboardRows players={visiblePlayers} variant="competition" />
-            </div>
-          )}
-
-          <button type="button" onClick={() => setShowAllPlayers((current) => !current)} aria-expanded={showAllPlayers} className="competition-ref-full-link" style={{width:"calc(100% - 8px)",minHeight:66,display:"flex",alignItems:"center",justifyContent:"center",gap:12,margin:"18px 4px 0",padding:"12px 16px",border:0,borderRadius:18,background:"#c8f169",color:"#0a0e0c",fontSize:20,fontWeight:900,textAlign:"center",cursor:"pointer"}}>{showAllPlayers ? "Show less" : "View full leaderboard"} <span style={{fontSize:24}}>{showAllPlayers ? "↑" : "→"}</span></button>
-        </section>
+        <LeaderboardPeriodFilter initialPlayers={players.map((player) => ({ ...player, boardmanBonusPoints: Number((player as any).boardmanBonusPoints || 0) }))} />
       </div>
 
       <style jsx>{`
