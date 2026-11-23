@@ -57,7 +57,8 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
   const [customEnd,setCustomEnd]=useState(isoDay(lagosDate()));
   const [rows,setRows]=useState<Row[]>(initialPlayers);
   const [busy,setBusy]=useState(false);
-  const [message,setMessage]=useState("");\n  const [showAll,setShowAll]=useState(false);
+  const [message,setMessage]=useState("");
+  const [showAll,setShowAll]=useState(false);
   const [now]=useState(()=>new Date());
   const range=useMemo(()=>boundaries(filter,now,customStart,customEnd),[filter,now,customStart,customEnd]);
   const label=rangeLabel(range.start,range.end,filter);
