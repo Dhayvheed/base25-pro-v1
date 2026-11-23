@@ -41,6 +41,7 @@ export default function PublicPlayerProfile() {
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [champions, setChampions] = useState<ChampionRow[]>([]);
   const [wagerWinnings, setWagerWinnings] = useState(0);
+  const [archiveEntries, setArchiveEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("10");
   const [activePoint, setActivePoint] = useState<number | null>(null);
@@ -95,9 +96,10 @@ export default function PublicPlayerProfile() {
       setMatches((games || []) as MatchRow[]);
       setChampions((wins || []) as ChampionRow[]);
       setWagerWinnings(Number(wagerTotal || 0));
+      setArchiveEntries(archiveRows || []);
       setLoading(false);
       if (!profile) return;
-      void archiveRows;
+
     }
     load();
     return () => { active = false; };
@@ -212,6 +214,8 @@ export default function PublicPlayerProfile() {
   if (!player) return <main className="shell redesign-shell"><SiteNavigation /><div className="public-empty"><h1>Player not found</h1><Link href="/players">← All players</Link></div></main>;
 
   const weeklyChampions = champions.length;
+  const topFiveFinishes = archiveEntries.filter((entry: any) => Number(entry.rank) > 0 && Number(entry.rank) <= 5).length;
+  const weeklyLeaderFinishes = archiveEntries.filter((entry: any) => Number(entry.rank) === 1).length;
 
   return (
     <main className="shell redesign-shell public-player-page">
@@ -315,8 +319,8 @@ export default function PublicPlayerProfile() {
           <div className="public-section-heading"><div><small>CAREER MILESTONES</small><h2>Achievements</h2></div><span>PLAYER LEGACY</span></div>
           <div className="public-achievements">
             <div className="public-achievement"><i>♛</i><strong>{weeklyChampions}</strong><span>Saturday<br />Champion</span></div>
-            <div className="public-achievement"><i>♜</i><strong>—</strong><span>Weekly<br />Leader</span></div>
-            <div className="public-achievement"><i>★</i><strong>—</strong><span>Top 5<br />Finishes</span></div>
+            <div className="public-achievement"><i>♜</i><strong>{weeklyLeaderFinishes || "—"}</strong><span>Weekly<br />Leader</span></div>
+            <div className="public-achievement"><i>★</i><strong>{topFiveFinishes || "—"}</strong><span>Top 5<br />Finishes</span></div>
             <div className="public-achievement"><i>▥</i><strong>{peak.toLocaleString()}</strong><span>Peak<br />ELO</span></div>
           </div>
         </section>
