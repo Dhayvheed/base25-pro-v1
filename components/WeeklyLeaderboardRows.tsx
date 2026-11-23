@@ -32,13 +32,14 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
   return <>{players.map((player) => {
     const isOdumodu = player.username?.trim().toLowerCase() === "odumodu";
     const rank = isOdumodu ? null : ++eligibleRank;
+    const isHighlighted = isOdumodu;
     const rankIndex = rank === null ? 0 : rank - 1;
-    return <Link className={"home-v2-player-row " + (rank === 1 ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
+    return <Link className={"home-v2-player-row " + (isHighlighted ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
       <span className={"home-v2-rank " + (rank === null ? "is-empty" : "rank-" + rank)}>{rank !== null && <span className="home-v2-rank-ball" style={{ background: rankColors[rankIndex] || "#52634b" }}><i>{rank}</i></span>}</span>
       <span className="home-v2-player">
         <span className="home-v2-avatar">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.username?.[0]?.toUpperCase() || "?"}</span>
         <span className="home-v2-player-copy">
-          <strong>{player.username}{rank === 1 && <span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>
+          <strong>{player.username}{isHighlighted && <span className="home-v2-player-crown" aria-label="Featured player">♛</span>}</strong>
           <DesignationBadge designation={player.designation} variant="home" />
           {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
           <small>{player.player_code}</small>
