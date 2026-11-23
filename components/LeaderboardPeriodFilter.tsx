@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import WeeklyLeaderboardRows, { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 import { calculatePeriodLeaderboard, type PeriodPlayer, type PeriodMatch, type PeriodRack } from "@/lib/leaderboard-period";
 import { supabase } from "@/lib/supabase";
@@ -39,13 +38,10 @@ function rangeLabel(start:Date|null,end:Date|null,key:FilterKey){
   return start.getTime()+86400000===end.getTime()?dayLabel(start):dayLabel(start)+" – "+dayLabel(last);
 }
 
-type BoardmanProfile = { id: string; username: string; player_code: string; photo_url: string | null; elo_rating: number; wins: number; losses: number };
-
 export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers:Row[]}){
   const [filter,setFilter]=useState<FilterKey>("this_week");
   const [open,setOpen]=useState(false);
   const [rows,setRows]=useState<Row[]>(initialPlayers);
-  const [boardman,setBoardman]=useState<BoardmanProfile|null>(null);
   const latestInitialPlayers=useRef(initialPlayers);
   latestInitialPlayers.current=initialPlayers;
   const [busy,setBusy]=useState(false);
@@ -103,21 +99,8 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     if(filter==="this_week")setRows(initialPlayers);
   },[initialPlayers,filter]);
 
-  useEffect(()=>{
-    let alive=true;
-    async function loadBoardman(){
-      if(!supabase)return;
-      const {data}=await supabase.from("players").select("id,username,player_code,photo_url").eq("designation","boardman").limit(1).maybeSingle();
-      if(!data){if(alive)setBoardman(null);return;}
-      const {data:stats}=await supabase.from("player_public_leaderboard").select("wins,losses").eq("id",data.id).maybeSingle();
-      if(alive)setBoardman({...data,elo_rating:1530,wins:Number(stats?.wins||0),losses:Number(stats?.losses||0)} as BoardmanProfile);
-    }
-    loadBoardman();
-    return()=>{alive=false;};
-  },[]);
-
   const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};
-  const rankedRows=rows.filter(p=>p.designation!=="boardman");
+  const rankedRows=rows;
   const visibleRows=showAll?rankedRows:rankedRows.slice(0,5);
   return <section className="competition-ref-leaderboard" id="weekly-leaderboard">
     <div className="competition-ref-leaderboard-heading">
@@ -138,22 +121,10 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     <div className="competition-ref-table-head" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 48px 46px",alignItems:"center",gap:10,padding:"4px 10px 8px 80px",color:"#9aa69f",font:"10px 'JetBrains Mono',monospace",letterSpacing:"1.5px"}}>
       <span>PLAYER</span><span style={{textAlign:"right"}}>RECORD</span><span style={{textAlign:"right"}}>RATING</span>
     </div>
-    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rankedRows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows">{boardman&&<Link href={"/players/"+boardman.id} className="competition-ref-player-row is-boardman-row"><span className="competition-ref-rank-spacer"/><span className="competition-ref-avatar">{boardman.photo_url?<img src={boardman.photo_url} alt=""/>:boardman.username?.[0]?.toUpperCase()||"?"}</span><span className="competition-ref-player-name"><strong>{boardman.username} <i aria-label="Boardman">♛</i></strong><span className="competition-ref-boardman-tag">BOARDMAN 💀</span><small>{boardman.player_code}</small></span><span className="competition-ref-record">{Number(boardman.wins||0)}W / {Number(boardman.losses||0)}L</span><strong className="competition-ref-rating">1,530</strong></Link>}<WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
+    {busy?<p className="competition-ref-empty">Loading {label} standings…</p>:message?<p className="competition-ref-empty">{message}</p>:rankedRows.length===0?<p className="competition-ref-empty">No matches recorded in this period.</p>:<div className="competition-ref-rows">}<WeeklyLeaderboardRows players={visibleRows.map(p=>({...p,designation:p.designation??undefined,hasBoardmanSlayerBadge:false,boardmanBonusPoints:p.boardmanBonusPoints||0}))} variant="competition"/></div>}
     {rankedRows.length>5&&!busy&&!message&&<button type="button" className="period-show-all" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show less":"View full leaderboard"} <span>{showAll?"↑":"→"}</span></button> }
     <style jsx>{`
       .competition-ref-leaderboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
-      .competition-ref-player-row.is-boardman-row{display:grid;grid-template-columns:26px 34px minmax(0,1fr) 48px 46px;align-items:center;column-gap:10px;width:100%;min-width:0;min-height:56px;margin:0 0 4px;padding:0 10px;box-sizing:border-box;border:1px solid rgba(200,241,105,.65);border-radius:14px;background:linear-gradient(90deg,rgba(200,241,105,.22),rgba(200,241,105,.07));box-shadow:inset 0 0 24px rgba(200,241,105,.04);color:#f4f5f2;text-decoration:none}
-      .competition-ref-player-row.is-boardman-row .competition-ref-rank-spacer{width:26px;height:26px;display:block}
-      .competition-ref-player-row.is-boardman-row .competition-ref-avatar{position:relative;width:34px;height:34px;display:grid;place-items:center;overflow:hidden;border:2px solid #c8f169;border-radius:50%;background:#17251b;color:#c8f169;font-size:14px;font-weight:900;line-height:1}
-      .competition-ref-player-row.is-boardman-row .competition-ref-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
-      .competition-ref-player-row.is-boardman-row .competition-ref-player-name{display:grid;gap:4px;min-width:0}
-      .competition-ref-player-row.is-boardman-row .competition-ref-player-name strong{display:block;min-width:0;overflow-wrap:anywhere;color:#f4f5f2;font-size:15px;font-weight:600;line-height:1.2}
-      .competition-ref-player-row.is-boardman-row .competition-ref-player-name strong i{margin-left:4px;color:#e8c547;font-size:14px;font-style:normal}
-      .competition-ref-boardman-tag{width:max-content;max-width:100%;padding:3px 6px;border:1px solid #a94343;border-radius:6px;background:#351b20;color:#ff777d;font-size:9px;font-weight:900;line-height:1.1}
-      .competition-ref-player-row.is-boardman-row .competition-ref-player-name small{display:block;color:#9aa69f;font:10px 'JetBrains Mono',monospace}
-      .competition-ref-player-row.is-boardman-row .competition-ref-record{display:block;text-align:right;white-space:nowrap;color:#d5dad6;font-size:12px}
-      .competition-ref-player-row.is-boardman-row .competition-ref-rating{display:block;text-align:right;white-space:nowrap;color:#c8f169;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
-      @media(max-width:370px){.competition-ref-player-row.is-boardman-row{grid-template-columns:24px 32px minmax(0,1fr) 44px 42px;column-gap:7px;padding:0 7px}.competition-ref-player-row.is-boardman-row .competition-ref-avatar{width:32px;height:32px}.competition-ref-player-row.is-boardman-row .competition-ref-record{font-size:10px}.competition-ref-player-row.is-boardman-row .competition-ref-rating{font-size:15px}}
       .competition-ref-leaderboard-heading h2{margin:0}
       .period-current-label{display:block;margin-top:4px;color:#9aa69f;font-size:11px}
       .period-show-all{width:calc(100% - 8px);min-height:58px;display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 4px 0;border:0;border-radius:15px;background:#c8f169;color:#0a0e0c;font-size:17px;font-weight:900;cursor:pointer}\n      .period-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #35483a;border-radius:12px;background:#17221b;color:#c8f169;font-size:12px;font-weight:800;cursor:pointer}
