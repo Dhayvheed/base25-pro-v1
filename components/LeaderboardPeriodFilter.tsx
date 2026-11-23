@@ -93,7 +93,8 @@ export default function LeaderboardPeriodFilter({initialPlayers}:{initialPlayers
     load();return()=>{alive=false;};
   },[filter,range.start?.getTime(),range.end?.getTime(),initialPlayers]);
 
-  const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};\n  const visibleRows=showAll?rows:rows.slice(0,5);
+  const select=(key:FilterKey)=>{setFilter(key);setShowAll(false);setOpen(false);};
+  const visibleRows=showAll?rows:rows.slice(0,5);
   return <section className="competition-ref-leaderboard" id="weekly-leaderboard">
     <div className="competition-ref-leaderboard-heading">
       <div><h2>{filter==="this_week"?"This week's leaderboard":"Leaderboard"}</h2><small className="period-current-label">{label}</small></div>
