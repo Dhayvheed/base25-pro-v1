@@ -30,6 +30,7 @@ function Avatar({ player }: { player: Player }) {
 
 export default function LeaderboardPage() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [boardman, setBoardman] = useState<{id:string;username:string;player_code:string;photo_url:string|null}|null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -59,8 +60,12 @@ export default function LeaderboardPage() {
           ? await supabase.from("players").select("id,designation").in("id", ids)
           : { data: [] as { id: string; designation: Player["designation"] }[] };
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
-        const bonusData = await getBoardmanBonusData(supabase);
-        setPlayers(rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }))
+        const [bonusData, boardmanResult] = await Promise.all([
+          getBoardmanBonusData(supabase),
+          supabase.from("players").select("id,username,player_code,photo_url").eq("designation", "boardman").limit(1).maybeSingle(),
+        ]);
+        setBoardman(boardmanResult.data as {id:string;username:string;player_code:string;photo_url:string|null}|null);
+        setPlayers(rows.filter((player) => designations.get(player.id) !== "boardman").map((player) => ({ ...player, designation: designations.get(player.id) || "regular", boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }))
           .sort((a, b) => (Number(b.elo_rating || 0) + Number(b.boardmanBonusPoints || 0)) - (Number(a.elo_rating || 0) + Number(a.boardmanBonusPoints || 0))));
       }
       setLoading(false);
@@ -107,6 +112,8 @@ export default function LeaderboardPage() {
             </div>
             <div className="weekly-top-five"><b>TOP 5</b><span>QUALIFY</span></div>
           </div>
+
+          {boardman && <Link href={`/players/${boardman.id}`} className="weekly-boardman-challenge"><span className="weekly-boardman-avatar">{boardman.photo_url ? <img src={boardman.photo_url} alt="" /> : "B"}</span><span className="weekly-boardman-copy"><b>{boardman.username} <em>BOARDMAN 💀</em></b><small>OPERATION: TAKE DOWN THE BOARDMAN</small></span><strong>1,500 <small>ELO</small></strong></Link>}
 
           <div className="weekly-tools">
             <div className="weekly-count">{loading ? "Loading standings…" : `Showing ${filtered.length} of ${players.length} players`}</div>
@@ -160,6 +167,9 @@ export default function LeaderboardPage() {
         .weekly-board-heading p{max-width:690px;margin:0;color:#aab9aa;font-size:12px;line-height:1.6}
         .weekly-top-five{flex:none;display:grid;place-items:center;width:76px;height:76px;border:1px solid #c5f36a;border-radius:18px;background:#c5f32d12;box-shadow:0 0 20px #c5f32d12}
         .weekly-top-five b{font-size:21px;color:#d8f76a}.weekly-top-five span{font:800 8px monospace;letter-spacing:.12em;color:#aabd9e}
+        .weekly-boardman-challenge{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:11px;margin:18px 0 8px;padding:12px;border:1px solid #98743b;border-radius:15px;background:linear-gradient(100deg,#332515,#171b14 72%);color:#f7f1df;text-decoration:none;box-shadow:inset 0 1px #ffffff12}
+        .weekly-boardman-avatar{width:40px;height:40px;display:grid;place-items:center;overflow:hidden;border:2px solid #c99a45;border-radius:50%;background:#21190f;color:#e8c547;font-weight:900}.weekly-boardman-avatar img{width:100%;height:100%;object-fit:cover}
+        .weekly-boardman-copy{min-width:0;display:grid;gap:5px}.weekly-boardman-copy b{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}.weekly-boardman-copy em{padding:3px 5px;border:1px solid #8b632d;border-radius:5px;background:#3b2915;color:#f0c56a;font:900 7px monospace;font-style:normal}.weekly-boardman-copy small{color:#c6a96f;font:800 8px monospace;letter-spacing:.08em}.weekly-boardman-challenge>strong{color:#f0cf7a;font-size:18px;white-space:nowrap;font-variant-numeric:tabular-nums}.weekly-boardman-challenge>strong small{display:block;color:#bba16d;font:800 8px monospace;text-align:right;letter-spacing:.12em}
         .weekly-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px}
         .weekly-count{color:#93a493;font-size:11px}
         .weekly-search{display:flex;align-items:center;gap:8px;width:min(100%,260px);padding:10px 12px;border:1px solid #344c38;border-radius:11px;background:#080f0a;color:#c5f36a}
@@ -191,6 +201,7 @@ export default function LeaderboardPage() {
           .weekly-hero-meta{gap:8px;margin-top:19px;font-size:9px}
           .weekly-hero-meta b{font-size:12px}
           .weekly-board-panel{padding:14px 10px;border-radius:16px}
+          .weekly-boardman-challenge{grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:10px}.weekly-boardman-avatar{width:34px;height:34px}.weekly-boardman-copy b{font-size:11px}.weekly-boardman-copy small{font-size:7px}.weekly-boardman-challenge>strong{font-size:15px}
           .weekly-board-heading{gap:8px}.weekly-board-heading p{font-size:10px}
           .weekly-top-five{width:57px;height:57px;border-radius:13px}.weekly-top-five b{font-size:17px}.weekly-top-five span{font-size:7px}
           .weekly-tools{align-items:stretch;flex-direction:column;margin:17px 0 9px}
