@@ -11,7 +11,7 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
- const [publicPreview,setPublicPreview]=useState(false),[searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
+ const [searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
   const {data:{session}}=await supabase.auth.getSession();
@@ -60,8 +60,6 @@ export default function PlayerProfile(){
   <header className="private-topbar">
    <Link href="/" aria-label="Back">←</Link><h1>My profile</h1><button type="button" aria-label="Profile settings" onClick={()=>setCashoutNotice((v)=>!v)}>☷</button>
   </header>
-  <div className="private-view-switch"><button className={!publicPreview?"active":""} onClick={()=>setPublicPreview(false)}>My view</button><Link className={publicPreview?"active":""} href={`/players/${player.id}`}>Preview as public</Link></div>
-  {publicPreview ? <div className="private-preview-note">This is the public profile other players see. <Link href={`/players/${player.id}`}>Open public profile →</Link></div> : null}
   <section className="private-identity-card">
    <div className="private-identity-main"><div className="private-avatar">{player.photo_url?<img src={player.photo_url} alt={player.username}/>:player.username?.[0]?.toUpperCase()}</div>
     <div className="private-identity-copy"><h2>{player.username}<b>✓</b></h2><div><small>{player.player_code}</small><em>COMPETITIVE</em></div><p>“Play smart. Clear tables.”</p></div>
@@ -134,9 +132,6 @@ export default function PlayerProfile(){
  .private-topbar{height:42px;display:grid;grid-template-columns:50px 1fr 50px;align-items:center;margin-bottom:12px}
  .private-topbar>a,.private-topbar>button{width:42px;height:42px;border:1px solid #24392c;border-radius:13px;background:#09130d;color:#f2f5ef;display:grid;place-items:center;text-decoration:none;font-size:23px}
  .private-topbar>button{justify-self:end;color:#c5f36a}.private-topbar h1{text-align:center;font-size:19px;margin:0}
- .private-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-bottom:13px;border:1px solid #293b2e;border-radius:14px;background:#080f0b}
- .private-view-switch button,.private-view-switch a{height:45px;border:0;border-radius:10px;background:transparent;color:#c5cec5;text-decoration:none;display:grid;place-items:center;font-size:13px;font-weight:700}
- .private-view-switch .active{background:#c5f36a;color:#10170e}
  .private-preview-note{margin:0 0 12px;padding:10px;border:1px solid #3a573b;border-radius:10px;font-size:11px;color:#b5c2b3}.private-preview-note a{color:#c5f36a}
  .private-identity-card{padding:18px 16px;border:1px solid #31533b;border-radius:22px;background:radial-gradient(ellipse at 85% 0%,#115332 0%,#0c2b1d 35%,#09120d 80%)}
  .private-identity-main{display:flex;align-items:center;gap:14px}
