@@ -33,7 +33,7 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
     const isBoardman = player.designation === "boardman";
     const rank = isBoardman ? null : ++eligibleRank;
     const rankIndex = rank === null ? 0 : rank - 1;
-    return <Link className={"home-v2-player-row " + (isBoardman ? "is-boardman" : rank === 1 ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
+    return <Link className={"home-v2-player-row " + (isBoardman ? "is-first is-boardman" : rank === 1 ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
       <span className={"home-v2-rank " + (rank === null ? "is-empty" : "rank-" + rank)}>{rank !== null && <span className="home-v2-rank-ball" style={{ background: rankColors[rankIndex] || "#52634b" }}><i>{rank}</i></span>}</span>
       <span className="home-v2-player">
         <span className="home-v2-avatar">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.username?.[0]?.toUpperCase() || "?"}</span>
