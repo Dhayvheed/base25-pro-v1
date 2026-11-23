@@ -28,17 +28,14 @@ function DesignationBadge({ designation, variant }: { designation?: WeeklyLeader
 
 function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
   const rankColors = ["#F2C230", "#2F5FD0", "#D9402F", "#7B3FA0", "#E8782A"];
-  let eligibleRank = 0;
-  return <>{players.map((player) => {
-    const isBoardman = player.designation === "boardman";
-    const rank = isBoardman ? null : ++eligibleRank;
-    const rankIndex = rank === null ? 0 : rank - 1;
-    return <Link className={"home-v2-player-row " + (isBoardman ? "is-first is-boardman" : rank === 1 ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
-      <span className={"home-v2-rank " + (rank === null ? "is-empty" : "rank-" + rank)}>{rank !== null && <span className="home-v2-rank-ball" style={{ background: rankColors[rankIndex] || "#52634b" }}><i>{rank}</i></span>}</span>
+  return <>{players.map((player, index) => {
+    const rank = index + 1;
+    return <Link className={"home-v2-player-row " + (rank === 1 ? "is-first" : "")} href={"/players/" + player.id} key={player.id}>
+      <span className={"home-v2-rank rank-" + rank}><span className="home-v2-rank-ball" style={{ background: rankColors[index] || "#52634b" }}><i>{rank}</i></span></span>
       <span className="home-v2-player">
         <span className="home-v2-avatar">{player.photo_url ? <img src={player.photo_url} alt="" /> : player.username?.[0]?.toUpperCase() || "?"}</span>
         <span className="home-v2-player-copy">
-          <strong>{player.username}{isBoardman && <span className="home-v2-player-crown" aria-label="Boardman">♛</span>}</strong>
+          <strong>{player.username}{rank === 1 && <span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>
           <DesignationBadge designation={player.designation} variant="home" />
           {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
           <small>{player.player_code}</small>
@@ -49,7 +46,6 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
     </Link>;
   })}</>;
 }
-
 function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
   return <>{players.map((player, index) => {
     const rank = index + 1;
