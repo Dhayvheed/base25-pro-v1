@@ -50,7 +50,7 @@ export function calculatePeriodLeaderboard(players: PeriodPlayer[], matches: Per
     else{ratings.set(a,Math.max(0,Math.round(ra-delta+rackA)));ratings.set(b,Math.max(0,Math.round(rb+delta+rackB)));}
     counts.set(a,ca+1);counts.set(b,cb+1);wins.set(m.winner_id,(wins.get(m.winner_id)||0)+1);
     const one=boardmen.has(a),two=boardmen.has(b);
-    if(one!==two && m.winner_id!==(one?a:b) && (!qualifyingBonusMatchIds || qualifyingBonusMatchIds.has(m.id))){
+    if(one!==two && m.winner_id!==(one?a:b)){
       const key=lagosWeekKey(m.played_at)+":"+m.winner_id,used=bonusCounts.get(key)||0;
       if(used<3){bonusCounts.set(key,used+1);bonusPoints.set(m.winner_id,(bonusPoints.get(m.winner_id)||0)+10);}
     }
