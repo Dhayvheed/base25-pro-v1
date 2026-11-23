@@ -11,7 +11,7 @@ export default function PlayerProfile(){
  const [player,setPlayer]=useState<any>(null),[matches,setMatches]=useState<any[]>([]),[racksByMatch,setRacksByMatch]=useState<Record<string,Rack[]>>({});
  const [rank,setRank]=useState(0),[loading,setLoading]=useState(true),[range,setRange]=useState("10"),[activePoint,setActivePoint]=useState<number|null>(null);
  const [currentWeek,setCurrentWeek]=useState<any>(null),[currentWeekRank,setCurrentWeekRank]=useState(0),[weeklyHistory,setWeeklyHistory]=useState<any[]>([]),[championHistory,setChampionHistory]=useState<any[]>([]),[totalEarnings,setTotalEarnings]=useState(0);
- const [searchVisible,setSearchVisible]=useState(true),[showLosses,setShowLosses]=useState(false),[cashoutNotice,setCashoutNotice]=useState(false);
+ const [searchVisible,setSearchVisible]=useState(true),[cashoutNotice,setCashoutNotice]=useState(false),[profileEditNotice,setProfileEditNotice]=useState(false),[wagerEarnings,setWagerEarnings]=useState(0);
  useEffect(()=>{let active=true;async function load(){
   if(!supabase){setLoading(false);return;}
   const {data:{session}}=await supabase.auth.getSession();
@@ -21,16 +21,17 @@ export default function PlayerProfile(){
   if(mineError||!own?.id){setLoading(false);return;}
   const playerId=own.id as string;
   setId(playerId);
-  const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions}]=await Promise.all([
+  const [{data:profile},{data:games,error:gamesError},{data:board},{data:weekBoard},{data:archiveRows},{data:champions},{data:wagerTotal}]=await Promise.all([
    supabase.from("player_public_leaderboard").select("*").eq("id",playerId).single(),
    supabase.from("matches").select("*,one:players!matches_player_one_id_fkey(username,player_code),two:players!matches_player_two_id_fkey(username,player_code)").or(`player_one_id.eq.${playerId},player_two_id.eq.${playerId}`).order("played_at",{ascending:false}),
    supabase.from("player_public_leaderboard").select("id,elo_rating").order("elo_rating",{ascending:false}),
    supabase.rpc("get_period_leaderboard",{p_period:"this_week"}),
    supabase.from("weekly_leaderboard_archive_entries").select("rank,weekly_elo,matches_played,wins,losses,win_percentage,archive:weekly_leaderboard_archives(week_start,week_end)").eq("player_id",playerId).order("rank",{ascending:true}),
-   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount,payout_confirmed_at").eq("player_id",playerId).order("week_start",{ascending:false})
+   supabase.from("weekly_champions").select("id,week_start,week_end,prize_amount,payout_confirmed_at").eq("player_id",playerId).order("week_start",{ascending:false}),
+   supabase.rpc("get_player_wager_winnings",{p_player_id:playerId})
   ]);
   if(!active)return;
-  setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
+  setWagerEarnings(Number(wagerTotal||0));setPlayer(profile);setCurrentWeek((weekBoard||[]).find((p:any)=>p.id===playerId)||null);setCurrentWeekRank((weekBoard||[]).findIndex((p:any)=>p.id===playerId)+1);setWeeklyHistory(archiveRows||[]);setChampionHistory(champions||[]);setTotalEarnings((champions||[]).reduce((sum:any,row:any)=>sum+Number(row.prize_amount||0),0));if(gamesError)console.error("Could not load player matches:",gamesError);
   const rows=games||[];setMatches(rows);setRank((board||[]).findIndex((p:any)=>p.id===playerId)+1);
   if(rows.length){const {data:rackRows,error:rackError}=await supabase.from("match_racks").select("id,match_id,rack_number,winner_id,loser_id,loser_balls_remaining,black_ball_finish").in("match_id",rows.map((m:any)=>m.id)).order("rack_number",{ascending:true});
    if(rackError)console.error("Could not load rack details:",rackError);
