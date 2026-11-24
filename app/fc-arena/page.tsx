@@ -42,7 +42,7 @@ export default function FCArenaPage(){
  },[version]);
  const playerMap=useMemo(()=>new Map(players.map(p=>[p.id,p])),[players]);
  const ranked=useMemo(()=>ratings.map(r=>({...r,player:playerMap.get(r.player_id)})).filter(r=>r.player).sort((a,b)=>b.elo_rating-a.elo_rating),[ratings,playerMap]);
- const weeklyRanked=useMemo(()=>{const totals=new Map<string,{points:number;matches:number}>();history.forEach(row=>{const v=totals.get(row.player_id)||{points:0,matches:0};v.points+=Number(row.rating_change||0);v.matches+=1;totals.set(row.player_id,v)});return Array.from(totals.entries()).map(([player_id,v])=>({player_id,elo_rating:v.points,matches_played:v.matches,player:playerMap.get(player_id)})).filter(x=>x.player).sort((a,b)=>b.elo_rating-a.elo_rating)},[history,playerMap]);
+ const weeklyRanked=useMemo(()=>{const totals=new Map<string,{points:number;matches:number}>();history.forEach(row=>{const v=totals.get(row.player_id)||{points:0,matches:0};v.points+=Number(row.rating_change||0);v.matches+=1;totals.set(row.player_id,v)});return Array.from(totals.entries()).map(([player_id,v])=>({player_id,elo_rating:v.points,matches_played:v.matches,wins:0,draws:0,losses:0,player:playerMap.get(player_id)})).filter(x=>x.player).sort((a,b)=>b.elo_rating-a.elo_rating)},[history,playerMap]);
  const activeBoard=board==="career"?ranked:weeklyRanked;
  const filtered=activeBoard.filter(r=>(r.player!.username+" "+r.player!.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=ratings.reduce((n,r)=>n+r.matches_played,0)/2;
