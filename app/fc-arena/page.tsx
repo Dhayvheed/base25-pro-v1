@@ -32,7 +32,7 @@ export default function FCArenaPage(){
    supabase.from("players").select("id,username,player_code,photo_url").order("username"),
    supabase.from("fc_player_ratings").select("player_id,game_version,elo_rating,matches_played,wins,draws,losses").eq("game_version",version),
    supabase.from("fc_clubs").select("id,game_version,name,star_rating").eq("game_version",version).eq("is_active",true).order("star_rating",{ascending:false}).order("name"),
-   supabase.from("fc_matches").select("id,game_version,played_at,player_one_id,player_two_id,player_one_score,player_two_score,player_one_club_name,player_two_club_name,player_one_elo_change,player_two_elo_change,player_one_goal_bonus,player_two_goal_bonus,").eq("game_version",version).order("played_at",{ascending:false}).limit(30),
+   supabase.from("fc_matches").select("id,game_version,played_at,player_one_id,player_two_id,player_one_score,player_two_score,player_one_club_name,player_two_club_name,player_one_elo_change,player_two_elo_change,player_one_goal_bonus,player_two_goal_bonus").eq("game_version",version).order("played_at",{ascending:false}).limit(30),
    supabase.from("fc_rating_history").select("player_id,rating_change,created_at").eq("game_version",version).gte("created_at",weekStart.toISOString()),
    supabase.from("fc_matches").select("player_one_id,player_two_id,played_at,player_one_goal_bonus,player_two_goal_bonus").eq("game_version",version).eq("match_type","ranked")
   ]);
