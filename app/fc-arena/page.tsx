@@ -7,7 +7,8 @@ import SiteNavigation from "@/components/SiteNavigation";
 type Player={id:string;username:string;player_code:string;photo_url?:string|null};
 type Club={id:string;game_version:"FC26"|"FC27";name:string;star_rating:number};
 type Rating={player_id:string;game_version:string;elo_rating:number;matches_played:number;wins:number;draws:number;losses:number};
-type History={player_id:string;rating_change:number;created_at:string};\ntype Match={id:string;game_version:string;played_at:string;player_one_id:string;player_two_id:string;player_one_score:number;player_two_score:number;player_one_club_name:string;player_two_club_name:string;player_one_elo_change:number|null;player_two_elo_change:number|null};
+type History={player_id:string;rating_change:number;created_at:string};
+type Match={id:string;game_version:string;played_at:string;player_one_id:string;player_two_id:string;player_one_score:number;player_two_score:number;player_one_club_name:string;player_two_club_name:string;player_one_elo_change:number|null;player_two_elo_change:number|null};
 const versions=["FC26","FC27"] as const;
 const fmt=(v:number)=>Number(v||0).toLocaleString("en-NG");
 export default function FCArenaPage(){
@@ -15,18 +16,22 @@ export default function FCArenaPage(){
  const [players,setPlayers]=useState<Player[]>([]);
  const [ratings,setRatings]=useState<Rating[]>([]);
  const [clubs,setClubs]=useState<Club[]>([]);
- const [matches,setMatches]=useState<Match[]>([]);\n const [history,setHistory]=useState<History[]>([]);\n const [board,setBoard]=useState<"career"|"weekly">("career");
+ const [matches,setMatches]=useState<Match[]>([]);
+ const [history,setHistory]=useState<History[]>([]);
+ const [board,setBoard]=useState<"career"|"weekly">("career");
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  const [search,setSearch]=useState("");
  useEffect(()=>{let live=true;async function load(){
   if(!supabase){setError("Arena is not configured yet.");setLoading(false);return}
   setLoading(true);
-  const now=new Date();const weekStart=new Date(now);weekStart.setDate(now.getDate()-((now.getDay()+1)%7));weekStart.setHours(0,0,0,0);\n  const [p,r,c,m,h]=await Promise.all([
+  const now=new Date();const weekStart=new Date(now);weekStart.setDate(now.getDate()-((now.getDay()+1)%7));weekStart.setHours(0,0,0,0);
+  const [p,r,c,m,h]=await Promise.all([
    supabase.from("players").select("id,username,player_code,photo_url").order("username"),
    supabase.from("fc_player_ratings").select("player_id,game_version,elo_rating,matches_played,wins,draws,losses").eq("game_version",version),
    supabase.from("fc_clubs").select("id,game_version,name,star_rating").eq("game_version",version).eq("is_active",true).order("star_rating",{ascending:false}).order("name"),
-   supabase.from("fc_matches").select("id,game_version,played_at,player_one_id,player_two_id,player_one_score,player_two_score,player_one_club_name,player_two_club_name,player_one_elo_change,player_two_elo_change").eq("game_version",version).order("played_at",{ascending:false}).limit(30)
+   supabase.from("fc_matches").select("id,game_version,played_at,player_one_id,player_two_id,player_one_score,player_two_score,player_one_club_name,player_two_club_name,player_one_elo_change,player_two_elo_change").eq("game_version",version).order("played_at",{ascending:false}).limit(30),
+   supabase.from("fc_rating_history").select("player_id,rating_change,created_at").eq("game_version",version).gte("created_at",weekStart.toISOString())
   ]);
   if(!live)return;
   const failure=p.error||r.error||c.error||m.error||h.error;
@@ -37,7 +42,9 @@ export default function FCArenaPage(){
  },[version]);
  const playerMap=useMemo(()=>new Map(players.map(p=>[p.id,p])),[players]);
  const ranked=useMemo(()=>ratings.map(r=>({...r,player:playerMap.get(r.player_id)})).filter(r=>r.player).sort((a,b)=>b.elo_rating-a.elo_rating),[ratings,playerMap]);
- const weeklyRanked=useMemo(()=>{const totals=new Map<string,{points:number;matches:number}>();history.forEach(row=>{const v=totals.get(row.player_id)||{points:0,matches:0};v.points+=Number(row.rating_change||0);v.matches+=1;totals.set(row.player_id,v)});return Array.from(totals.entries()).map(([player_id,v])=>({player_id,elo_rating:v.points,matches_played:v.matches,player:playerMap.get(player_id)})).filter(x=>x.player).sort((a,b)=>b.elo_rating-a.elo_rating)},[history,playerMap]);\n const activeBoard=board==="career"?ranked:weeklyRanked;\n const filtered=activeBoard.filter(r=>(r.player!.username+" "+r.player!.player_code).toLowerCase().includes(search.toLowerCase()));
+ const weeklyRanked=useMemo(()=>{const totals=new Map<string,{points:number;matches:number}>();history.forEach(row=>{const v=totals.get(row.player_id)||{points:0,matches:0};v.points+=Number(row.rating_change||0);v.matches+=1;totals.set(row.player_id,v)});return Array.from(totals.entries()).map(([player_id,v])=>({player_id,elo_rating:v.points,matches_played:v.matches,player:playerMap.get(player_id)})).filter(x=>x.player).sort((a,b)=>b.elo_rating-a.elo_rating)},[history,playerMap]);
+ const activeBoard=board==="career"?ranked:weeklyRanked;
+ const filtered=activeBoard.filter(r=>(r.player!.username+" "+r.player!.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=ratings.reduce((n,r)=>n+r.matches_played,0)/2;
  return <main className="shell redesign-shell"><SiteNavigation/><div className="fc-wrap">
   <header className="fc-hero"><div className="fc-kicker">BASE25 PRO / COMPETITIVE GAMING</div><h1>FC <span>ARENA</span></h1><p>Pick your club. Play your match. Earn your place.</p><div className="fc-hero-stats"><div><b>{ranked.length}</b><small>RANKED PLAYERS</small></div><div><b>{fmt(totalMatches)}</b><small>RANKED MATCHES</small></div><div><b>{clubs.length}</b><small>ACTIVE CLUBS</small></div></div></header>
