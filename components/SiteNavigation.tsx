@@ -30,6 +30,7 @@ const competitionLinks = [
   { href: "/matches", label: "Match history", icon: "history" },
   { href: "/weekly-archive", label: "Weekly archive", icon: "calendar" },
   { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
+  { href: "/fc-arena", label: "FC Arena", icon: "target" },
 ];
 
 export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void } = {}) {
@@ -206,6 +207,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
             <Link className={pathname === "/matches" ? "active" : ""} href="/matches" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="history" /></span>Match history</Link>
             <Link className={pathname === "/weekly-archive" ? "active" : ""} href="/weekly-archive" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="calendar" /></span>Weekly archive</Link>
             <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="crown" /></span>Hall of Fame</Link>
+            <Link className={pathname.startsWith("/fc-arena") ? "active" : ""} href="/fc-arena" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>FC Arena</Link>
           </div>}
           <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="players" /></span>Players</Link>
           {isStaff && <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Predictions League</Link>}
