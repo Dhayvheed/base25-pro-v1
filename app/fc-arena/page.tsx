@@ -18,7 +18,8 @@ export default function FCArenaPage(){
  const [ratings,setRatings]=useState<Rating[]>([]);
  const [clubs,setClubs]=useState<Club[]>([]);
  const [matches,setMatches]=useState<Match[]>([]);
- const [history,setHistory]=useState<History[]>([]);\n const [bonusMatches,setBonusMatches]=useState<BonusMatch[]>([]);
+ const [history,setHistory]=useState<History[]>([]);
+ const [bonusMatches,setBonusMatches]=useState<BonusMatch[]>([]);
  const [board,setBoard]=useState<"career"|"weekly">("career");
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
