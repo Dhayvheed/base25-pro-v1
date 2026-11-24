@@ -30,6 +30,7 @@ const competitionLinks = [
   { href: "/matches", label: "Match history", icon: "history" },
   { href: "/weekly-archive", label: "Weekly archive", icon: "calendar" },
   { href: "/hall-of-fame", label: "Hall of Fame", icon: "crown" },
+  { href: "/fc-arena", label: "FC Arena", icon: "target" },
 ];
 
 export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountChange?: (value: { signedIn:boolean; authReady:boolean; profile:any; accountName:string }) => void } = {}) {
