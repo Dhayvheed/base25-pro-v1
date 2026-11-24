@@ -7,7 +7,7 @@ import SiteNavigation from "@/components/SiteNavigation";
 type Player={id:string;username:string;player_code:string;photo_url?:string|null};
 type Club={id:string;game_version:"FC26"|"FC27";name:string;star_rating:number};
 type Rating={player_id:string;game_version:string;elo_rating:number;matches_played:number;wins:number;draws:number;losses:number};
-type Match={id:string;game_version:string;played_at:string;player_one_id:string;player_two_id:string;player_one_score:number;player_two_score:number;player_one_club_name:string;player_two_club_name:string;player_one_elo_change:number|null;player_two_elo_change:number|null};
+type History={player_id:string;rating_change:number;created_at:string};\ntype Match={id:string;game_version:string;played_at:string;player_one_id:string;player_two_id:string;player_one_score:number;player_two_score:number;player_one_club_name:string;player_two_club_name:string;player_one_elo_change:number|null;player_two_elo_change:number|null};
 const versions=["FC26","FC27"] as const;
 const fmt=(v:number)=>Number(v||0).toLocaleString("en-NG");
 export default function FCArenaPage(){
@@ -15,36 +15,36 @@ export default function FCArenaPage(){
  const [players,setPlayers]=useState<Player[]>([]);
  const [ratings,setRatings]=useState<Rating[]>([]);
  const [clubs,setClubs]=useState<Club[]>([]);
- const [matches,setMatches]=useState<Match[]>([]);
+ const [matches,setMatches]=useState<Match[]>([]);\n const [history,setHistory]=useState<History[]>([]);\n const [board,setBoard]=useState<"career"|"weekly">("career");
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  const [search,setSearch]=useState("");
  useEffect(()=>{let live=true;async function load(){
   if(!supabase){setError("Arena is not configured yet.");setLoading(false);return}
   setLoading(true);
-  const [p,r,c,m]=await Promise.all([
+  const now=new Date();const weekStart=new Date(now);weekStart.setDate(now.getDate()-((now.getDay()+1)%7));weekStart.setHours(0,0,0,0);\n  const [p,r,c,m,h]=await Promise.all([
    supabase.from("players").select("id,username,player_code,photo_url").order("username"),
    supabase.from("fc_player_ratings").select("player_id,game_version,elo_rating,matches_played,wins,draws,losses").eq("game_version",version),
    supabase.from("fc_clubs").select("id,game_version,name,star_rating").eq("game_version",version).eq("is_active",true).order("star_rating",{ascending:false}).order("name"),
    supabase.from("fc_matches").select("id,game_version,played_at,player_one_id,player_two_id,player_one_score,player_two_score,player_one_club_name,player_two_club_name,player_one_elo_change,player_two_elo_change").eq("game_version",version).order("played_at",{ascending:false}).limit(30)
   ]);
   if(!live)return;
-  const failure=p.error||r.error||c.error||m.error;
-  if(failure)setError(failure.message);else{setPlayers(p.data||[]);setRatings(r.data||[]);setClubs(c.data||[]);setMatches(m.data||[]);setError("")}
+  const failure=p.error||r.error||c.error||m.error||h.error;
+  if(failure)setError(failure.message);else{setPlayers(p.data||[]);setRatings(r.data||[]);setClubs(c.data||[]);setMatches(m.data||[]);setHistory(h.data||[]);setError("")}
   setLoading(false);
  }
  load();return()=>{live=false}
  },[version]);
  const playerMap=useMemo(()=>new Map(players.map(p=>[p.id,p])),[players]);
  const ranked=useMemo(()=>ratings.map(r=>({...r,player:playerMap.get(r.player_id)})).filter(r=>r.player).sort((a,b)=>b.elo_rating-a.elo_rating),[ratings,playerMap]);
- const filtered=ranked.filter(r=>(r.player!.username+" "+r.player!.player_code).toLowerCase().includes(search.toLowerCase()));
+ const weeklyRanked=useMemo(()=>{const totals=new Map<string,{points:number;matches:number}>();history.forEach(row=>{const v=totals.get(row.player_id)||{points:0,matches:0};v.points+=Number(row.rating_change||0);v.matches+=1;totals.set(row.player_id,v)});return Array.from(totals.entries()).map(([player_id,v])=>({player_id,elo_rating:v.points,matches_played:v.matches,player:playerMap.get(player_id)})).filter(x=>x.player).sort((a,b)=>b.elo_rating-a.elo_rating)},[history,playerMap]);\n const activeBoard=board==="career"?ranked:weeklyRanked;\n const filtered=activeBoard.filter(r=>(r.player!.username+" "+r.player!.player_code).toLowerCase().includes(search.toLowerCase()));
  const totalMatches=ratings.reduce((n,r)=>n+r.matches_played,0)/2;
  return <main className="shell redesign-shell"><SiteNavigation/><div className="fc-wrap">
   <header className="fc-hero"><div className="fc-kicker">BASE25 PRO / COMPETITIVE GAMING</div><h1>FC <span>ARENA</span></h1><p>Pick your club. Play your match. Earn your place.</p><div className="fc-hero-stats"><div><b>{ranked.length}</b><small>RANKED PLAYERS</small></div><div><b>{fmt(totalMatches)}</b><small>RANKED MATCHES</small></div><div><b>{clubs.length}</b><small>ACTIVE CLUBS</small></div></div></header>
   <div className="fc-toolbar"><div className="fc-tabs">{versions.map(v=><button key={v} className={version===v?"active":""} onClick={()=>setVersion(v)}>{v}</button>)}</div><Link className="fc-admin-link" href="/fc-arena/admin">ARENA ADMIN ↗</Link></div>
   {error&&<div className="fc-notice">{error}</div>}
-  <section className="fc-panel"><div className="fc-panel-head"><div><small>THE RANKINGS</small><h2>{version} Leaderboard</h2><p>Ratings are tracked separately for each FC edition.</p></div><input aria-label="Search players" placeholder="Search player..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
-  {loading?<div className="fc-empty">Loading arena rankings…</div>:filtered.length===0?<div className="fc-empty">No ranked players yet. Record the first match to open the table.</div>:<div className="fc-table"><div className="fc-table-head"><span>RANK</span><span>PLAYER</span><span>W-D-L</span><span>RATING</span></div>{filtered.map((r,i)=><div className={"fc-player-row "+(i===0?"leader":"")} key={r.player_id}><span className="fc-rank">{String(i+1).padStart(2,"0")}</span><span className="fc-player"><span className="fc-avatar">{r.player!.photo_url?<img src={r.player!.photo_url} alt=""/>:r.player!.username.slice(0,1).toUpperCase()}</span><span><b>@{r.player!.username}</b><small>{r.player!.player_code}</small></span></span><span className="fc-record">{r.wins}-{r.draws}-{r.losses}</span><strong className="fc-elo">{fmt(r.elo_rating)}</strong></div>)}</div>}</section>
+  <section className="fc-panel"><div className="fc-panel-head"><div><small>THE RANKINGS</small><h2>{version} Leaderboard</h2><p>{board==="career"?"Career Elo rating.":"Net Elo gained since Saturday this week."}</p><div className="fc-board-switch"><button className={board==="career"?"selected":""} onClick={()=>setBoard("career")}>CAREER</button><button className={board==="weekly"?"selected":""} onClick={()=>setBoard("weekly")}>THIS WEEK</button></div></div><input aria-label="Search players" placeholder="Search player..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
+  {loading?<div className="fc-empty">Loading arena rankings…</div>:filtered.length===0?<div className="fc-empty">No ranked results for this board yet. Record the first match to open the table.</div>:<div className="fc-table"><div className="fc-table-head"><span>RANK</span><span>PLAYER</span><span>W-D-L</span><span>RATING</span></div>{filtered.map((r,i)=><div className={"fc-player-row "+(i===0?"leader":"")} key={r.player_id}><span className="fc-rank">{String(i+1).padStart(2,"0")}</span><span className="fc-player"><span className="fc-avatar">{r.player!.photo_url?<img src={r.player!.photo_url} alt=""/>:r.player!.username.slice(0,1).toUpperCase()}</span><span><b>@{r.player!.username}</b><small>{r.player!.player_code}</small></span></span><span className="fc-record">{r.wins}-{r.draws}-{r.losses}</span><strong className="fc-elo">{fmt(r.elo_rating)}</strong></div>)}</div>}</section>
   <section className="fc-panel"><div className="fc-panel-head"><div><small>CLUB DATABASE</small><h2>{version} Club Ratings</h2><p>Club strength is considered when calculating expected match outcomes.</p></div></div><div className="fc-club-grid">{clubs.map(c=><div className="fc-club" key={c.id}><b>{c.name}</b><span>{"★".repeat(Math.floor(c.star_rating))}{c.star_rating%1?"½":""}</span><small>{Number(c.star_rating).toFixed(1)} / 5</small></div>)}</div>{!loading&&clubs.length===0&&<div className="fc-empty">Club list is being prepared.</div>}</section>
   <section className="fc-panel"><div className="fc-panel-head"><div><small>RECENT RESULTS</small><h2>Latest matches</h2><p>Ranked and casual fixtures recorded at BASE25.</p></div></div>{loading?<div className="fc-empty">Loading results…</div>:matches.length===0?<div className="fc-empty">No matches recorded yet.</div>:<div className="fc-match-list">{matches.map(m=><article className="fc-match" key={m.id}><div><b>@{playerMap.get(m.player_one_id)?.username||"Player"}</b><small>{m.player_one_club_name}</small></div><strong>{m.player_one_score} <i>—</i> {m.player_two_score}</strong><div className="right"><b>@{playerMap.get(m.player_two_id)?.username||"Player"}</b><small>{m.player_two_club_name}</small></div><footer>{new Date(m.played_at).toLocaleString("en-NG",{dateStyle:"medium",timeStyle:"short"})}<span>{m.player_one_elo_change==null?"CASUAL":(m.player_one_elo_change>0?"+":"")+m.player_one_elo_change+" ELO"}</span></footer></article>)}</div>}</section>
   <p className="fc-foot">BASE25 PRO · FC ARENA · {version}</p>
