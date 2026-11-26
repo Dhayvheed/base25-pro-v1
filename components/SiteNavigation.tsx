@@ -208,6 +208,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
             <Link className={pathname === "/hall-of-fame" ? "active" : ""} href="/hall-of-fame" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="crown" /></span>Hall of Fame</Link>
           </div>}
           <Link className={pathname.startsWith("/players") ? "active" : ""} href="/players" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="players" /></span>Players</Link>
+          <Link className={pathname.startsWith("/matchup-calculator") ? "active" : ""} href="/matchup-calculator" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Matchup Calculator</Link>
           {isStaff && <Link className={pathname === "/predictions" ? "active" : ""} href="/predictions" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}><span><MenuIcon name="target" /></span>Predictions League</Link>}
         </nav>
         <div className="menu-v2-section-label menu-v2-about-label">ABOUT</div>
