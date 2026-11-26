@@ -61,7 +61,7 @@ export default function LeaderboardPage() {
         const designations = new Map((designationRows || []).map((row: any) => [row.id, row.designation]));
         const bonusData = await getBoardmanBonusData(supabase);
         setPlayers(rows.map((player) => ({ ...player, designation: designations.get(player.id) || "regular", boardmanBonusPoints: bonusData.bonusByPlayerId.get(player.id) || 0 }))
-          .sort((a, b) => (Number(b.elo_rating || 0) + Number(b.boardmanBonusPoints || 0)) - (Number(a.elo_rating || 0) + Number(a.boardmanBonusPoints || 0))));
+          .sort((a, b) => Number(b.designation === "boardman") - Number(a.designation === "boardman") || (Number(b.elo_rating || 0) + Number(b.boardmanBonusPoints || 0)) - (Number(a.elo_rating || 0) + Number(a.boardmanBonusPoints || 0))));
       }
       setLoading(false);
     }
@@ -125,10 +125,11 @@ export default function LeaderboardPage() {
             <div className="weekly-table">
               <div className="weekly-table-head"><span>RANK</span><span>PLAYER</span><span>W</span><span>L</span><span>TOTAL PTS</span></div>
               {filtered.map((player) => {
-                const rank = players.findIndex((p) => p.id === player.id) + 1;
+                const playerIndex = players.findIndex((p) => p.id === player.id);
+                const rank = player.designation === "boardman" ? null : players.slice(0, playerIndex).filter((p) => p.designation !== "boardman").length + 1;
                 return (
-                  <Link href={`/players/${player.id}`} className={`weekly-player-row ${rank <= 5 ? "is-qualifying" : ""} ${rank === 1 ? "is-leader" : ""}`} key={player.id}>
-                    <span className="weekly-rank">{rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : String(rank).padStart(2, "0")}</span>
+                  <Link href={`/players/${player.id}`} className={`weekly-player-row ${rank !== null && rank <= 5 ? "is-qualifying" : ""} ${rank === 1 ? "is-leader" : ""}`} key={player.id}>
+                    <span className="weekly-rank">{rank === null ? "—" : rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : String(rank).padStart(2, "0")}</span>
                     <span className="weekly-player"><Avatar player={player} /><span><b>{player.username} {player.designation === "boardman" && <span className="weekly-designation is-boardman">BOARDMAN 💀</span>}{player.designation === "house_ghost" && <span className="weekly-designation is-ghost">HOUSE GHOSTS 👻</span>}</b><small>{player.player_code}</small></span></span>
                     <strong>{player.wins}</strong>
                     <strong>{player.losses}</strong>
