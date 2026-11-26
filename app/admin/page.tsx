@@ -325,8 +325,14 @@ export default function Admin() {
     setBusy(false);
   }
   async function savePlayerEdit(event: FormEvent) {
-    event.preventDefault(); if (!supabase || !editingPlayer) return; setBusy(true);
-    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: players.find(item => item.id === editingPlayer)?.username || "", p_photo_url: editPhoto.trim() || null });
+    event.preventDefault();
+    if (!supabase || !editingPlayer) return;
+    const normalizedUsername = editUsername.trim().replace(/^@+/, "");
+    if (!editFullName.trim() || !normalizedUsername) { setMessage("Full name and username are required."); return; }
+    const duplicate = players.some(player => player.id !== editingPlayer && player.username.trim().replace(/^@+/, "").toLowerCase() === normalizedUsername.toLowerCase());
+    if (duplicate) { setMessage(`@${normalizedUsername} is already taken. Choose another username.`); return; }
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_update_player", { p_player_id: editingPlayer, p_full_name: editFullName.trim(), p_username: normalizedUsername, p_photo_url: editPhoto.trim() || null });
     if (error) setMessage(`Player update failed: ${error.message}`); else { setMessage("Player profile updated."); setEditingPlayer(null); await refresh(); }
     setBusy(false);
   }
@@ -668,7 +674,8 @@ export default function Admin() {
               {expanded&&<div className="manage-profile-details">
                 {editingPlayer===player.id?<form className="form manage-profile-edit" onSubmit={savePlayerEdit}>
                   <label>Full name<input required value={editFullName} onChange={e=>setEditFullName(e.target.value)}/></label>
-                  <div className="eyebrow">USERNAME · @{player.username} (LOCKED)</div>
+                  <label>Username<input required value={editUsername} onChange={e=>setEditUsername(e.target.value.replace(/\\s/g,""))} placeholder="Choose a unique username" autoCapitalize="none" autoCorrect="off"/></label>
+                  <p className="manage-profile-help">Usernames must be unique. Existing usernames cannot be assigned to another player.</p>
                   <label>Photo URL<input value={editPhoto} onChange={e=>setEditPhoto(e.target.value)}/></label>
                   <div className="manage-profile-actions"><button disabled={busy}>Save changes</button><button type="button" className="secondary" onClick={()=>setEditingPlayer(null)}>Cancel</button></div>
                 </form>:<>
