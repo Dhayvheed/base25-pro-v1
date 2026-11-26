@@ -20,9 +20,7 @@ export default function PWAInstall() {
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch((error) => console.error("BASE25 PRO service worker registration failed:", error));
-      }, { once: true });
+      navigator.serviceWorker.register("/sw.js").catch((error) => console.error("BASE25 PRO service worker registration failed:", error));
     }
     return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
   }, []);
