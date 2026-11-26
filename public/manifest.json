@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "BASE25 PRO",
+  "short_name": "BASE25 PRO",
+  "description": "The official BASE25 competition board. Track players, matches and rankings.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
+  "categories": [
+    "games",
+    "sports",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
