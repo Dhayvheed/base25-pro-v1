@@ -11,6 +11,7 @@ create table public.kombat_fighters (
   slug text not null unique check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   image_src text,
   tile_color text,
+  starting_group text not null check (starting_group in ('A','B','C','D')),
   enabled boolean not null default true,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
