@@ -48,6 +48,8 @@ create table public.kombat_config (
      and fighter_tier_a_min >= fighter_tier_b_min)
 );
 
+insert into public.kombat_config (singleton) values (true);
+
 create table public.kombat_ratings (
   player_id uuid primary key references public.players(id) on delete restrict,
   all_time_elo integer not null default 1000 check (all_time_elo >= 0),
