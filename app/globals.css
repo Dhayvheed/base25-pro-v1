@@ -1427,7 +1427,7 @@
 /* BASE25 KOMBAT ARENA — isolated visual layer */
 .kombat-shell{position:relative;min-height:100vh;background:#0b0a0a;color:#f4f1f0;overflow:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom));}
 .kombat-shell:before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:420px;pointer-events:none;background:radial-gradient(ellipse at 85% 18%,rgba(229,55,46,.30),transparent 62%);}
-.kombat-shell>*{position:relative;z-index:1}
+.kombat-shell>.home-header,.kombat-shell>.home-game-row,.kombat-shell>.kombat-content{position:relative;z-index:1}
 .kombat-shell .home-header,.kombat-shell .home-game-row{max-width:480px;margin-left:auto;margin-right:auto}
 .kombat-shell .home-game-chips a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;border:1px solid #3a2c2c;border-radius:4px;background:#141010;color:#f4f1f0;text-decoration:none;font:800 16px "Barlow Condensed",sans-serif;text-transform:uppercase}
 .kombat-shell .home-game-chips a.active{background:#e5372e;border-color:#e5372e;clip-path:polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px))}
