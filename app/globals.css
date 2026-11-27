@@ -1390,3 +1390,15 @@
 @keyframes home-pot-glow{50%{box-shadow:0 0 30px rgba(232,197,71,.13)}}
 @media(prefers-reduced-motion:reduce){.home-simple .home-v2-pot,.home-simple .home-last-match i{animation:none}}
 @media(max-width:390px){.home-simple{padding-left:12px;padding-right:12px}.home-simple .home-v2-columns,.home-simple .home-v2-player-row{grid-template-columns:22px 30px minmax(0,1fr) 43px 44px;gap:5px}.home-simple .home-v2-record{font-size:9px}.home-simple .home-v2-rating{font-size:12px}.home-simple .home-v2-hero{min-height:155px;padding:17px 12px}.home-simple .home-v2-hero-copy{max-width:77%}.home-simple .home-v2-actions{gap:6px}.home-simple .home-v2-primary,.home-simple .home-v2-secondary{padding:0 10px;font-size:11px}}
+
+
+.home-total-skeleton{display:block;width:58px;height:27px;border-radius:7px;background:linear-gradient(90deg,#1a241e,#29362d,#1a241e);background-size:200% 100%;animation:admin-skeleton 1.2s ease-in-out infinite}
+.home-simple .home-header-bell:after{display:none}
+.home-simple .home-v2-player-row.is-house .home-v2-rank{color:#b4beb8}
+.home-simple .home-v2-player-row.is-house .home-v2-player-copy strong{color:#e0e4e1}
+.home-simple .home-v2-player-row.is-real .home-v2-rank{color:#c8f169}
+.home-simple .home-simple-tags i{border-color:#78827c;background:transparent;color:#b4beb8}
+.home-simple .home-simple-tags em{border-color:#9b7434;background:#382713;color:#f0c36b}
+.home-simple .home-v2-rating{font-variant-numeric:tabular-nums}
+.home-simple .home-v2-record{font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.home-total-skeleton{animation:none}}
