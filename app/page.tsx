@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
@@ -17,12 +16,11 @@ function Avatar({player}:{player:{username:string;photo_url?:string|null}}){retu
 function getLagosWeekStartDate(){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const part=(t:string)=>Number(parts.find(p=>p.type===t)?.value||0);const today=Date.UTC(part("year"),part("month")-1,part("day"));const weekday=new Date(today).getUTCDay();return new Date(today-((weekday+1)%7)*86400000).toISOString().slice(0,10);}
 function CountValue({value,gold=false,loading=false}:{value:number;gold?:boolean;loading?:boolean}){const [shown,setShown]=useState(value);useEffect(()=>{const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;if(reduced){setShown(value);return;}let frame=0,start=0;const duration=1000;const tick=(now:number)=>{if(!start)start=now;const t=Math.min(1,(now-start)/duration);const eased=1-Math.pow(1-t,3);setShown(Math.round(value*eased));if(t<1)frame=requestAnimationFrame(tick);};setShown(0);frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[value]);return loading?<i className="home-total-skeleton" aria-label="Loading total"/>:<strong className={gold?"is-gold":""}>{gold?money(shown):shown.toLocaleString("en-NG")}</strong>;}
 export default function Home(){
- const searchParams = useSearchParams();
  const [account,setAccount]=useState<HomeAccount>({signedIn:false,authReady:false,profile:null,accountName:""});
  const [players,setPlayers]=useState<Player[]>([]),[weeklyPlayers,setWeeklyPlayers]=useState<Player[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [champion,setChampion]=useState<Champion|null>(null),[matchesSinceSaturday,setMatchesSinceSaturday]=useState(0),[potAmount,setPotAmount]=useState(0),[paidOut,setPaidOut]=useState(0),[allMatchCount,setAllMatchCount]=useState(0);
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[showAllWeekly,setShowAllWeekly]=useState(false),[selectedGame,setSelectedGame]=useState("billiards"),[bonusByMatch,setBonusByMatch]=useState<Map<string,number>>(new Map());
- useEffect(()=>{const game=searchParams.get("game");setSelectedGame(game==="fifa"||game==="mortal-kombat"?game:"billiards");window.scrollTo(0,0);},[searchParams]);
+ useEffect(()=>{const game=new URLSearchParams(window.location.search).get("game");setSelectedGame(game==="fifa"||game==="mortal-kombat"?game:"billiards");window.scrollTo(0,0);},[]);
  const chooseGame=(game:string)=>{setSelectedGame(game);const url=new URL(window.location.href);if(game==="billiards")url.searchParams.delete("game");else url.searchParams.set("game",game);window.history.replaceState({}, "",url.toString());};
  const share=async()=>{const url=window.location.href;try{if(navigator.share)await navigator.share({title:"BASE25 PRO · Every match counts",url});else{await navigator.clipboard.writeText(url);}}catch{}};
  useEffect(()=>{let active=true;async function load(){if(!supabase){setError("Records are temporarily unavailable.");setLoading(false);return;}
