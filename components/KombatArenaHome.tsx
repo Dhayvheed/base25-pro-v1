@@ -15,7 +15,7 @@ type KombatMatch = {
   match_type: "ranked" | "casual"; is_final: boolean; published_at: string;
 };
 type PublicConfig = { pot_mode: "live" | "fixed" | "soon"; fixed_pot_amount: number | null; pot_per_ranked_match: number | null };
-type ArenaData = { ratings: Rating[]; players: Map<string, Player>; fighters: Map<string, Fighter>; matches: KombatMatch[]; config: PublicConfig | null; loading: boolean };
+type ArenaData = { ratings: Rating[]; players: Map<string, Player>; fighters: Map<string, Fighter>; matches: KombatMatch[]; config: PublicConfig | null; livePotAmount: number; loading: boolean };
 
 function EmptyState({ children }: { children: React.ReactNode }) {
   return <p className="kombat-empty-state">{children}</p>;
@@ -34,7 +34,7 @@ function FighterTile({ fighter }: { fighter?: Fighter }) {
 
 export default function KombatArenaHome({ account: initialAccount }: { account: Account }) {
   const [account, setAccount] = useState(initialAccount);
-  const [arena, setArena] = useState<ArenaData>({ ratings: [], players: new Map(), fighters: new Map(), matches: [], config: null, loading: true });
+  const [arena, setArena] = useState<ArenaData>({ ratings: [], players: new Map(), fighters: new Map(), matches: [], config: null, livePotAmount: 0, loading: true });
   const share = async () => {
     try {
       if (navigator.share) await navigator.share({ title: "BASE25 KOMBAT ARENA", url: window.location.href });
@@ -49,15 +49,21 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
         if (active) setArena((old) => ({ ...old, loading: false }));
         return;
       }
-      const [ratingResult, matchResult, fighterResult, configResult] = await Promise.all([
+      const [ratingResult, matchResult, fighterResult, configResult, weekResult] = await Promise.all([
         supabase.from("kombat_ratings").select("player_id,weekly_rating,all_time_elo,ranked_wins,ranked_losses").order("weekly_rating", { ascending: false }).limit(5),
         supabase.from("kombat_matches").select("id,player_one_id,player_two_id,fighter_one_id,fighter_two_id,winner_id,player_one_games_won,player_two_games_won,match_type,is_final,published_at").not("published_at", "is", null).is("voided_at", null).order("published_at", { ascending: false }).limit(5),
         supabase.from("kombat_fighters").select("id,name,slug,tile_color,image_src").eq("enabled", true).order("sort_order", { ascending: true }),
-        supabase.from("kombat_public_config").select("pot_mode,fixed_pot_amount,pot_per_ranked_match").maybeSingle()
+        supabase.from("kombat_public_config").select("pot_mode,fixed_pot_amount,pot_per_ranked_match").maybeSingle(),
+        supabase.from("kombat_weeks").select("id").eq("status", "open").order("starts_at", { ascending: false }).limit(1).maybeSingle()
       ]);
       if (!active) return;
       const ratings = (ratingResult.data || []) as Rating[];
       const matches = (matchResult.data || []) as KombatMatch[];
+      let livePotAmount = 0;
+      if (!weekResult.error && weekResult.data?.id) {
+        const potResult = await supabase.from("kombat_matches").select("pot_contribution").eq("week_id", weekResult.data.id).eq("match_type", "ranked").eq("is_final", false).not("published_at", "is", null).is("voided_at", null);
+        if (!potResult.error) livePotAmount = (potResult.data || []).reduce((total, row) => total + Number(row.pot_contribution || 0), 0);
+      }
       const fighters = new Map(((fighterResult.data || []) as Fighter[]).map((fighter) => [fighter.id, fighter]));
       const ids = [...new Set([...ratings.map((row) => row.player_id), ...matches.flatMap((row) => [row.player_one_id, row.player_two_id])])];
       let players = new Map<string, Player>();
@@ -72,6 +78,7 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
         fighters: fighterResult.error ? new Map() : fighters,
         matches: matchResult.error ? [] : matches,
         config: configResult.error ? null : (configResult.data as PublicConfig | null),
+        livePotAmount,
         loading: false
       });
     }
@@ -85,7 +92,7 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
   const potAmount = arena.config?.pot_mode === "fixed"
     ? Number(arena.config.fixed_pot_amount || 0)
     : arena.config?.pot_mode === "live"
-      ? arena.matches.filter((match) => match.match_type === "ranked" && !match.is_final).length * Number(arena.config.pot_per_ranked_match || 0)
+      ? arena.livePotAmount
       : null;
 
   return (
