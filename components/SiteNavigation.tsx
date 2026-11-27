@@ -47,6 +47,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
   useEffect(() => { onHomeAccountChange?.({ signedIn, authReady, profile: playerSummary, accountName }); }, [signedIn, authReady, playerSummary, accountName, onHomeAccountChange]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => { const openMenu = () => setOpen(true); window.addEventListener("base25:open-menu", openMenu); return () => window.removeEventListener("base25:open-menu", openMenu); }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
