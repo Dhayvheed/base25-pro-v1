@@ -14,19 +14,19 @@ export default function KombatArenaPage(){
  const [fighters,setFighters]=useState<Fighter[]>([]),[ratings,setRatings]=useState<Rating[]>([]),[matches,setMatches]=useState<Match[]>([]);
  const [config,setConfig]=useState<Config>({pot_mode:"soon",fixed_pot_amount:0,pot_per_ranked_match:100}),[week,setWeek]=useState<Week|null>(null);
  const [loading,setLoading]=useState(true),[unavailable,setUnavailable]=useState(false),[lastUpdated,setLastUpdated]=useState<Date|null>(null),[livePotCount,setLivePotCount]=useState(0);
- useEffect(()=>{if(!supabase){setUnavailable(true);setLoading(false);return;}let active=true;
+ useEffect(()=>{const db=supabase;if(!db){setUnavailable(true);setLoading(false);return;}let active=true;
  const load=async()=>{const [f,r,m,c,w]=await Promise.all([
- supabase.from("kombat_fighters").select("id,name,slug,enabled,sort_order,tile_color").eq("enabled",true).order("sort_order"),
- supabase.from("kombat_ratings").select("player_id,all_time_elo,weekly_rating,ranked_wins,ranked_losses,current_streak,player:players(username)").order("weekly_rating",{ascending:false}).limit(5),
- supabase.from("kombat_matches").select("id,player1_id,player2_id,winner_id,match_type,published_at,player1:players!kombat_matches_player1_id_fkey(username),player2:players!kombat_matches_player2_id_fkey(username)").not("published_at","is",null).is("voided_at",null).order("published_at",{ascending:false}).limit(4),
- supabase.from("kombat_config").select("pot_mode,fixed_pot_amount,pot_per_ranked_match").eq("id",1).maybeSingle(),
- supabase.from("kombat_weeks").select("id,start_at,end_at,status").eq("status","open").order("start_at",{ascending:false}).limit(1).maybeSingle()
- ]);if(!active)return;const liveCount = w.data?.id ? await supabase.from("kombat_matches").select("id",{count:"exact",head:true}).eq("week_id",w.data.id).eq("match_type","ranked").not("published_at","is",null).is("voided_at",null) : {count:0,error:null};
+ db.from("kombat_fighters").select("id,name,slug,enabled,sort_order,tile_color").eq("enabled",true).order("sort_order"),
+ db.from("kombat_ratings").select("player_id,all_time_elo,weekly_rating,ranked_wins,ranked_losses,current_streak,player:players(username)").order("weekly_rating",{ascending:false}).limit(5),
+ db.from("kombat_matches").select("id,player1_id,player2_id,winner_id,match_type,published_at,player1:players!kombat_matches_player1_id_fkey(username),player2:players!kombat_matches_player2_id_fkey(username)").not("published_at","is",null).is("voided_at",null).order("published_at",{ascending:false}).limit(4),
+ db.from("kombat_config").select("pot_mode,fixed_pot_amount,pot_per_ranked_match").eq("id",1).maybeSingle(),
+ db.from("kombat_weeks").select("id,start_at,end_at,status").eq("status","open").order("start_at",{ascending:false}).limit(1).maybeSingle()
+ ]);if(!active)return;const liveCount = w.data?.id ? await db.from("kombat_matches").select("id",{count:"exact",head:true}).eq("week_id",w.data.id).eq("match_type","ranked").not("published_at","is",null).is("voided_at",null) : {count:0,error:null};
  if(liveCount.error)setUnavailable(true);
  const errors=[f.error,r.error,m.error,c.error,w.error].filter(Boolean);if(errors.length)setUnavailable(true);
  setFighters((f.data||[]) as Fighter[]);setRatings((r.data||[]) as Rating[]);setMatches((m.data||[]) as Match[]);if(c.data)setConfig(c.data as Config);setWeek((w.data||null) as Week|null);setLivePotCount(liveCount.count||0);setLastUpdated(new Date());setLoading(false);};
- load();const channel=supabase.channel("kombat-arena-live").on("postgres_changes",{event:"*",schema:"public",table:"kombat_matches"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_ratings"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_fighters"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_config"},load).subscribe();
- const fallback=window.setInterval(load,30000);return()=>{active=false;window.clearInterval(fallback);supabase.removeChannel(channel);};},[]);
+ load();const channel=db.channel("kombat-arena-live").on("postgres_changes",{event:"*",schema:"public",table:"kombat_matches"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_ratings"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_fighters"},load).on("postgres_changes",{event:"*",schema:"public",table:"kombat_config"},load).subscribe();
+ const fallback=window.setInterval(load,30000);return()=>{active=false;window.clearInterval(fallback);db.removeChannel(channel);};},[]);
  const pot=useMemo(()=>config.pot_mode==="live"?{label:"LIVE KOMBAT POT",amount:money(livePotCount*config.pot_per_ranked_match),detail:"Ranked matches × "+money(config.pot_per_ranked_match)+" · resets Saturday"}:config.pot_mode==="fixed"?{label:"FIXED PRIZE",amount:money(config.fixed_pot_amount),detail:"Weekly prize set by BASE25 · paid to the Saturday champion"}:{label:"KOMBAT POT",amount:"Opens soon",detail:"The Kombat pot starts when more fighters join"},[config,livePotCount]);
  return <main style={{minHeight:"100vh",background:"#090909",color:"#f5f5f5",padding:"22px 16px 48px",fontFamily:"Arial,sans-serif"}}><div style={{maxWidth:560,margin:"0 auto",display:"grid",gap:16}}>
  <header style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><Link href="/" style={{color:"#f5f5f5",textDecoration:"none",fontWeight:900,letterSpacing:1}}>BASE25 <span style={{color:"#e8b84b"}}>PRO</span></Link><Link href="/" style={{color:"#aaa",textDecoration:"none",fontSize:13}}>← All games</Link></header>
