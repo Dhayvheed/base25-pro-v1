@@ -81,15 +81,25 @@ create table public.kombat_matches (
   voided_at timestamptz,
   void_reason text,
   check (player_one_id <> player_two_id),
-  check (fighter_one_id <> fighter_two_id),
+  -- Mirror matches are allowed; each player still has exactly one fighter FK.
   check (winner_id is null or winner_id in (player_one_id, player_two_id)),
   check (not is_final or match_format = 'bo5'),
+  check (
+    (player_one_games_won is null and player_two_games_won is null) or
+    (match_format = 'bo3' and
+      ((player_one_games_won = 2 and player_two_games_won between 0 and 1) or
+       (player_two_games_won = 2 and player_one_games_won between 0 and 1))) or
+    (match_format = 'bo5' and
+      ((player_one_games_won = 3 and player_two_games_won between 0 and 2) or
+       (player_two_games_won = 3 and player_one_games_won between 0 and 2)))
+  ),
   check (
     published_at is null or (
       winner_id is not null and
       player_one_games_won is not null and
       player_two_games_won is not null and
-      player_one_games_won <> player_two_games_won
+      ((winner_id = player_one_id and player_one_games_won > player_two_games_won) or
+       (winner_id = player_two_id and player_two_games_won > player_one_games_won))
     )
   ),
   check (voided_at is null or nullif(trim(void_reason), '') is not null)
@@ -151,6 +161,9 @@ create policy kombat_match_games_public_read on public.kombat_match_games
     )
   );
 
+-- Series child-row count, game winner slots, ranked/casual side effects, pot rules,
+-- and Elo calculations must be validated inside the Phase 2 atomic publish RPC.
+-- Do not implement those as loose client-side writes.
 -- Staff can inspect all Kombat rows, including unpublished records.
 -- There are intentionally NO direct client INSERT/UPDATE/DELETE policies in Phase 1.
 create policy kombat_fighters_staff_read on public.kombat_fighters
