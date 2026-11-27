@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import SiteNavigation from "@/components/SiteNavigation";
 import { supabase } from "@/lib/supabase";
@@ -34,7 +34,7 @@ function FighterTile({ fighter }: { fighter?: Fighter }) {
 
 export default function KombatArenaHome({ account: initialAccount }: { account: Account }) {
   const [account, setAccount] = useState(initialAccount);
-  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, []);
+  useLayoutEffect(() => {\n    const resetScroll = () => {\n      window.scrollTo(0, 0);\n      document.documentElement.scrollTop = 0;\n      document.body.scrollTop = 0;\n    };\n    resetScroll();\n    const frame = window.requestAnimationFrame(resetScroll);\n    return () => window.cancelAnimationFrame(frame);\n  }, []);
   const [arena, setArena] = useState<ArenaData>({ ratings: [], players: new Map(), fighters: new Map(), matches: [], config: null, livePotAmount: 0, loading: true });
   const share = async () => {
     try {
