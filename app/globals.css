@@ -1407,3 +1407,9 @@
 .home-simple .home-v2-pot-amount .home-total-skeleton{width:145px;height:42px;margin:5px auto}
 
 .home-simple .home-header-bell svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+
+/* Fix homepage weekly leaderboard CTA visibility */
+.home-simple a.home-v2-full-link{min-height:46px;padding:0 14px;margin-top:8px;border:1px solid #c8f169;border-radius:14px;background:transparent!important;color:#c8f169!important;font-size:12px;font-weight:800;line-height:1.2;text-align:center;text-decoration:none;}
+.home-simple a.home-v2-full-link:visited{color:#c8f169!important;}
+.home-simple a.home-v2-full-link:hover{background:rgba(200,241,105,.10)!important;color:#d8ff8c!important;}
