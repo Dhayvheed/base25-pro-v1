@@ -6,6 +6,7 @@ import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
 import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
+type SecondChanceRow = { player_id: string; week_start: string; reset_at: string };
 type PlayerAccountStatus = { player_id: string; assigned_email: string | null; account_status: "Not Assigned" | "Verification Pending" | "Verified" };
 type MatchRecord = { id: string; played_at: string; venue: string; player_one_id: string; player_two_id: string; player_one_score: number; player_two_score: number; winner_id: string };
 type MatchWager = { match_id: string; player_one_stake: number | string; player_two_stake: number | string };
@@ -20,6 +21,8 @@ export default function Admin() {
   const [newStaffRole, setNewStaffRole] = useState<"manager" | "attendant">("manager");
   const [staffRoleDrafts, setStaffRoleDrafts] = useState<Record<string, "manager" | "attendant">>({});
   const [players, setPlayers] = useState<Player[]>([]);
+  const [secondChanceRows, setSecondChanceRows] = useState<SecondChanceRow[]>([]);
+  const [secondChanceSearch, setSecondChanceSearch] = useState("");
   const [recentPlayerIds, setRecentPlayerIds] = useState<string[]>([]);
   const [playerAccountStatuses, setPlayerAccountStatuses] = useState<PlayerAccountStatus[]>([]);
   const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
@@ -72,7 +75,7 @@ export default function Admin() {
   const [championWeek, setChampionWeek] = useState("");
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions">("overview");
+  const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions"|"secondChance">("overview");
   const [profileSearch, setProfileSearch] = useState("");
   const [profileFilter, setProfileFilter] = useState<"all" | "no-login" | "active">("all");
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
@@ -130,6 +133,28 @@ export default function Admin() {
     const roleById = new Map((designations || []).map((row: any) => [row.id, row.designation]));
     setPlayers((data || []).map((player: Player) => ({ ...player, designation: (roleById.get(player.id) as Player["designation"]) || "regular" })));
     setPlayersLoaded(true);
+  }
+
+  async function refreshSecondChances() {
+    if (!supabase) return;
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+    const part = (name: string) => Number(parts.find(item => item.type === name)?.value || 0);
+    const day = new Date(Date.UTC(part("year"), part("month") - 1, part("day")));
+    day.setUTCDate(day.getUTCDate() - day.getUTCDay());
+    const weekStart = day.toISOString().slice(0, 10);
+    const { data, error } = await supabase.from("weekly_second_chances").select("player_id,week_start,reset_at").eq("week_start", weekStart);
+    if (error) { setMessage(`Could not load Second Chance records: ${error.message}`); return; }
+    setSecondChanceRows((data || []) as SecondChanceRow[]);
+  }
+
+  async function grantSecondChance(player: Player) {
+    if (!supabase || busy) return;
+    if (!window.confirm(`Reset the weekly leaderboard score for @${player.username}? This cannot be undone. Match history and career rating will remain unchanged.`)) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_grant_weekly_second_chance", { p_player_id: player.id });
+    if (error) setMessage(`Second Chance not granted: ${error.message}`);
+    else { setMessage(`Second Chance granted to @${player.username}. Their weekly score now starts fresh.`); await Promise.all([refreshSecondChances(), refresh()]); }
+    setBusy(false);
   }
 
   async function refreshPlayerAccountStatuses() {
@@ -211,7 +236,7 @@ export default function Admin() {
       setStaffRole(role === "owner" || role === "manager" || role === "attendant" ? role : null);
       if (error) setMessage(error.message);
       if (role) {
-        refresh(); refreshMatches();
+        refresh(); refreshMatches(); refreshSecondChances();
         const { data: potData, error: potError } = await supabase.rpc("get_current_kings_pot");
         if (!potError && Array.isArray(potData) && potData[0]) setKingsPot(potData[0]);
         const lagosToday = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
@@ -508,6 +533,7 @@ export default function Admin() {
         {staffRole==="owner"&&playersLoaded&&accountStatusesLoaded&&noLoginProfileCount>0&&<button type="button" className="admin-v2-attention" onClick={()=>setActiveSection("players")}><span className="admin-v2-attention-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></span><span><b>{noLoginProfileCount.toLocaleString("en-NG")} players can&#39;t log in yet.</b><small>Create their logins in Manage profiles.</small></span><i>›</i></button>}
         
         <h2 className="admin-v2-manage-title">Manage</h2><div className="admin-v2-manage">
+          <button type="button" onClick={()=>setActiveSection("secondChance")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></svg></span><div><b>Second Chance</b><small>Reset a player’s weekly score</small></div><i>›</i></button>
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("predictions")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h5M8 16h8"/></svg></span><div><b>Prediction questions</b><small>Weekly questions, points and schedules</small></div><i>›</i></button>}
           <button type="button" onClick={()=>setActiveSection("matches")} style={{display:staffRole==="owner"?"flex":"none"}}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg></span><div><b>Manage matches</b><small>Edit or remove results</small></div><i>›</i></button>
           {staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("players")}><span className="admin-v2-manage-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M6 16c.7-1.7 1.7-2.5 3-2.5s2.3.8 3 2.5M15 9h3M15 13h3"/></svg></span><div><b>Manage profiles</b><small>Photos, names, bios and logins</small></div><i>›</i></button>}
@@ -702,6 +728,20 @@ export default function Admin() {
         </div>)}
       </section>
       </>}
+      <section className="admin-card" style={{display:activeSection==="secondChance"?"block":"none"}}>
+        <div className="eyebrow">WEEKLY LEADERBOARD</div><h2>Grant a Second Chance</h2>
+        <p className="muted">Choose a player to restart their score for this leaderboard week. Their match history, career rating and previous records stay untouched. Each player can use this once per week.</p>
+        <label className="manage-profile-search"><input type="search" value={secondChanceSearch} onChange={e=>setSecondChanceSearch(e.target.value)} placeholder="Search player username or ID" aria-label="Search players for Second Chance"/></label>
+        <div className="manage-profile-list">
+          {players.filter(player=>`${player.username} ${player.full_name} ${player.player_code}`.toLowerCase().includes(secondChanceSearch.trim().toLowerCase())).map(player=>{
+            const granted=secondChanceRows.some(row=>row.player_id===player.id);
+            return <article className="manage-profile-card" key={player.id} style={{padding:14,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+              <div><strong>@{player.username}</strong><small style={{display:"block",opacity:.7}}>{player.player_code}</small></div>
+              {granted?<span className="manage-profile-status active">SECOND CHANCE USED</span>:<button type="button" className="manage-profile-primary" disabled={busy} onClick={()=>grantSecondChance(player)}>Reset weekly score</button>}
+            </article>
+          })}
+        </div>
+      </section>
       <section className="admin-card" style={{display:activeSection==="directory"?"block":"none"}}><h2>Registered players ({players.length})</h2>{players.map((player) => <div className="player-row" key={player.id}><b>{player.full_name}</b><span>{player.player_code}</span></div>)}</section>
       <p className="admin-v2-hint">Entered a wrong result? Tap the pencil to fix it.</p>
       <SiteNavigation />
