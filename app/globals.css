@@ -1402,3 +1402,6 @@
 .home-simple .home-v2-rating{font-variant-numeric:tabular-nums}
 .home-simple .home-v2-record{font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.home-total-skeleton{animation:none}}
+
+.home-simple{max-width:480px}
+.home-simple .home-v2-pot-amount .home-total-skeleton{width:145px;height:42px;margin:5px auto}
