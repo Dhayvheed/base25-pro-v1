@@ -1413,3 +1413,7 @@
 .home-simple a.home-v2-full-link{min-height:46px;padding:0 14px;margin-top:8px;border:1px solid #c8f169;border-radius:14px;background:transparent!important;color:#c8f169!important;font-size:12px;font-weight:800;line-height:1.2;text-align:center;text-decoration:none;}
 .home-simple a.home-v2-full-link:visited{color:#c8f169!important;}
 .home-simple a.home-v2-full-link:hover{background:rgba(200,241,105,.10)!important;color:#d8ff8c!important;}
+
+/* Homepage leaderboard expand/collapse control */
+.home-simple button.home-v2-full-link{width:100%;min-height:46px;padding:0 14px;margin:8px 0 0;border:1px solid #c8f169;border-radius:14px;background:transparent!important;color:#c8f169!important;font:800 12px Inter,Arial,sans-serif;line-height:1.2;text-align:center;cursor:pointer;}
+.home-simple button.home-v2-full-link:hover{background:rgba(200,241,105,.10)!important;color:#d8ff8c!important;}
