@@ -23,20 +23,18 @@ export default function Home(){
  const chooseGame=(game:string)=>{setSelectedGame(game);const url=new URL(window.location.href);if(game==="billiards")url.searchParams.delete("game");else url.searchParams.set("game",game);window.history.replaceState({}, "",url.toString());};
  const share=async()=>{const url=window.location.href;try{if(navigator.share)await navigator.share({title:"BASE25 PRO · Every match counts",url});else{await navigator.clipboard.writeText(url);}}catch{}};
  useEffect(()=>{let active=true;async function load(){if(!supabase){setError("Records are temporarily unavailable.");setLoading(false);return;}
- const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{data:matchCountRows,count:matchCount,error:matchError},{data:prizes,error:prizeError},{data:wagers,error:wagerError},{data:potContributions,error:potError}]=await Promise.all([
+ const [{data:p,error:pe},{data:w,error:we},{data:m,error:me},{data:c,error:ce},{count:matchCount,error:matchError},{data:financial,error:financialError}]=await Promise.all([
  supabase.from("player_public_leaderboard").select("*").order("elo_rating",{ascending:false}),
  supabase.rpc("get_period_leaderboard_with_designation",{p_period:"this_week"}),
  supabase.from("matches").select("id,played_at,player_one_id,player_two_id,player_one_score,player_two_score,winner_id,one:players!matches_player_one_id_fkey(id,username,designation),two:players!matches_player_two_id_fkey(id,username,designation)").order("played_at",{ascending:false}).limit(3),
  supabase.from("weekly_champions").select("id,week_start,week_end,player_id,prize_amount,players(username,photo_url)").order("week_start",{ascending:false}).limit(1),
  supabase.from("matches").select("id",{count:"exact",head:true}),
- supabase.from("weekly_champions").select("prize_amount"),
- supabase.from("match_wagers").select("winner_payout"),
- supabase.from("kings_pot_match_contributions").select("amount").eq("week_start",getLagosWeekStartDate())
+ supabase.rpc("get_homepage_financial_totals")
  ]);
- if(!active)return;if(pe||we||me||ce||matchError||prizeError||wagerError||potError)setError("Some competition data could not be refreshed.");
+ if(!active)return;if(pe||we||me||ce||matchError||financialError)setError("Some competition data could not be refreshed.");
  const [slayers,bonus]=await Promise.all([getBoardmanSlayerPlayerIds(supabase),getBoardmanBonusData(supabase)]);
  const ordered=((w||[]) as Player[]).map(x=>({...x,hasBoardmanSlayerBadge:slayers.has(x.id),boardmanBonusPoints:bonus.bonusByPlayerId.get(x.id)||0})).sort((a,b)=>((b.elo_rating+(b.boardmanBonusPoints||0))-(a.elo_rating+(a.boardmanBonusPoints||0))));
- setPlayers((p||[]) as Player[]);setWeeklyPlayers(ordered);setMatches(((m||[]) as any[]).map(row=>({...row,one:Array.isArray(row.one)?(row.one[0]||null):(row.one||null),two:Array.isArray(row.two)?(row.two[0]||null):(row.two||null)})) as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setMatchesSinceSaturday((potContributions||[]).length);setPotAmount((potContributions||[]).reduce((n:any,x:any)=>n+Number(x.amount||0),0));setAllMatchCount(matchCount||0);setPaidOut((prizes||[]).reduce((n:any,x:any)=>n+Number(x.prize_amount||0),0)+(wagers||[]).reduce((n:any,x:any)=>n+Number(x.winner_payout||0),0));setBonusByMatch(bonus.bonusByMatchId);setLoading(false);
+ setPlayers((p||[]) as Player[]);setWeeklyPlayers(ordered);setMatches(((m||[]) as any[]).map(row=>({...row,one:Array.isArray(row.one)?(row.one[0]||null):(row.one||null),two:Array.isArray(row.two)?(row.two[0]||null):(row.two||null)})) as Match[]);setChampion(((c||[]) as unknown as Champion[])[0]||null);setMatchesSinceSaturday(Number(financial?.[0]?.pot_contribution_count||0));setPotAmount(Number(financial?.[0]?.pot_total||0));setAllMatchCount(matchCount||0);setPaidOut(Number(financial?.[0]?.paid_out_total||0));setBonusByMatch(bonus.bonusByMatchId);setLoading(false);
  }load();const timer=setInterval(load,15000);return()=>{active=false;clearInterval(timer);};},[]);
  const totalMatches=allMatchCount||Math.round(players.reduce((n,p)=>n+p.matches_played,0)/2);
  const newest=matches[0]?.played_at;const lastMatchText=useMemo(()=>{if(!newest)return "";const mins=Math.max(0,Math.floor((Date.now()-new Date(newest).getTime())/60000));return mins<1?"just now":mins<60?mins+" min ago":Math.floor(mins/60)<24?Math.floor(mins/60)+" hr ago":Math.floor(mins/1440)+" days ago";},[newest]);
