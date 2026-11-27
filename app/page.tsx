@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import SiteNavigation from "@/components/SiteNavigation";
+import KombatArenaHome from "@/components/KombatArenaHome";
 import { getBoardmanSlayerPlayerIds } from "@/components/WeeklyLeaderboardRows";
 import { getBoardmanBonusData } from "@/lib/boardman-bonus";
 
@@ -41,6 +42,7 @@ export default function Home(){
  const visiblePlayers=showAllWeekly?weeklyPlayers:weeklyPlayers.slice(0,7);
  const isBilliards=selectedGame==="billiards",gameName=selectedGame==="billiards"?"BILLIARDS":selectedGame==="fifa"?"FIFA":"MORTAL KOMBAT";
  const rows=visiblePlayers.map((p,index)=>({p,rank:weeklyPlayers.slice(0,index+1).filter(x=>x.designation!=="boardman").length}));
+ if(selectedGame==="mortal-kombat") return <KombatArenaHome account={account}/>;
  const realBefore=(index:number)=>weeklyPlayers.slice(0,index+1).filter(p=>!p.designation||p.designation==="regular").length;
  return <main className="shell redesign-shell home-v2 home-simple">
  <SiteNavigation onHomeAccountChange={setAccount}/>
