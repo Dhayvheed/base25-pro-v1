@@ -18,6 +18,7 @@ type WeeklyPlayer = {
   losses: number;
   win_percentage: number;
   designation?: "regular" | "house_ghost" | "boardman";
+  second_chance?: boolean;
 };
 
 type KingsPot = {
@@ -93,7 +94,7 @@ export default function CompetitionPage() {
       }
 
       const [leaderboardResult, potResult] = await Promise.all([
-        supabase.rpc("get_period_leaderboard", { p_period: "this_week" }),
+        supabase.rpc("get_period_leaderboard_with_designation", { p_period: "this_week" }),
         supabase.rpc("get_current_kings_pot"),
       ]);
 
