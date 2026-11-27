@@ -17,7 +17,7 @@ const tierDescriptions: Record<Tier, string> = {
 
 // Provisional composite tiers based on published competitive lists for MK11's final balance patch.
 // These are reference ratings, not BASE25 match results or official NetherRealm ratings.
-const seed: Omit<Character, "rating">[] = [
+const seed: Character[] = [
   ...["Cetrion", "Jacqui Briggs", "Liu Kang", "The Joker", "Fujin", "Geras", "Jade"].map(name => ({ name, tier: "S" as Tier, note: "Top-tier competitive reference" })),
   ...["Sub-Zero", "Shang Tsung", "Kabal", "Kung Lao", "Erron Black", "Kano", "Noob Saibot", "Cassie Cage", "Johnny Cage", "Kotal Kahn", "Spawn"].map(name => ({ name, tier: "A" as Tier, note: "Strong competitive reference" })),
   ...["Sheeva", "Raiden", "Jax", "Kollector", "The Terminator", "Scorpion", "D'Vorah", "Baraka", "Nightwolf", "Rain", "Sindel", "Frost", "Mileena", "Sonya Blade"].map(name => ({ name, tier: "B" as Tier, note: "Solid competitive reference" })),
