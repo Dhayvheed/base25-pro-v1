@@ -11,6 +11,7 @@ export type WeeklyLeaderboardPlayer = {
   wins: number;
   losses: number;
   designation?: "regular" | "house_ghost" | "boardman";
+  second_chance?: boolean;
   hasBoardmanSlayerBadge?: boolean;
   boardmanBonusPoints?: number;
 };
@@ -39,6 +40,7 @@ function HomeRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
         <span className="home-v2-player-copy">
           <strong>{player.username}{rank === 1 && <span className="home-v2-player-crown" aria-label="First place">♛</span>}</strong>
           <DesignationBadge designation={player.designation} variant="home" />
+          {player.second_chance && <span className="home-v2-designation-tag is-second-chance">SECOND CHANCE</span>}
           {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
           <small>{player.player_code}</small>
         </span>
@@ -66,6 +68,7 @@ function CompetitionRows({ players }: { players: WeeklyLeaderboardPlayer[] }) {
           {player.username}
         </strong>
         <DesignationBadge designation={player.designation} variant="competition" />
+        {player.second_chance && <span className="home-v2-designation-tag is-second-chance">SECOND CHANCE</span>}
         {player.hasBoardmanSlayerBadge && <span className="home-v2-designation-tag is-boardman-slayer">BOARDMAN SLAYER ⚔</span>}
         <small style={{ display: "block", font: "10px 'JetBrains Mono',monospace", letterSpacing: 0, color: "#9aa69f" }}>{player.player_code}</small>
       </span>
