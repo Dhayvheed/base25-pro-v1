@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PredictionQuestionsAdmin from "@/components/PredictionQuestionsAdmin";
+import KombatMatchRecorderPreview from "@/components/KombatMatchRecorderPreview";
 import SiteNavigation from "@/components/SiteNavigation";
 
 type Player = { id: string; full_name: string; player_code: string; username: string; photo_url?: string | null; elo_rating?: number | null; designation?: "regular" | "house_ghost" | "boardman" };
@@ -73,6 +74,7 @@ export default function Admin() {
   const [championPlayer, setChampionPlayer] = useState("");
   const [championNotice, setChampionNotice] = useState("");
   const [activeSection, setActiveSection] = useState<"overview"|"register"|"match"|"champion"|"staff"|"players"|"matches"|"directory"|"predictions">("overview");
+  const [recordingGame, setRecordingGame] = useState<"pool" | "kombat">("pool");
   const [profileSearch, setProfileSearch] = useState("");
   const [profileFilter, setProfileFilter] = useState<"all" | "no-login" | "active">("all");
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
@@ -500,7 +502,7 @@ export default function Admin() {
       {activeSection!=="overview"&&<button type="button" className="admin-v2-back" onClick={()=>setActiveSection("overview")}>← Admin desk</button>}
       {activeSection==="overview"&&<section className="admin-v2-overview">
         <div className="admin-v2-heading"><div className="eyebrow">CONTROL ROOM</div><h1>Admin desk<span>.</span></h1><p>Signed in as {session?.user?.email?.split("@")[0] || "staff"}</p></div>
-        <button type="button" className="admin-v2-primary" onClick={()=>setActiveSection("match")}><span>＋</span>Record a match</button>
+        <div className="admin-v2-record-actions"><button type="button" className="admin-v2-primary" onClick={()=>{setRecordingGame("pool");setActiveSection("match");}}><span>＋</span>Record pool match</button><button type="button" className="admin-v2-primary admin-v2-kombat-primary" onClick={()=>{setRecordingGame("kombat");setActiveSection("match");}}><span>＋</span>Record Kombat fight</button></div>
         <div className="admin-v2-quick-actions">{staffRole==="owner"&&<button type="button" onClick={()=>setActiveSection("register")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/></svg></span><b>Register player</b></button>}{staffRole==="owner"&&<button type="button" className="admin-v2-champion-action" disabled={!snapshotReady} onClick={()=>setActiveSection("champion")}><span className="admin-v2-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 7 5 4 5-7 5 7 5-4-2 13H4L2 7Z"/></svg></span><b>Crown Saturday champion<small>{snapshotReady?"Weekly snapshot saved":"Available Saturday"}</small></b></button>}</div>
         
         <section className="admin-v2-pot"><div className="admin-v2-pot-top"><div><small>KING&#39;S POT · THIS WEEK</small><strong>{!potLoaded?<i className="admin-skeleton-block"/>:kingsPot?"₦"+Number(kingsPot.pot_amount).toLocaleString("en-NG"):"—"}</strong><span>{!potLoaded?<i className="admin-skeleton-line"/>:kingsPot?potMatchCount===null?"Match count unavailable":potMatchCount.toLocaleString("en-NG")+" matches × ₦100":"Pot data unavailable"}</span></div><div className="admin-v2-pot-count"><strong>{daysToSaturday===0?"Final day":saturdayCountdown}</strong><span>To Saturday final</span><small>Resets after snapshot</small></div></div></section>
@@ -540,7 +542,7 @@ export default function Admin() {
         </section>
 
         <section className="admin-card record-match-shell" style={{display:activeSection==="match"?"block":"none"}}>
-          <form className="record-match-form" onSubmit={addMatch}>
+          {recordingGame === "kombat" ? <KombatMatchRecorderPreview players={players} onBack={()=>setActiveSection("overview")} /> : <form className="record-match-form" onSubmit={addMatch}>
             <div className="record-match-header"><button type="button" className="record-back" onClick={()=>setActiveSection("overview")} aria-label="Back">←</button><h2>Record match</h2><span /></div>
             <div className="record-format-switch" role="group" aria-label="Match format">
               <button type="button" className={matchFormat==="single"?"selected":""} onClick={()=>{setMatchFormat("single");setRacks([{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"},{winnerId:"",loserBalls:"3"}]);}}>One rack</button>
