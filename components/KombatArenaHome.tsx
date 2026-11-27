@@ -34,7 +34,16 @@ function FighterTile({ fighter }: { fighter?: Fighter }) {
 
 export default function KombatArenaHome({ account: initialAccount }: { account: Account }) {
   const [account, setAccount] = useState(initialAccount);
-  useLayoutEffect(() => {\n    const resetScroll = () => {\n      window.scrollTo(0, 0);\n      document.documentElement.scrollTop = 0;\n      document.body.scrollTop = 0;\n    };\n    resetScroll();\n    const frame = window.requestAnimationFrame(resetScroll);\n    return () => window.cancelAnimationFrame(frame);\n  }, []);
+  useLayoutEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    resetScroll();
+    const frame = window.requestAnimationFrame(resetScroll);
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const [arena, setArena] = useState<ArenaData>({ ratings: [], players: new Map(), fighters: new Map(), matches: [], config: null, livePotAmount: 0, loading: true });
   const share = async () => {
     try {
