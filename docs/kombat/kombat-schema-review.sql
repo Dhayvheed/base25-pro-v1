@@ -99,7 +99,7 @@ create table public.kombat_match_games (
   id uuid primary key default gen_random_uuid(),
   match_id uuid not null references public.kombat_matches(id) on delete cascade,
   game_number smallint not null check (game_number between 1 and 5),
-  winner_id uuid not null references public.players(id) on delete restrict,
+  winner_slot text not null check (winner_slot in ('player_one','player_two')),
   player_one_rounds smallint check (player_one_rounds is null or player_one_rounds >= 0),
   player_two_rounds smallint check (player_two_rounds is null or player_two_rounds >= 0),
   created_at timestamptz not null default now(),
