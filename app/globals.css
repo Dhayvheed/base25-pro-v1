@@ -1405,3 +1405,5 @@
 
 .home-simple{max-width:480px}
 .home-simple .home-v2-pot-amount .home-total-skeleton{width:145px;height:42px;margin:5px auto}
+
+.home-simple .home-header-bell svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
