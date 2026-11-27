@@ -30,7 +30,7 @@ These groups preserve the user's initial competitive-strength classification. Th
 - Kotal Kahn
 - Spawn
 
-## C — Challenging (14)
+## C — Challenging (17)
 
 - Sheeva
 - Raiden
@@ -46,12 +46,12 @@ These groups preserve the user's initial competitive-strength classification. Th
 - Frost
 - Mileena
 - Sonya Blade
-
-## D — Weakest competitively (5)
-
 - Kitana
 - Skarlet
 - RoboCop
+
+## D — Weakest competitively (2)
+
 - Shao Kahn
 - Rambo
 
