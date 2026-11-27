@@ -46,6 +46,25 @@ create table public.kombat_config (
 insert into public.kombat_config (singleton) values (true)
 on conflict (singleton) do nothing;
 
+-- Public-safe projection. The view owner reads the singleton config row;
+-- callers receive only fields needed by the public Arena UI. The fixed amount
+-- is exposed only when fixed mode is active; live contribution only in live mode.
+create view public.kombat_public_config
+with (security_invoker = false) as
+select
+  pot_mode,
+  case when pot_mode = 'fixed' then fixed_pot_amount else null end as fixed_pot_amount,
+  case when pot_mode = 'live' then pot_per_ranked_match else null end as pot_per_ranked_match,
+  final_format,
+  qualifying_spots,
+  fighter_minimum_matches,
+  fighter_tier_s,
+  fighter_tier_a,
+  fighter_tier_b,
+  updated_at
+from public.kombat_config
+where singleton = true;
+
 create table public.kombat_ratings (
   player_id uuid primary key references public.players(id) on delete restrict,
   all_time_elo integer not null default 1000 check (all_time_elo >= 0),
@@ -147,8 +166,9 @@ create policy kombat_fighters_public_read on public.kombat_fighters
   for select to anon, authenticated using (enabled);
 create policy kombat_weeks_public_read on public.kombat_weeks
   for select to anon, authenticated using (true);
-create policy kombat_config_public_read on public.kombat_config
-  for select to anon, authenticated using (true);
+-- Config table itself is staff-only. Public clients use the safe projection view.
+create policy kombat_config_staff_read on public.kombat_config
+  for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
 create policy kombat_ratings_public_read on public.kombat_ratings
   for select to anon, authenticated using (true);
 create policy kombat_matches_public_read on public.kombat_matches
@@ -170,8 +190,6 @@ create policy kombat_fighters_staff_read on public.kombat_fighters
   for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
 create policy kombat_weeks_staff_read on public.kombat_weeks
   for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
-create policy kombat_config_staff_read on public.kombat_config
-  for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
 create policy kombat_ratings_staff_read on public.kombat_ratings
   for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
 create policy kombat_matches_staff_read on public.kombat_matches
@@ -180,5 +198,32 @@ create policy kombat_match_games_staff_read on public.kombat_match_games
   for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
 create policy kombat_audit_log_staff_read on public.kombat_audit_log
   for select to authenticated using ((select private.current_staff_role()) in ('owner','manager'));
+
+
+-- Explicit Data API privileges. RLS controls rows; GRANT controls whether a role
+-- can reach the table/view at all. No client role receives direct write privileges.
+revoke all privileges on table
+  public.kombat_fighters,
+  public.kombat_weeks,
+  public.kombat_config,
+  public.kombat_ratings,
+  public.kombat_matches,
+  public.kombat_match_games,
+  public.kombat_audit_log
+from public, anon, authenticated;
+
+grant select on table
+  public.kombat_fighters,
+  public.kombat_weeks,
+  public.kombat_ratings,
+  public.kombat_matches,
+  public.kombat_match_games
+to anon, authenticated;
+
+-- Authenticated staff can read the full config and audit log through staff RLS.
+grant select on table public.kombat_config, public.kombat_audit_log to authenticated;
+
+revoke all privileges on table public.kombat_public_config from public, anon, authenticated;
+grant select on table public.kombat_public_config to anon, authenticated;
 
 commit;
