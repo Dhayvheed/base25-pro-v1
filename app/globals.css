@@ -1422,3 +1422,5 @@
 .home-simple .home-v2-champion-sun{width:54px;height:54px;flex:0 0 54px;overflow:visible;}
 .home-simple .home-v2-champion-sun:before{inset:0;clip-path:circle(48%);}
 .home-simple .home-v2-champion-sun>span{display:none!important;}
+
+.home-simple .home-simple-tags .second-chance-tag,.home-v2-designation-tag.is-second-chance{border:1px solid #c8f169;background:rgba(200,241,105,.12);color:#d9ff91;font-style:normal;font-weight:800;}
