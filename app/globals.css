@@ -1425,6 +1425,9 @@
 
 
 /* BASE25 KOMBAT ARENA — isolated visual layer */
+/* On Kombat, use the arena's compact header; keep SiteNavigation drawer and bottom navigation mounted. */
+.kombat-shell > .site-header{display:none!important}
+
 .kombat-shell{position:relative;min-height:100vh;background:#0b0a0a;color:#f4f1f0;overflow:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom));}
 .kombat-shell:before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:420px;pointer-events:none;background:radial-gradient(ellipse at 85% 18%,rgba(229,55,46,.30),transparent 62%);}
 .kombat-shell>.home-header,.kombat-shell>.home-game-row,.kombat-shell>.kombat-content{position:relative;z-index:1}
