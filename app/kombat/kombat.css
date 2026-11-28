@@ -74,7 +74,7 @@
 @keyframes character-arena-pulse{to{opacity:.5}}
 .character-arena-compare-bar{position:fixed;z-index:80;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(100%,520px);min-height:66px;display:flex;align-items:center;gap:9px;padding:9px 16px;border-top:1px solid #3A2C2C;background:#0D0B0B}
 .character-arena-compare-tiles{display:flex;gap:6px;flex:none}
-.character-fighter-compare{width:30px;height:36px;flex:0 0 30px}
+.character-fighter-compare{width:36px;height:36px;flex:0 0 36px}
 .character-fighter-compare>b{font-size:17px}
 .character-arena-compare-copy{min-width:0;flex:1;display:grid;gap:3px}
 .character-arena-compare-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#F4F1F0;font:700 12px Inter,Arial,sans-serif}
