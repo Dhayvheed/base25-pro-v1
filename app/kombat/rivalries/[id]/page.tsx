@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import KombatRivalryDetailClient from "@/components/kombat/KombatRivalryDetailClient";
-import { SAMPLE_RIVALRY, SAMPLE_RIVALRY_ID } from "@/lib/kombat/rivalry-detail-sample";
+import { SAMPLE_RIVALRY_ID } from "@/lib/kombat/rivalry-detail-sample";
 
 type Props = { params: Promise<{ id: string }> };
 
