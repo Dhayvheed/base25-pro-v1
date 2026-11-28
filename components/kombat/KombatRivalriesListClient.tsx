@@ -53,7 +53,7 @@ const summary = (r: Rivalry) => {
 function buildRivalries(matches: MatchRow[], players: Record<string, Player>, fighters: Record<string, Fighter>): Rivalry[] {
   const grouped = new Map<string, MatchRow[]>();
   for (const match of matches) {
-    if (match.match_type !== "ranked" || !match.published_at || match.voided_at !== null) continue;
+    if (match.match_type !== "ranked" || !match.published_at || match.voided_at != null) continue;
     const a = match.player_one_id;
     const b = match.player_two_id;
     if (!a || !b || a === b || !match.winner_id || (match.winner_id !== a && match.winner_id !== b)) continue;
@@ -82,8 +82,8 @@ function buildRivalries(matches: MatchRow[], players: Record<string, Player>, fi
       rightPlayerId,
       leftName: players[leftPlayerId]?.username || players[leftPlayerId]?.player_code || "Unknown player",
       rightName: players[rightPlayerId]?.username || players[rightPlayerId]?.player_code || "Unknown player",
-      leftFighterSlug: leftFighter?.slug || "scorpion",
-      rightFighterSlug: rightFighter?.slug || "sub-zero",
+      leftFighterSlug: leftFighter?.slug || "",
+      rightFighterSlug: rightFighter?.slug || "",
       leftFighterName: leftFighter?.name || "Fighter not recorded",
       rightFighterName: rightFighter?.name || "Fighter not recorded",
       results,
@@ -150,12 +150,24 @@ export default function KombatRivalriesClient() {
     const client = supabase;
     if (!client) { setError("The Supabase client is not configured for this deployment."); setLoading(false); setAuthReady(true); return; }
     try {
-      const [{ data: matchData, error: matchError }, { data: sessionData }] = await Promise.all([
-        client.from("kombat_matches").select("*").eq("match_type", "ranked").not("published_at", "is", null).is("voided_at", null).order("published_at", { ascending: true }).limit(1000),
-        client.auth.getSession(),
-      ]);
-      if (matchError) throw matchError;
-      const matches = (matchData || []) as MatchRow[];
+      const [{ data: sessionData }] = await Promise.all([client.auth.getSession()]);
+      const pageSize = 1000;
+      const allMatches: MatchRow[] = [];
+      for (let from = 0; ; from += pageSize) {
+        const { data: page, error: pageError } = await client
+          .from("kombat_matches")
+          .select("*")
+          .eq("match_type", "ranked")
+          .not("published_at", "is", null)
+          .is("voided_at", null)
+          .order("published_at", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (pageError) throw pageError;
+        const rows = (page || []) as MatchRow[];
+        allMatches.push(...rows);
+        if (rows.length < pageSize) break;
+      }
+      const matches = allMatches;
       const playerIds = [...new Set(matches.flatMap((m) => [m.player_one_id, m.player_two_id]).filter((v): v is string => Boolean(v)))];
       const fighterIds = [...new Set(matches.flatMap((m) => [m.fighter_one_id, m.fighter_two_id]).filter((v): v is string => Boolean(v)))];
       const [playerResult, fighterResult] = await Promise.all([
