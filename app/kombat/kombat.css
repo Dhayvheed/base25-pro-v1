@@ -37,7 +37,7 @@
 .character-fighter-tile>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .character-arena-card-info{padding:8px 9px 10px}
 .character-arena-name{display:block;min-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#F4F1F0;font:800 21px/1.1 "Barlow Condensed",sans-serif;text-transform:uppercase}
-.character-arena-stats{display:flex;align-items:end;justify-content:space-between;gap:5px;margin-top:5px}
+.character-arena-stats{display:flex;align-items:flex-end;justify-content:space-between;gap:5px;margin-top:5px}
 .character-arena-stats>div{display:grid;gap:1px;min-width:0}
 .character-arena-stats b{color:#F5D547;font:800 22px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .character-arena-stats small{color:#A8A0A0;font:500 8px/1.3 "JetBrains Mono",monospace;letter-spacing:1.2px}
