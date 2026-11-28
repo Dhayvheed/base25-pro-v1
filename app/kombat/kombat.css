@@ -612,3 +612,7 @@
  .kombat-rd-meeting>strong{font-size:20px}
 }
 @media(prefers-reduced-motion:reduce){.kombat-rd-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+.kombat-rd-sample-banner{padding:8px 10px;border:1px dashed #8a6b2b;background:#211b0d;color:#F5D547;text-align:center;font:700 8px/1.4 "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rd-share.kombat-detail-primary-button{width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none}
