@@ -13,7 +13,7 @@ const sections: Array<{ key: Section; label: string; href: string }> = [
   { key: "hall", label: "Hall of Fame", href: "/kombat/coming-soon/hall-of-fame" },
 ];
 
-export default function KombatPageShell({ children, active }: { children: React.ReactNode; active: Section }) {
+export default function KombatPageShell({ children, active, title = "KOMBAT" }: { children: React.ReactNode; active: Section; title?: string }) {
   const activeLink = useRef<HTMLAnchorElement | null>(null);
   useEffect(() => {
     activeLink.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
@@ -25,7 +25,7 @@ export default function KombatPageShell({ children, active }: { children: React.
       <Link href="/?game=mortal-kombat" className="kombat-header-icon" aria-label="Back to Kombat Arena">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0 7-7m-7 7 7 7" /></svg>
       </Link>
-      <strong>KOMBAT</strong>
+      <strong>{title}</strong>
       <button type="button" className="kombat-header-icon" aria-label="Open navigation menu" onClick={() => window.dispatchEvent(new Event("base25:open-menu"))}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
       </button>
