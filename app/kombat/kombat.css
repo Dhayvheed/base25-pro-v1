@@ -295,3 +295,64 @@
 .kombat-history-empty b{display:block;color:#F4F1F0;font-size:14px;margin-bottom:5px}
 .kombat-history-empty p{margin:0;color:#A8A0A0}
 @media(max-width:380px){.kombat-history-page{padding-left:12px;padding-right:12px}.kombat-history-day{padding-left:9px;padding-right:9px}.kombat-history-match-head{column-gap:6px}.kombat-history-match-copy strong{font-size:11px}.kombat-history-score{font-size:21px}.kombat-history-game{grid-template-columns:48px minmax(0,1fr) auto;gap:6px}}
+
+
+/* BASE25 KOMBAT · Match Detail */
+.kombat-match-detail{max-width:520px;margin:0 auto;padding:14px 18px 112px;display:grid;gap:12px;color:#f4f1f0}
+.kombat-md-hero{padding:16px 13px 17px;border:1px solid #76612d;background:radial-gradient(ellipse at 12% 35%,#3a2b08 0,transparent 48%),linear-gradient(145deg,#1b160d,#100d0c);clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px))}
+.kombat-md-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#c8c0b8;font:8px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-md-meta>span{padding:4px 7px;border:1px solid #534633}
+.kombat-md-meta>span:first-child{border-color:#f0443a;background:#d92d2d;color:white;font-weight:800}
+.kombat-md-meta>span.casual{border-color:#716a6a;background:transparent;color:#d3cccc}
+.kombat-md-meta time{margin-left:auto;font-size:8px}
+.kombat-md-versus{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;margin:16px 0 0}
+.kombat-md-contender{display:grid;justify-items:center;gap:6px;min-width:0}
+.kombat-md-tile{width:clamp(76px,23vw,94px);height:clamp(76px,23vw,94px);display:grid;place-items:center;background:linear-gradient(145deg,#e8bb34,#704d0b);clip-path:polygon(0 0,87% 0,100% 14%,100% 100%,13% 100%,0 87%);box-shadow:0 0 18px #e6b93a35}
+.kombat-md-tile.blue{background:linear-gradient(145deg,#53b7ff,#12447e);box-shadow:0 0 18px #3699e835}
+.kombat-md-tile .kombat-fighter{width:100%;height:100%;font-size:28px}
+.kombat-md-tile .kombat-fighter>b{font:900 34px "Barlow Condensed",sans-serif}
+.kombat-md-contender>strong{font:900 clamp(18px,5vw,25px)/1 "Barlow Condensed",sans-serif;text-transform:uppercase;text-align:center;overflow-wrap:anywhere;color:#f5d34c}
+.kombat-md-contender:last-child>strong{color:#f4f1f0}
+.kombat-md-contender>small{font:8px "JetBrains Mono",monospace;letter-spacing:1px;color:#b9b0a7;text-align:center;text-transform:uppercase}
+.kombat-md-score{text-align:center}
+.kombat-md-score>strong{display:block;font:900 clamp(43px,12vw,60px)/.95 "Barlow Condensed",sans-serif;white-space:nowrap}
+.kombat-md-score>small{font:8px "JetBrains Mono",monospace;letter-spacing:2px;color:#b9b0a7}
+.kombat-md-panel{padding:14px 13px;border:1px solid #3c3030;background:linear-gradient(145deg,#171212,#100d0d);clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.kombat-md-kicker{display:block;color:#b8adad;font:8px "JetBrains Mono",monospace;letter-spacing:1.8px}
+.kombat-md-panel h2{margin:4px 0 8px;font:900 24px/.98 "Barlow Condensed",sans-serif;letter-spacing:.4px}
+.kombat-md-game{min-height:61px;display:grid;grid-template-columns:55px 36px minmax(0,1fr) auto;align-items:center;gap:8px;border-top:1px solid #2b2323}
+.kombat-md-game>small{font:8px "JetBrains Mono",monospace;color:#b8adad;letter-spacing:1px}
+.kombat-md-game-tile{width:33px;height:33px;display:grid;place-items:center;overflow:hidden;background:#33280d;color:#f5d34c;font:900 12px "Barlow Condensed",sans-serif}
+.kombat-md-game-tile .kombat-fighter{width:33px;height:33px}
+.kombat-md-game>strong{font:700 12px Inter,Arial,sans-serif;overflow-wrap:anywhere}
+.kombat-md-game>b{font:900 20px "Barlow Condensed",sans-serif;white-space:nowrap;color:#f5d34c}
+.kombat-md-muted,.kombat-md-note{margin:9px 0 0;color:#b8adad;font:10px/1.5 Inter,Arial,sans-serif}
+.kombat-md-note{padding-top:10px;border-top:1px solid #2b2323}
+.kombat-md-rating{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.kombat-md-rating>div{min-width:0;padding:11px 9px;border:1px solid #302626;background:#130f0f;display:grid;gap:5px}
+.kombat-md-rating strong{font:700 13px Inter,Arial,sans-serif;overflow-wrap:anywhere}
+.kombat-md-rating b{font:900 27px/.95 "Barlow Condensed",sans-serif}
+.kombat-md-rating b.up{color:#f5d34c}.kombat-md-rating b.down{color:#f0443a}
+.kombat-md-rating small{font:8px "JetBrains Mono",monospace;color:#b8adad;overflow-wrap:anywhere}
+.kombat-md-impact{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #2b2323}
+.kombat-md-impact:last-child{border-bottom:0}
+.kombat-md-impact>span{font-size:18px;color:#b8adad}
+.kombat-md-impact>span.gold{color:#f5d34c}.kombat-md-impact>span.red{color:#f0443a}
+.kombat-md-impact p{margin:0;font:11px/1.4 Inter,Arial,sans-serif}
+.kombat-md-impact a{margin-left:5px;color:#f0443a;font-weight:800;text-decoration:none}
+.kombat-md-rivalry{border-color:#4a302d}
+.kombat-md-rivalry h2{font-size:25px;margin:7px 0 3px}
+.kombat-md-rivalry>strong{font:900 16px "Barlow Condensed",sans-serif;color:#f5d34c}
+.kombat-md-rivalry>small{display:block;margin-top:5px;color:#b8adad;font:8px "JetBrains Mono",monospace;letter-spacing:.6px}
+.kombat-md-record{margin:7px 0 0;color:#b8adad;font:10px/1.5 Inter,Arial,sans-serif}
+.kombat-md-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.kombat-md-actions button,.kombat-md-actions a{min-height:47px;display:flex;align-items:center;justify-content:center;padding:8px 6px;border:1px solid #534343;background:#171212;color:#f4f1f0;text-decoration:none;text-align:center;font:900 11px "Barlow Condensed",sans-serif;letter-spacing:1px;clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.kombat-md-actions button{cursor:pointer;background:#211818}
+.kombat-md-actions a{background:#171212}
+.kombat-match-detail-empty{max-width:520px;margin:20px auto;padding:22px;border:1px solid #403333;background:#151010;color:#eee;text-align:center}
+.kombat-match-detail-empty b{font:900 18px "Barlow Condensed",sans-serif}
+.kombat-match-detail-empty p{color:#b8adad;font:11px/1.5 Inter,Arial,sans-serif}
+.kombat-match-detail-empty a{color:#f0443a;font:800 10px "JetBrains Mono",monospace;text-decoration:none}
+.kombat-detail-loading{padding:24px;color:#b8adad;text-align:center;font:11px "JetBrains Mono",monospace}
+.kombat-history-open-label{display:block;margin-top:11px;text-align:right;color:#ff5a4d;text-decoration:none;font:700 10px "JetBrains Mono",monospace}
+@media(max-width:380px){.kombat-match-detail{padding-left:12px;padding-right:12px}.kombat-md-panel{padding:12px 10px}.kombat-md-game{grid-template-columns:48px 32px minmax(0,1fr) auto;gap:6px}.kombat-md-game>strong{font-size:11px}.kombat-md-game>b{font-size:18px}.kombat-md-meta time{margin-left:0}}
