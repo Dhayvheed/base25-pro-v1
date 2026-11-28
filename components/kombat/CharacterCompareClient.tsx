@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { FEATURED_ROSTER_FALLBACK } from "@/lib/kombat/data";
 import type { KombatFighter } from "@/lib/kombat/types";
@@ -13,12 +12,11 @@ const nameFromId=(id:string)=>"Player "+id.slice(0,5).toUpperCase();
 const pct=(wins:number,total:number)=>total?Math.round(wins/total*100):null;
 const dateLabel=(date:string|null)=>date?new Date(date).toLocaleDateString("en-GB",{day:"2-digit",month:"short"}).toUpperCase():"—";
 
-export default function CharacterCompareClient(){
- const params=useSearchParams();
+export default function CharacterCompareClient({initialA="scorpion",initialB="sub-zero"}:{initialA?:string;initialB?:string}){
  const [fighters,setFighters]=useState<KombatFighter[]>(FEATURED_ROSTER_FALLBACK);
  const [matches,setMatches]=useState<Match[]>([]);
- const [a,setA]=useState(params.get("a")||"scorpion");
- const [b,setB]=useState(params.get("b")||"sub-zero");
+ const [a,setA]=useState(initialA);
+ const [b,setB]=useState(initialB);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  const [swap,setSwap]=useState(false);
