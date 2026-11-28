@@ -1,6 +1,5 @@
 import Link from "next/link";
 import SiteNavigation from "@/components/SiteNavigation";
-import "./kombat-types";
 export default function KombatPageShell({children,active}:{children:React.ReactNode;active:"leaderboard"|"players"|"characters"}) {
   return <main className="shell redesign-shell kb-shell">
     <SiteNavigation />
