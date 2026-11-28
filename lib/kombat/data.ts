@@ -97,3 +97,19 @@ export function buildFighterPerformance(
   });
   return result;
 }
+
+/**
+ * Display-only fallback roster metadata for the eight featured fighters.
+ * This is not performance data and does not seed the database.
+ * TODO: connect to real enabled roster records when they are available.
+ */
+export const FEATURED_ROSTER_FALLBACK: KombatFighter[] = [
+  { id: "featured-scorpion", name: "Scorpion", slug: "scorpion", tile_color: null, image_src: null, enabled: true, sort_order: 1 },
+  { id: "featured-sub-zero", name: "Sub-Zero", slug: "sub-zero", tile_color: null, image_src: null, enabled: true, sort_order: 2 },
+  { id: "featured-liu-kang", name: "Liu Kang", slug: "liu-kang", tile_color: null, image_src: null, enabled: true, sort_order: 3 },
+  { id: "featured-kitana", name: "Kitana", slug: "kitana", tile_color: null, image_src: null, enabled: true, sort_order: 4 },
+  { id: "featured-raiden", name: "Raiden", slug: "raiden", tile_color: null, image_src: null, enabled: true, sort_order: 5 },
+  { id: "featured-jax", name: "Jax", slug: "jax", tile_color: null, image_src: null, enabled: true, sort_order: 6 },
+  { id: "featured-johnny-cage", name: "Johnny Cage", slug: "johnny-cage", tile_color: null, image_src: null, enabled: true, sort_order: 7 },
+  { id: "featured-geras", name: "Geras", slug: "geras", tile_color: null, image_src: null, enabled: true, sort_order: 8 },
+];
