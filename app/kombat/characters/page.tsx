@@ -3,14 +3,14 @@ import {useEffect,useMemo,useState} from "react";
 import KombatPageShell from "@/components/kombat/KombatPageShell";
 import {supabase} from "@/lib/supabase";
 type Fighter={id:string;name:string;slug:string;tile_color:string|null;image_src:string|null;sort_order:number};
-const ROSTER=["Baraka","Cassie Cage","Cetrion","D'Vorah","Erron Black","Frost","Fujin","Geras","Jacqui Briggs","Jade","Jax Briggs","Johnny Cage","Kabal","Kano","Kitana","Kollector","Kotal Kahn","Kung Lao","Liu Kang","Mileena","Nightwolf","Noob Saibot","Raiden","Rambo","RoboCop","Scorpion","Shang Tsung","Shao Kahn","Sheeva","Sindel","Sk arlet","Spawn","Sub-Zero","The Joker","Terminator","Rain","Kronika"];
+const ROSTER=["Baraka","Cassie Cage","Cetrion","D'Vorah","Erron Black","Frost","Fujin","Geras","Jacqui Briggs","Jade","Jax Briggs","Johnny Cage","Kabal","Kano","Kitana","Kollector","Kotal Kahn","Kung Lao","Liu Kang","Mileena","Nightwolf","Noob Saibot","Raiden","Rambo","RoboCop","Scorpion","Shang Tsung","Shao Kahn","Sheeva","Sindel","Skarlet","Sonya Blade","Spawn","Sub-Zero","The Joker","Terminator","Rain"];
 export default function KombatCharactersPage(){
  const [fighters,setFighters]=useState<Fighter[]>([]);
  const [query,setQuery]=useState("");
  const [sort,setSort]=useState("default");
  const [selected,setSelected]=useState<string[]>([]);
  const [loading,setLoading]=useState(true);
- useEffect(()=>{let active=true;async function load(){if(!supabase){setLoading(false);return}const {data,error}=await supabase.from("kombat_fighters").select("id,name,slug,tile_color,image_src,sort_order").eq("enabled",true).order("sort_order",{ascending:true});if(!active)return;if(!error&&data?.length)setFighters(data as Fighter[]);else setFighters(ROSTER.map((name,i)=>({id:"roster-"+i,name,slug:name.toLowerCase().replace(/[^a-z0-9]+/g,"-"),tile_color:null,image_src:null,sort_order:i})));setLoading(false)}load();return()=>{active=false}},[]);
+ useEffect(()=>{let active=true;async function load(){if(!supabase){setLoading(false);return}const {data,error}=await supabase.from("kombat_fighters").select("id,name,slug,tile_color,image_src,sort_order").eq("enabled",true).order("sort_order",{ascending:true});if(!active)return;const metadata=new Map(((error?[]:data||[]) as Fighter[]).map(f=>[f.name.toLowerCase(),f]));setFighters(ROSTER.map((name,i)=>{const known=metadata.get(name.toLowerCase());return {id:known?.id||"roster-"+i,name,slug:known?.slug||name.toLowerCase().replace(/[^a-z0-9]+/g,"-"),tile_color:known?.tile_color||null,image_src:known?.image_src||null,sort_order:i}}));setLoading(false)}load();return()=>{active=false}},[]);
  const visible=useMemo(()=>{const rows=fighters.filter(f=>f.name.toLowerCase().includes(query.toLowerCase()));return sort==="az"?[...rows].sort((a,b)=>a.name.localeCompare(b.name)):rows},[fighters,query,sort]);
  const toggle=(id:string)=>setSelected(old=>old.includes(id)?old.filter(x=>x!==id):old.length<2?[...old,id]:[old[1],id]);
  const chosen=selected.map(id=>fighters.find(f=>f.id===id)).filter(Boolean) as Fighter[];
