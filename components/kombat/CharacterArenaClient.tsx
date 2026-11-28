@@ -20,6 +20,11 @@ const sortOptions: Array<{ key: SortKey; label: string }> = [{key:"tier",label:"
 const tierOrder: Record<string, number> = { S:0,A:1,B:2,C:3,NEW:4 };
 const featuredOrder = new Map<string, number>(FEATURED_FIGHTER_ORDER.map((slug,index): [string, number] => [slug,index]));
 
+function isMissingKombatTable(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  return error.code === "42P01" || error.code === "PGRST205" || /kombat_(fighters|matches).*(does not exist|could not find the table)|relation .* does not exist/i.test(error.message || "");
+}
+
 export default function CharacterArenaClient() {
   const router=useRouter();
   const [fighters,setFighters]=useState<ArenaFighter[]>([]);
@@ -37,10 +42,18 @@ export default function CharacterArenaClient() {
       supabase.from("kombat_fighters").select("id,name,slug,tile_color,image_src,enabled,sort_order").eq("enabled",true).order("sort_order",{ascending:true}),
       supabase.from("kombat_matches").select("fighter_one_id,fighter_two_id,player_one_id,player_two_id,winner_id,match_type,published_at,voided_at").eq("match_type","ranked").not("published_at","is",null).is("voided_at",null),
     ]);
-    if(fighterResult.error||matchResult.error){setError("We couldn't load the Character Arena data. Please retry.");setLoading(false);return;}
-    const databaseRoster=(fighterResult.data||[]) as KombatFighter[];
+    const fighterTableMissing=isMissingKombatTable(fighterResult.error);
+    const matchTableMissing=isMissingKombatTable(matchResult.error);
+    if((fighterResult.error&&!fighterTableMissing)||(matchResult.error&&!matchTableMissing)){
+      setError("We couldn't load the Character Arena data. Please retry.");
+      setLoading(false);
+      return;
+    }
+    // Keep the arena usable before the Kombat schema is installed. This is display-only
+    // metadata: it does not create database rows or invent match statistics.
+    const databaseRoster=(fighterTableMissing?[]:(fighterResult.data||[])) as KombatFighter[];
     const roster=databaseRoster.length?databaseRoster:FEATURED_ROSTER_FALLBACK;
-    const ranked=((matchResult.data||[]) as MatchRow[]).filter(m=>m.match_type==="ranked"&&Boolean(m.published_at)&&!m.voided_at);
+    const ranked=matchTableMissing?[]:((matchResult.data||[]) as MatchRow[]).filter(m=>m.match_type==="ranked"&&Boolean(m.published_at)&&!m.voided_at);
     const performance=buildFighterPerformance(roster,ranked);
     setFighters(roster.map(f=>({...f,performance:performance[f.id]})));
     setLoading(false);
@@ -82,7 +95,7 @@ export default function CharacterArenaClient() {
       </Link>
       <label className="character-arena-select"><input type="checkbox" checked={selected.includes(f.slug)} onChange={e=>toggleSelected(f.slug,e.target.checked)} aria-label={"Select "+f.name+" for comparison"}/><span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3.2 3.2L13 4.5"/></svg></span></label>
      </KombatCard>)}</div>{filtered.length>shown.length&&<button className="character-arena-load-more" type="button" onClick={()=>setVisibleCount(v=>v+20)}>Load more fighters</button>}</>}
-    <p className="character-arena-note">Tier comes from win rate and needs at least 10 ranked matches. Fighters below that show "NEW". The roster is editable, and hidden fighters keep their history.</p>
+    <p className="character-arena-note">Showing the 8 featured fighters until the Kombat roster is connected. Match statistics stay blank until official ranked records are available. Tier needs at least 10 ranked matches.</p>
     {chosen.length>0&&<aside className="character-arena-compare-bar" aria-label="Selected fighters"><div className="character-arena-compare-tiles">{chosen.map(f=><FighterTile key={f.id} slug={f.slug} name={f.name} imageSrc={f.image_src} size="compare"/>)}</div><div className="character-arena-compare-copy"><strong>{chosen.length} {chosen.length===1?"fighter":"fighters"} selected</strong><small>{chosen.length===2?chosen[0].name+" VS "+chosen[1].name:"Pick one more to compare"}</small></div><button type="button" onClick={compare} disabled={chosen.length!==2}>COMPARE</button></aside>}
   </div>;
 }
