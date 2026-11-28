@@ -13,7 +13,7 @@
 .kombat-section-menu a{height:44px;min-width:max-content;display:flex;align-items:center;justify-content:center;padding:0 12px;position:relative;color:#A8A0A0;text-decoration:none;text-transform:uppercase;font:700 16px "Barlow Condensed",sans-serif;letter-spacing:.5px}
 .kombat-section-menu a.active{color:#F4F1F0}
 .kombat-section-menu a.active:after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:3px;background:#E5372E}
-.character-arena-content{position:relative;z-index:1;width:100%;padding:0 16px 24px}
+.character-arena-content{position:relative;z-index:1;width:100%;padding:0 20px 24px}
 .character-arena-intro{padding:18px 8px 12px}
 .character-arena-eyebrow{color:#FF5A4D;font:500 9px "JetBrains Mono",monospace;letter-spacing:1.5px;text-transform:uppercase}
 .character-arena-intro h1{margin:7px 0 3px;color:#F4F1F0;font:italic 800 44px/.95 "Barlow Condensed",sans-serif;letter-spacing:-.4px;text-transform:uppercase}
