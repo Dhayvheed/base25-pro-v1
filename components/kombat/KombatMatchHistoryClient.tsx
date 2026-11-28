@@ -31,11 +31,11 @@ export default function KombatMatchHistoryClient(){
  const [error,setError]=useState("");
  useEffect(()=>{let live=true;(async()=>{
   if(!supabase){setUnavailable(true);setLoading(false);return;}
-  const result=await supabase.from("kombat_matches").select("*").order("published_at",{ascending:false}).limit(200);
+  const result=await supabase.from("kombat_matches").select("*").limit(200);
   if(!live)return;
   if(result.error){if(["42P01","PGRST205"].includes(result.error.code||""))setUnavailable(true);else setError("Match history could not be loaded.");setLoading(false);return;}
   const data=(result.data||[]) as Row[];
-  const published=data.filter(m=>m.voided_at==null&&(m.published_at||m.played_at||m.created_at));
+  const published=data.filter(m=>m.voided_at==null&&(m.published_at||m.played_at||m.created_at)).sort((a,b)=>new Date(getDate(b)||0).getTime()-new Date(getDate(a)||0).getTime());
   setRows(published);
   if(published.length)setExpanded(published[0].id);
   const playerIds=[...new Set(published.flatMap(m=>[m.player_one_id,m.player_two_id]).filter(Boolean))];
@@ -73,7 +73,7 @@ export default function KombatMatchHistoryClient(){
    {loading?<div className="kombat-history-empty">Loading match history…</div>:error?<div className="kombat-history-empty">{error}</div>:unavailable?<div className="kombat-history-empty"><b>Match history is being prepared</b><p>Ranked and casual Kombat results will appear here once the Kombat match records are connected.</p></div>:filtered.length===0?<div className="kombat-history-empty"><b>{rows.length?"No matches found":"No Kombat matches recorded yet"}</b><p>{rows.length?"Try another search or filter.":"Recorded Mortal Kombat results will appear here automatically."}</p></div>:<>
     <div className="kombat-history-list">{groups.map(([date,items])=><section className="kombat-history-day" key={date}><h2>{date}</h2>{items.map(m=>{
       const p1=name(m.player_one_id),p2=name(m.player_two_id),f1=fighter(m.fighter_one_id),f2=fighter(m.fighter_two_id);
-      const score1=getScore(m,"one"),score2=getScore(m,"two"),winner=m.winner_id;
+      const score1=getScore(m,"one"),score2=getScore(m,"two");
       const games=getGames(m),open=expanded===m.id,elo1=eloChange(m,"one"),elo2=eloChange(m,"two");
       return <article className={"kombat-history-match "+(open?"expanded":"")} key={m.id}>
        <button className="kombat-history-match-head" onClick={()=>setExpanded(open?null:m.id)} aria-expanded={open}>
@@ -86,7 +86,7 @@ export default function KombatMatchHistoryClient(){
        {open&&<div className="kombat-history-expanded">
         {games.length?games.map((g:any,i:number)=><div className="kombat-history-game" key={g.id||i}><small>GAME {g.game_number||g.game||i+1}</small><strong>{g.winner_name||((g.winner_id===m.player_one_id)?p1:(g.winner_id===m.player_two_id)?p2:"Game result") } won</strong><b>{g.player_one_score??g.score_one??g.score??"—"} – {g.player_two_score??g.score_two??"—"}</b></div>):<p className="kombat-history-no-games">Game-by-game scores aren't available for this record.</p>}
         <div className="kombat-history-elo">{elo1!==null&&<span>{p1} <b className={elo1>=0?"positive":"negative"}>{elo1>0?"+":""}{elo1} Elo</b></span>}{elo2!==null&&<span>{p2} <b className={elo2>=0?"positive":"negative"}>{elo2>0?"+":""}{elo2} Elo</b></span>}</div>
-        <a href={"/kombat/matches/"+m.id}>OPEN MATCH →</a>
+        <span className="kombat-history-open-label">MATCH BREAKDOWN</span>
        </div>}
       </article>
     })}</section>)}</div>
