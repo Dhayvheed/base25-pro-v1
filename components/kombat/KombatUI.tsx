@@ -19,8 +19,10 @@ export function FighterTile({ slug, name, imageSrc, size = "portrait" }: { slug:
 
 import Link from "next/link";
 
-export function PrimaryButton({ children, href }: { children: ReactNode; href: string }) {
-  return <Link className="kombat-detail-primary-button" href={href}>{children}</Link>;
+export function PrimaryButton({ children, href, onClick, className = "" }: { children: ReactNode; href?: string; onClick?: () => void; className?: string }) {
+  if (onClick) return <button type="button" className={"kombat-detail-primary-button " + className} onClick={onClick}>{children}</button>;
+  if (!href) return null;
+  return <Link className={"kombat-detail-primary-button " + className} href={href}>{children}</Link>;
 }
 export function SecondaryButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return <button type="button" className="kombat-detail-secondary-button" onClick={onClick}>{children}</button>;
