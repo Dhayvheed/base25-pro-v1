@@ -356,3 +356,62 @@
 .kombat-detail-loading{padding:24px;color:#b8adad;text-align:center;font:11px "JetBrains Mono",monospace}
 .kombat-history-open-label{display:block;margin-top:11px;text-align:right;color:#ff5a4d;text-decoration:none;font:700 10px "JetBrains Mono",monospace}
 @media(max-width:380px){.kombat-match-detail{padding-left:12px;padding-right:12px}.kombat-md-panel{padding:12px 10px}.kombat-md-game{grid-template-columns:48px 32px minmax(0,1fr) auto;gap:6px}.kombat-md-game>strong{font-size:11px}.kombat-md-game>b{font-size:18px}.kombat-md-meta time{margin-left:0}}
+
+
+/* BASE25 KOMBAT · Rivalries */
+.kombat-rivalries-page{max-width:520px;margin:0 auto;padding:15px 18px 112px;display:grid;gap:11px;color:#f4f1f0}
+.kombat-rivalries-intro small{color:#ff5a4d;font:8px "JetBrains Mono",monospace;letter-spacing:1.4px}
+.kombat-rivalries-intro h1{margin:6px 0 4px;font:italic 900 38px/.95 "Barlow Condensed",sans-serif}
+.kombat-rivalries-intro h1 em{color:#e5372e}
+.kombat-rivalries-intro p{margin:7px 0 0;color:#c0b8b8;font:11px/1.45 Inter,Arial,sans-serif}
+.kombat-rivalries-tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid #453535;background:#151010;padding:3px}
+.kombat-rivalries-tabs button{height:39px;border:0;background:transparent;color:#d0caca;font:900 11px "Barlow Condensed",sans-serif;letter-spacing:1px}
+.kombat-rivalries-tabs button.active{background:#e5372e;color:#fff;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
+.kombat-rivalries-sorts{display:flex;gap:7px;overflow-x:auto;padding-bottom:1px}
+.kombat-rivalries-sorts button{height:37px;flex:none;padding:0 12px;border:1px solid #514343;background:#141010;color:#d0caca;font:8px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalries-sorts button.active{border-color:#e5372e;background:#e5372e;color:white}
+.kombat-rivalry-feature{padding:11px;border:1px solid #7a332c;background:linear-gradient(145deg,#29110f,#130d0d);clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px))}
+.kombat-rivalry-feature-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.kombat-rivalry-feature-head small{color:#ff6259;font:8px "JetBrains Mono",monospace;letter-spacing:1.5px}
+.kombat-rivalry-feature-head>span{padding:4px 7px;border:1px solid #69322e;color:#ff8178;font:8px "JetBrains Mono",monospace}
+.kombat-rivalry-card{padding:11px;border:1px solid #382d2d;background:linear-gradient(145deg,#171212,#100d0d);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,11px 100%,0 calc(100% - 11px))}
+.kombat-rivalry-feature .kombat-rivalry-card{padding:0;border:0;background:transparent;clip-path:none}
+.kombat-rivalry-card-meta{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.kombat-rivalry-status{padding:3px 6px;border:1px solid #62504a;color:#e6d7d2;font:7px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalry-status.heated{border-color:#7a302c;color:#ff6b60}
+.kombat-rivalry-status.one-sided{border-color:#6d5c2c;color:#f5d34c}
+.kombat-rivalry-card-meta>small{color:#b8adad;font:7px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalry-versus{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;margin:12px 0 6px}
+.kombat-rivalry-player{min-width:0;display:grid;justify-items:center;gap:5px}
+.kombat-rivalry-player>.kombat-fighter{width:48px;height:48px}
+.kombat-rivalry-player>.kombat-fighter>b{font:900 20px "Barlow Condensed",sans-serif}
+.kombat-rivalry-player>b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:900 19px "Barlow Condensed",sans-serif;text-transform:uppercase}
+.kombat-rivalry-player>small{color:#b8adad;font:7px "JetBrains Mono",monospace;letter-spacing:1px;text-transform:uppercase}
+.kombat-rivalry-score{text-align:center}
+.kombat-rivalry-score>strong{display:block;color:#f5d34c;font:900 40px/.95 "Barlow Condensed",sans-serif;white-space:nowrap}
+.kombat-rivalry-score>small{color:#b8adad;font:7px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalry-strip{display:flex;justify-content:center;gap:3px;margin:10px 0 7px}
+.kombat-rivalry-strip i,.kombat-rivalry-legend i{width:11px;height:8px;display:inline-block;background:#514343}
+.kombat-rivalry-strip i.left,.kombat-rivalry-legend i.left{background:#f5d34c}
+.kombat-rivalry-strip i.right,.kombat-rivalry-legend i.right{background:#e5372e}
+.kombat-rivalry-last{margin:6px 0 9px;text-align:center;color:#c4baba;font:10px Inter,Arial,sans-serif}
+.kombat-rivalry-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kombat-rivalry-card-actions a{min-height:40px;display:grid;place-items:center;border:1px solid #544343;background:#1b1515;color:#f4f1f0;text-decoration:none;font:900 10px "Barlow Condensed",sans-serif;letter-spacing:1px}
+.kombat-rivalry-card-actions a.primary{border-color:#e5372e;background:#e5372e}
+.kombat-rivalries-list-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 -3px}
+.kombat-rivalries-list-head h2{margin:0;font:900 22px "Barlow Condensed",sans-serif}
+.kombat-rivalries-list-head small{color:#b8adad;font:8px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalries-list-head+.kombat-rivalry-card{margin-top:0}
+.kombat-rivalry-card:not(.featured){margin-top:0}
+.kombat-rivalry-load{justify-self:center;margin:5px 0;border:0;background:transparent;color:#ff6259;font:800 11px Inter,Arial,sans-serif}
+.kombat-rivalry-legend{padding:13px;border:1px solid #382d2d;background:#151010;clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,11px 100%,0 calc(100% - 11px))}
+.kombat-rivalry-legend>small{color:#b8adad;font:8px "JetBrains Mono",monospace;letter-spacing:1.5px}
+.kombat-rivalry-legend p{margin:8px 0;color:#c4baba;font:9px Inter,Arial,sans-serif}
+.kombat-rivalry-legend p b{display:inline-block;min-width:75px;margin-right:5px;padding:2px 4px;border:1px solid #554343;font:7px "JetBrains Mono",monospace;letter-spacing:1px}
+.kombat-rivalry-legend p b.heated{color:#ff6259}.kombat-rivalry-legend p b.one-sided{color:#f5d34c}
+.kombat-rivalry-legend>div{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:12px;padding-top:10px;border-top:1px solid #302626;color:#b8adad;font:8px Inter,Arial,sans-serif}
+.kombat-rivalry-legend i{width:9px;height:7px}
+.kombat-rivalry-empty{padding:25px 14px;border:1px solid #3a2d2d;background:#151010;text-align:center;color:#c4baba;font:11px/1.5 Inter,Arial,sans-serif}
+.kombat-rivalry-empty b{display:block;margin-bottom:5px;color:#f4f1f0;font:900 17px "Barlow Condensed",sans-serif}
+.kombat-rivalry-empty p{margin:0}
+@media(max-width:380px){.kombat-rivalries-page{padding-left:12px;padding-right:12px}.kombat-rivalry-player>.kombat-fighter{width:43px;height:43px}.kombat-rivalry-score>strong{font-size:35px}.kombat-rivalry-player>b{font-size:17px}}
