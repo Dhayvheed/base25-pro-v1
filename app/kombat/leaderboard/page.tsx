@@ -11,7 +11,7 @@ export default function KombatLeaderboardPage(){
  const [players,setPlayers]=useState<Map<string,Player>>(new Map());
  const [loading,setLoading]=useState(true);
  useEffect(()=>{let active=true;async function load(){if(!supabase){setLoading(false);return}
-  const {data,error}=await supabase.from("kombat_ratings").select("player_id,weekly_rating,all_time_elo,ranked_wins,ranked_losses").order(period==="weekly"?"weekly_rating":"all_time_elo",{ascending:false});
+  const {data,error}=await supabase.from("kombat_ratings").select("player_id,weekly_rating,all_time_elo,ranked_wins,ranked_losses").or("ranked_wins.gt.0,ranked_losses.gt.0").order(period==="weekly"?"weekly_rating":"all_time_elo",{ascending:false});
   if(!active)return;const rows=error?[]:(data||[]) as Rating[];setRatings(rows);
   const ids=rows.map(x=>x.player_id);if(ids.length){const p=await supabase.from("players").select("id,username,photo_url").in("id",ids);if(active)setPlayers(new Map(((p.data||[]) as Player[]).map(x=>[x.id,x])))}else setPlayers(new Map());
   setLoading(false);
