@@ -86,7 +86,7 @@ export default function KombatMatchHistoryClient(){
        {open&&<div className="kombat-history-expanded">
         {games.length?games.map((g:any,i:number)=><div className="kombat-history-game" key={g.id||i}><small>GAME {g.game_number||g.game||i+1}</small><strong>{g.winner_name||((g.winner_id===m.player_one_id)?p1:(g.winner_id===m.player_two_id)?p2:"Game result") } won</strong><b>{g.player_one_score??g.score_one??g.score??"—"} – {g.player_two_score??g.score_two??"—"}</b></div>):<p className="kombat-history-no-games">Game-by-game scores aren't available for this record.</p>}
         <div className="kombat-history-elo">{elo1!==null&&<span>{p1} <b className={elo1>=0?"positive":"negative"}>{elo1>0?"+":""}{elo1} Elo</b></span>}{elo2!==null&&<span>{p2} <b className={elo2>=0?"positive":"negative"}>{elo2>0?"+":""}{elo2} Elo</b></span>}</div>
-        <span className="kombat-history-open-label">MATCH BREAKDOWN</span>
+        <a className="kombat-history-open-label" href={"/kombat/matches/"+m.id}>OPEN MATCH →</a>
        </div>}
       </article>
     })}</section>)}</div>
