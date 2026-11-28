@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { KombatFighter } from "@/lib/kombat/types";
 import { buildFighterPerformance, FEATURED_FIGHTER_ORDER, type FighterPerformance, type KombatFighterMatch } from "@/lib/kombat/data";
-import { FighterTile, KombatTag } from "@/components/kombat/KombatUI";
+import { FighterTile, KombatCard, KombatTag } from "@/components/kombat/KombatUI";
 import KombatPageShell from "@/components/kombat/KombatPageShell";
 
 type SortKey = "tier" | "win" | "picked" | "az";
@@ -72,14 +72,14 @@ export default function CharacterArenaClient() {
     {loading?<div className="character-arena-grid" aria-label="Loading fighters">{Array.from({length:8}).map((_,i)=><div className="character-arena-card character-arena-skeleton" key={i}><div className="character-arena-skeleton-portrait"/><div className="character-arena-skeleton-lines"><i/><i/><i/></div></div>)}</div>
     :error?<div className="character-arena-state character-arena-error" role="alert"><strong>ARENA UNAVAILABLE</strong><p>{error}</p><button type="button" onClick={()=>setRetryToken(v=>v+1)}>Retry</button></div>
     :filtered.length===0?<div className="character-arena-state"><strong>NO FIGHTERS MATCH YOUR SEARCH</strong><button type="button" onClick={()=>setQuery("")}>Clear search</button></div>
-    :<><div className="character-arena-grid">{shown.map(f=><article className={"character-arena-card"+(selected.includes(f.slug)?" is-selected":"")} key={f.id}>
+    :<><div className="character-arena-grid">{shown.map(f=><KombatCard className={"character-arena-card"+(selected.includes(f.slug)?" is-selected":"")} key={f.id}>
       <Link href={"/kombat/characters/"+f.slug} className="character-arena-card-link" aria-label={"View "+f.name+" details"}><FighterTile slug={f.slug} name={f.name} imageSrc={f.image_src}/>
        <div className="character-arena-card-info"><strong className="character-arena-name">{f.name}</strong><div className="character-arena-stats"><div><b>{f.performance.winRate===null?"—":Math.round(f.performance.winRate)+"%"}</b><small>WIN RATE</small></div><div className="character-arena-matches"><b>{f.performance.rankedMatches?f.performance.rankedMatches.toLocaleString("en-NG"):"—"}</b><small>MATCHES</small></div></div>
         <div className="character-arena-pick-label">PICKED {f.performance.pickRate===null?"—":Math.round(f.performance.pickRate)+"%"}</div><div className="character-arena-pick-track"><span style={{width:f.performance.pickRate===null||maxPickRate===0?"0%":(f.performance.pickRate/maxPickRate*100)+"%"}}/></div>
        </div></Link>
       <KombatTag tone={f.performance.tier==="S"?"gold":f.performance.tier==="A"?"steel":f.performance.tier==="B"?"bronze":f.performance.tier==="C"?"grey":"new"} className="character-arena-tier">TIER {f.performance.tier}</KombatTag>
       <label className="character-arena-select"><input type="checkbox" checked={selected.includes(f.slug)} onChange={e=>toggleSelected(f.slug,e.target.checked)} aria-label={"Select "+f.name+" for comparison"}/><span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3.2 3.2L13 4.5"/></svg></span></label>
-     </article>)}</div>{filtered.length>shown.length&&<button className="character-arena-load-more" type="button" onClick={()=>setVisibleCount(v=>v+20)}>Load more fighters</button>}</>}
+     </KombatCard>)}</div>{filtered.length>shown.length&&<button className="character-arena-load-more" type="button" onClick={()=>setVisibleCount(v=>v+20)}>Load more fighters</button>}</>}
     <p className="character-arena-note">Tier comes from win rate and needs at least 10 ranked matches. Fighters below that show "NEW". The roster is editable, and hidden fighters keep their history.</p>
     {chosen.length>0&&<aside className="character-arena-compare-bar" aria-label="Selected fighters"><div className="character-arena-compare-tiles">{chosen.map(f=><FighterTile key={f.id} slug={f.slug} name={f.name} imageSrc={f.image_src} size="compare"/>)}</div><div className="character-arena-compare-copy"><strong>{chosen.length} {chosen.length===1?"fighter":"fighters"} selected</strong><small>{chosen.length===2?chosen[0].name+" VS "+chosen[1].name:"Pick one more to compare"}</small></div><button type="button" onClick={compare} disabled={chosen.length!==2}>COMPARE</button></aside>}
   </div>;
