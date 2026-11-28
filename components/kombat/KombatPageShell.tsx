@@ -9,7 +9,7 @@ const sections: Array<{ key: Section; label: string; href: string }> = [
   { key: "leaderboard", label: "Leaderboard", href: "/kombat/leaderboard" },
   { key: "characters", label: "Characters", href: "/kombat/characters" },
   { key: "matches", label: "Matches", href: "/kombat/coming-soon/matches" },
-  { key: "rivalries", label: "Rivalries", href: "/kombat/coming-soon/rivalries" },
+  { key: "rivalries", label: "Rivalries", href: "/kombat/rivalries" },
   { key: "hall", label: "Hall of Fame", href: "/kombat/coming-soon/hall-of-fame" },
 ];
 
