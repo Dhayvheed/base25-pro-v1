@@ -15,7 +15,7 @@ const pairKey=(a:string,b:string)=>[a,b].sort().join("::");
 export default function KombatRivalriesClient(){
  const [rows,setRows]=useState<Row[]>([]),[players,setPlayers]=useState<Record<string,Player>>({}),[fighters,setFighters]=useState<KombatFighter[]>(FEATURED_ROSTER_FALLBACK);
  const [tab,setTab]=useState<"all"|"mine">("all"),[sort,setSort]=useState<"hottest"|"meetings"|"recent">("hottest"),[visible,setVisible]=useState(8),[userId,setUserId]=useState<string|null>(null);
- const [loading,setLoading]=useState(true),[unavailable,setUnavailable]=useState(false),[error,setError]=useState("");
+ const [loading,setLoading]=useState(true),[unavailable,setUnavailable]=useState(false),[error,setError]=useState(""),[expanded,setExpanded]=useState<string|null>(null);
  useEffect(()=>{let live=true;(async()=>{
   if(!supabase){setUnavailable(true);setLoading(false);return}
   const [mr,ur]=await Promise.all([supabase.from("kombat_matches").select("*").limit(1000),supabase.auth.getUser()]);
@@ -71,7 +71,7 @@ export default function KombatRivalriesClient(){
   </div>
   {strip(r)}
   <p className="kombat-rivalry-last">{r.lastWinner?(players[r.lastWinner]?.username||"A player")+" won the last meeting · "+labelDate(r.last):"Last result unavailable"}</p>
-  <div className="kombat-rivalry-card-actions"><a href={"/kombat/coming-soon/matches?player="+r.one+"&opponent="+r.two}>ALL MEETINGS</a><a className="primary" href={"/kombat/players/"+r.one}>VIEW RIVALRY</a></div>
+  <div className="kombat-rivalry-card-actions"><button type="button" onClick={()=>setExpanded(expanded===r.key?null:r.key)}>{expanded===r.key?"HIDE MEETINGS":"ALL MEETINGS"}</button><button type="button" className="primary" onClick={()=>setExpanded(expanded===r.key?null:r.key)}>{expanded===r.key?"CLOSE RIVALRY":"VIEW RIVALRY"}</button></div>{expanded===r.key&&<div className="kombat-rivalry-meeting-list">{r.meetings.map((m,i)=><div key={m.id}><span>MEETING {r.meetings.length-i}</span><b>{players[m.winner_id]?.username||"Result pending"} won</b><small>{labelDate(dateOf(m))}</small></div>)}</div>}
  </article>;
  return <KombatPageShell active="rivalries" title="KOMBAT"><div className="kombat-rivalries-page">
   <header className="kombat-rivalries-intro"><small>MORTAL KOMBAT 11 · RECURRING MATCHUPS</small><h1>KOMBAT <em>RIVALRIES</em></h1><p>Players who keep meeting. A rivalry starts after 3 ranked meetings. Casual matches don't count.</p></header>
