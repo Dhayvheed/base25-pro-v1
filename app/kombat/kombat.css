@@ -507,3 +507,6 @@
 @media(min-width:481px){.kombat-rivalries-page{padding-left:20px;padding-right:20px}}
 @media(max-width:380px){.kombat-rivalries-page{padding-left:12px;padding-right:12px}.kombat-rivalries-intro h1{font-size:40px}.kombat-rivalry-item{padding:11px}.kombat-rivalry-item.featured{padding:0}.kombat-rivalry-item.featured .kombat-rivalry-person .kombat-fighter{width:64px;height:64px}.kombat-rivalry-item.featured .kombat-rivalry-record{min-width:90px}.kombat-rivalry-item.featured .kombat-rivalry-record>strong{font-size:58px}.kombat-rivalry-record>strong{font-size:34px}.kombat-rivalry-person>b{font-size:14px}.kombat-rivalry-person>small{font-size:6px}}
 @media(prefers-reduced-motion:reduce){.kombat-rivalry-loading i{animation:none}}
+
+.kombat-rivalry-item.featured>.kombat-rivalry-item-top{display:none}
+.kombat-rivalry-item.featured .kombat-rivalry-squares{margin-top:13px}
