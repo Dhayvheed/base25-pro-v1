@@ -141,8 +141,8 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
             <h1>BASE25<br/><em>KOMBAT</em></h1>
             <p>Your fighter. Your rank. Your rivals.</p>
             <div className="kombat-hero-actions">
-              <Link href="/competition?game=mortal-kombat">LEADERBOARD</Link>
-              <Link href="/?game=mortal-kombat#characters">CHARACTERS</Link>
+              <Link href="/kombat/leaderboard">LEADERBOARD</Link>
+              <Link href="/kombat/characters">CHARACTERS</Link>
             </div>
           </div>
           <div className="kombat-art-placeholder">ART · KEY VISUAL<br/>TWO FIGHTERS<br/>FACE TO FACE</div>
@@ -196,7 +196,7 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
               <strong className="kombat-rating">{rating.weekly_rating.toLocaleString("en-NG")}</strong>
             </div>;
           }) : <EmptyState>{arena.loading ? "Loading Kombat standings..." : "No published Kombat matches yet. The leaderboard will populate from Kombat records only."}</EmptyState>}
-          <Link className="kombat-text-link" href="/competition?game=mortal-kombat">VIEW FULL LEADERBOARD →</Link>
+          <Link className="kombat-text-link" href="/kombat/leaderboard">VIEW FULL LEADERBOARD →</Link>
         </section>
 
         <section className="kombat-card kombat-section">
@@ -216,7 +216,7 @@ export default function KombatArenaHome({ account: initialAccount }: { account: 
         <section className="kombat-card kombat-character" id="characters">
           <div className="kombat-label">CHARACTER OF THE WEEK</div>
           <div className="kombat-character-main"><div><h2>NOT DECIDED</h2><p>Character stats will be calculated from published ranked Kombat matches.</p></div></div>
-          <Link className="kombat-text-link" href="/competition?game=mortal-kombat#characters">OPEN CHARACTER ARENA →</Link>
+          <Link className="kombat-text-link" href="/kombat/characters">OPEN CHARACTER ARENA →</Link>
         </section>
 
         <section className="kombat-card kombat-rivalry">
