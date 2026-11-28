@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { KombatFighter } from "@/lib/kombat/types";
-import { buildFighterPerformance, FEATURED_FIGHTER_ORDER, type FighterPerformance, type KombatFighterMatch } from "@/lib/kombat/data";
+import { buildFighterPerformance, FEATURED_FIGHTER_ORDER, FEATURED_ROSTER_FALLBACK, type FighterPerformance, type KombatFighterMatch } from "@/lib/kombat/data";
 import { FighterTile, KombatCard, KombatTag } from "@/components/kombat/KombatUI";
 import KombatPageShell from "@/components/kombat/KombatPageShell";
 
@@ -38,7 +38,7 @@ export default function CharacterArenaClient() {
       supabase.from("kombat_matches").select("fighter_one_id,fighter_two_id,player_one_id,player_two_id,winner_id,match_type,published_at,voided_at").eq("match_type","ranked").not("published_at","is",null).is("voided_at",null),
     ]);
     if(fighterResult.error||matchResult.error){setError("We couldn't load the Character Arena data. Please retry.");setLoading(false);return;}
-    const roster=(fighterResult.data||[]) as KombatFighter[];
+    const databaseRoster=(fighterResult.data||[]) as KombatFighter[];\n    const roster=databaseRoster.length?databaseRoster:FEATURED_ROSTER_FALLBACK;
     const ranked=((matchResult.data||[]) as MatchRow[]).filter(m=>m.match_type==="ranked"&&Boolean(m.published_at)&&!m.voided_at);
     const performance=buildFighterPerformance(roster,ranked);
     setFighters(roster.map(f=>({...f,performance:performance[f.id]})));
