@@ -116,7 +116,7 @@ export default function SiteNavigation({ onHomeAccountChange }: { onHomeAccountC
     }
   };
 
-  const isCompetitionPage = pathname.startsWith("/competition") || ["/leaderboard", "/matches", "/weekly-archive", "/hall-of-fame", "/snapshots"].some((path) => pathname === path || pathname.startsWith(path + "/"));
+  const isCompetitionPage = pathname.startsWith("/kombat") || pathname.startsWith("/competition") || ["/leaderboard", "/matches", "/weekly-archive", "/hall-of-fame", "/snapshots"].some((path) => pathname === path || pathname.startsWith(path + "/"));
   const ownPublicProfile = Boolean(playerSummary?.id && pathname === `/players/${playerSummary.id}`);
   const isOwnProfile = pathname === "/account" || ownPublicProfile;
   const isPlayersPage = (pathname === "/players" || pathname.startsWith("/players/")) && !ownPublicProfile;
