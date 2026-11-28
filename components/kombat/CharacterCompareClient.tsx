@@ -47,14 +47,14 @@ export default function CharacterCompareClient(){
  const topPlayers=(fighterId:string)=>{const map=new Map<string,PlayerStat>();matches.forEach(m=>{let pid="",won=false;if(m.fighter_one_id===fighterId){pid=m.player_one_id;won=m.winner_id===pid}else if(m.fighter_two_id===fighterId){pid=m.player_two_id;won=m.winner_id===pid}else return;const row=map.get(pid)||{id:pid,name:nameFromId(pid),wins:0,matches:0};row.matches++;if(won)row.wins++;map.set(pid,row)});return [...map.values()].sort((x,y)=>(y.wins/y.matches)-(x.wins/x.matches)||y.matches-x.matches).slice(0,3)};
  const leftTop=topPlayers(left.id),rightTop=topPlayers(right.id);
  const choose=(side:"a"|"b",slug:string)=>{if(side==="a"){if(swap)setB(slug);else setA(slug);}else{if(swap)setA(slug);else setB(slug);}setSwap(false);};
- const displayA=swap?right:left,displayB=swap?left:right;
+ const displayA=left,displayB=right;
  return <KombatPageShell active="characters" title="COMPARE">
  <div className="kombat-compare-page">
   <header className="kombat-compare-intro"><small>FIGHTER COMPARISON</small><h1>{displayA.name} <em>VS</em> {displayB.name}</h1></header>
   <section className="kombat-compare-pickers">
    {[{f:displayA,side:"a" as const,tone:"gold"},{f:displayB,side:"b" as const,tone:"blue"}].map(({f,side,tone})=><div className={"kombat-compare-fighter "+tone} key={side}>
     <FighterTile slug={f.slug} name={f.name} imageSrc={f.image_src}/>
-    <b>{f.name}</b><KombatTag tone="grey">TIER {matches.filter(m=>m.fighter_one_id===f.id||m.fighter_two_id===f.id).length>=10?"RANKED":"NEW"}</KombatTag>
+    <b>{f.name}</b><KombatTag tone="grey">TIER {matches.filter(m=>m.fighter_one_id===f.id||m.fighter_two_id===f.id).length>=10?"—":"NEW"}</KombatTag>
     <label className="kombat-compare-select"><span className="sr-only">Change {side==="a"?"first":"second"} fighter</span><select value={f.slug} onChange={e=>choose(side,e.target.value)}>{fighters.map(x=><option key={x.id} value={x.slug}>{x.name}</option>)}</select></label>
    </div>)}
    <span className="kombat-compare-vs">VS</span>
