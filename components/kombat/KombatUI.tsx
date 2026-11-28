@@ -16,3 +16,18 @@ export function FighterTile({ slug, name, imageSrc, size = "portrait" }: { slug:
     {imageSrc ? <img src={imageSrc} alt={name} /> : <b>{initials}</b>}
   </span>;
 }
+
+import Link from "next/link";
+
+export function PrimaryButton({ children, href }: { children: ReactNode; href: string }) {
+  return <Link className="kombat-detail-primary-button" href={href}>{children}</Link>;
+}
+export function SecondaryButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return <button type="button" className="kombat-detail-secondary-button" onClick={onClick}>{children}</button>;
+}
+export function RankBadge({ rank }: { rank: number }) {
+  return <span className={"kombat-detail-rank rank-" + rank} aria-label={"Rank " + rank}>{rank}</span>;
+}
+export function Avatar({ name, imageSrc }: { name: string; imageSrc?: string | null }) {
+  return <span className="kombat-detail-avatar">{imageSrc ? <img src={imageSrc} alt="" /> : name.slice(0,1).toUpperCase()}</span>;
+}
