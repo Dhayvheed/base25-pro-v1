@@ -94,3 +94,94 @@
 
 .character-arena-card.kombat-card{margin:0;padding:0;border-radius:0;clip-path:none;background:#141010;border:1px solid #2A2020}
 .character-arena-card.kombat-card.is-selected{border-color:#E5372E;box-shadow:inset 0 0 0 2px #E5372E}
+
+
+/* Character detail — mobile-first, sample-data presentation */
+.kombat-detail-content{display:grid;gap:14px;padding:14px 15px 112px;max-width:520px;margin:0 auto;color:#F4F1F0}
+.kombat-detail-content .kombat-card{margin:0;padding:14px;background:linear-gradient(145deg,#171212,#100D0D);border:1px solid #3A2C2C;border-radius:0;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.kombat-detail-hero{background:linear-gradient(145deg,#241A08,#100D0D)!important;border-color:#6b5a1c!important;padding:12px!important}
+.kombat-detail-art-row{display:grid;grid-template-columns: minmax(0,1fr) minmax(0,1.28fr);gap:10px}
+.kombat-detail-hero-tile{height:132px;position:relative;overflow:hidden}
+.kombat-detail-hero-tile .kombat-fighter{width:100%;height:100%;display:grid;place-items:center}
+.kombat-detail-hero-tile .kombat-fighter b{font:800 46px "Barlow Condensed",sans-serif;color:#fff;text-shadow:0 2px 8px #000}
+.kombat-detail-hero-tile>span:last-child{position:absolute;right:5px;bottom:5px;min-width:18px;height:20px;padding:0 4px;display:grid;place-items:center;background:#E8C547;color:#17120a;font:800 13px "Barlow Condensed",sans-serif}
+.kombat-detail-portrait{height:132px;min-width:0;display:grid;place-items:center;overflow:hidden}
+.kombat-detail-portrait img{width:100%;height:100%;object-fit:cover}
+.kombat-detail-art-placeholder{border:1px dashed #6B5A5A;background:repeating-linear-gradient(135deg,rgba(107,90,90,.14) 0 1px,transparent 1px 8px),#171212;text-align:center}
+.kombat-detail-art-placeholder span{font:9px/1.7 "JetBrains Mono",monospace;letter-spacing:1.2px;color:#A8A0A0}
+.kombat-detail-identity{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 10px}
+.kombat-detail-identity>div{min-width:0}
+.kombat-detail-identity small,.kombat-detail-section-heading small,.kombat-detail-stats small,.kombat-detail-secondary-stats small{display:block;color:#A8A0A0;font:9px "JetBrains Mono",monospace;letter-spacing:1.3px;text-transform:uppercase}
+.kombat-detail-identity small{color:#E8C547}
+.kombat-detail-identity h1{margin:2px 0 0;font:800 clamp(38px,11vw,52px)/.95 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:-.5px;overflow-wrap:anywhere}
+.kombat-detail-identity .kombat-tag{flex:none;min-height:34px;display:grid;place-items:center;padding:0 12px;font:800 14px "Barlow Condensed",sans-serif}
+.kombat-detail-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.kombat-detail-stats>div,.kombat-detail-secondary-stats>div{min-width:0;padding:8px;background:#141010;border:1px solid #2A2020}
+.kombat-detail-stats b{display:block;margin-top:4px;font:800 clamp(26px,8vw,36px)/1 "Barlow Condensed",sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+.kombat-detail-stats b.gold,.kombat-detail-secondary-stats b{color:#F5D547}
+.kombat-detail-secondary-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.kombat-detail-secondary-stats b{display:block;margin-top:4px;font:800 28px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.kombat-detail-secondary-stats b em{font:500 15px Inter,sans-serif;color:#A8A0A0;font-style:normal}
+.kombat-detail-pick-track,.kombat-detail-matchup-main>i{display:block;height:5px;margin-top:7px;background:#2A2020;overflow:hidden}
+.kombat-detail-pick-track i,.kombat-detail-matchup-main>i span{display:block;height:100%;background:#E5372E}
+.kombat-detail-actions{display:flex;gap:8px;margin-top:10px}
+.kombat-detail-actions>*{min-width:0;min-height:48px;display:flex;align-items:center;justify-content:center;flex:1;padding:0 8px;text-decoration:none;text-transform:uppercase;font:800 16px "Barlow Condensed",sans-serif;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
+.kombat-detail-actions>*:last-child{flex:1.4}
+.kombat-detail-secondary-button{border:1px solid #4A3B3B;background:#171212;color:#F4F1F0;cursor:pointer}
+.kombat-detail-primary-button{background:#E5372E;color:white}
+.kombat-detail-section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.kombat-detail-section-heading h2{margin:2px 0 0;font:800 26px/1 "Barlow Condensed",sans-serif;text-transform:uppercase}
+.kombat-detail-section-heading .kombat-tag{flex:none;font:10px "JetBrains Mono",monospace;letter-spacing:1px;padding:7px 8px}
+.kombat-detail-chart{height:210px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;padding:12px 2px 0}
+.kombat-detail-chart-col{height:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}
+.kombat-detail-chart-track{width:100%;height:100%;display:flex;align-items:flex-end;background:transparent;border-bottom:1px solid #2A2020}
+.kombat-detail-chart-track span{width:100%;display:block;min-height:2px;background:#E5372E}
+.kombat-detail-chart-track span.current{background:#E8C547}
+.kombat-detail-chart-col small,.kombat-detail-chart-col b{font:9px "JetBrains Mono",monospace;color:#A8A0A0}
+.kombat-detail-chart-col b{font-size:8px}
+.kombat-detail-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.kombat-detail-note{margin:0 0 8px;color:#A8A0A0;font:12px/1.5 Inter,sans-serif}
+.kombat-detail-matchups,.kombat-detail-players,.kombat-detail-fights{display:grid}
+.kombat-detail-matchup{min-height:58px;display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #2A2020;color:#F4F1F0;text-decoration:none}
+.kombat-detail-matchup:last-child,.kombat-detail-player:last-child{border-bottom:0}
+.kombat-detail-matchup .character-fighter-compare{width:34px;height:34px;flex:0 0 34px}
+.kombat-detail-matchup-main{min-width:0;flex:1}
+.kombat-detail-matchup-main>b,.kombat-detail-matchup-main>small{display:block}
+.kombat-detail-matchup-main>b{font:700 13px Inter,sans-serif}
+.kombat-detail-matchup-main>small{font:8px "JetBrains Mono",monospace;letter-spacing:.7px;color:#A8A0A0}
+.kombat-detail-matchup-rate{text-align:right;flex:none;font:800 22px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.kombat-detail-matchup-rate small{display:block;color:#A8A0A0;font:8px "JetBrains Mono",monospace;letter-spacing:.6px}
+.kombat-detail-matchup-rate.gold,.kombat-detail-player strong{color:#F5D547}
+.kombat-detail-matchup-rate.red{color:#FF5A4D}
+.kombat-detail-matchup-main>i span.gold-fill{background:#E8C547}
+.kombat-detail-matchup-main>i span.red-fill{background:#E5372E}
+.kombat-detail-player{min-height:58px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #2A2020;color:#F4F1F0;text-decoration:none}
+.kombat-detail-rank{width:23px;height:23px;display:grid;place-items:center;flex:none;background:#C9CED3;color:#17120a;font:800 13px "Barlow Condensed",sans-serif}
+.kombat-detail-rank.rank-1{background:#E8C547}.kombat-detail-rank.rank-3{background:#C88A52}
+.kombat-detail-avatar{width:36px;height:36px;flex:none;display:grid;place-items:center;overflow:hidden;background:#292020;color:#F4F1F0;font:800 17px "Barlow Condensed",sans-serif}
+.kombat-detail-avatar img{width:100%;height:100%;object-fit:cover}
+.kombat-detail-player>b{min-width:0;flex:1;font:700 13px Inter,sans-serif}
+.kombat-detail-player>span:last-child{text-align:right;flex:none}
+.kombat-detail-player strong{display:block;font:800 22px "Barlow Condensed",sans-serif}
+.kombat-detail-player small{display:block;color:#A8A0A0;font:8px "JetBrains Mono",monospace;letter-spacing:.6px}
+.kombat-detail-match-row{min-height:64px;display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #2A2020;color:#F4F1F0;text-decoration:none}
+.kombat-detail-match-row .character-fighter-compare{width:36px;height:36px;flex:0 0 36px}
+.kombat-detail-match-copy{min-width:0;flex:1}
+.kombat-detail-match-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 11px Inter,sans-serif}
+.kombat-detail-match-copy i{font-style:normal;color:#A8A0A0}
+.kombat-detail-match-copy .match-winner{color:#fff}.kombat-detail-match-copy .match-loser{color:#C9C2C2}
+.kombat-detail-match-copy small{display:block;margin-top:4px;color:#A8A0A0;font:7px "JetBrains Mono",monospace;letter-spacing:.6px}
+.kombat-detail-match-result{flex:none;text-align:right}
+.kombat-detail-match-result>b{display:block;font:800 24px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.kombat-detail-match-result>em{display:inline-block;margin-top:2px;padding:3px 5px;background:#E5372E;color:white;font:8px "JetBrains Mono",monospace;font-style:normal}
+.kombat-detail-chevron{font-size:22px;color:#C9C2C2}
+.kombat-detail-view-all{min-height:44px;display:flex;align-items:center;justify-content:center;color:#FF5A4D;text-decoration:none;font:700 12px Inter,sans-serif}
+.kombat-detail-footer-note{margin:0;color:#A8A0A0;font:12px/1.5 Inter,sans-serif}
+.kombat-detail-empty{margin:16px!important;padding:24px!important;text-align:center}
+.kombat-detail-empty strong{font:800 24px "Barlow Condensed",sans-serif}
+.kombat-detail-empty p{color:#A8A0A0;font:13px/1.6 Inter,sans-serif}
+.kombat-detail-empty a{min-height:44px;display:inline-flex;align-items:center;color:#FF5A4D}
+.kombat-detail-loading{display:grid;gap:12px}.kombat-detail-skeleton{height:150px;padding:18px;background:#171212;border:1px solid #3A2C2C;display:grid;align-content:center;gap:12px;animation:character-arena-pulse 1.1s ease-in-out infinite alternate}.kombat-detail-skeleton i{height:10px;background:#302323}.kombat-detail-skeleton i:nth-child(2){width:65%}
+@media(min-width:521px){.kombat-detail-content{padding-left:20px;padding-right:20px}}
+@media(max-width:380px){.kombat-detail-content{padding-left:11px;padding-right:11px}.kombat-detail-hero{padding:10px!important}.kombat-detail-identity h1{font-size:38px}.kombat-detail-chart{gap:5px}.kombat-detail-match-copy strong{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.kombat-detail-content *{animation:none!important;scroll-behavior:auto!important}}
