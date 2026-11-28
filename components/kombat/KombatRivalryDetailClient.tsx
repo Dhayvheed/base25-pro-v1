@@ -40,7 +40,14 @@ export default function KombatRivalryDetailClient() {
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
-      setShareMessage("Unable to share automatically. Copy this page URL instead.");
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          setShareMessage("Rivalry link copied.");
+        } else setShareMessage("Unable to share automatically. Copy this page URL instead.");
+      } catch {
+        setShareMessage("Unable to share automatically. Copy this page URL instead.");
+      }
     }
   };
 
@@ -68,6 +75,7 @@ export default function KombatRivalryDetailClient() {
 
   return <KombatPageShell active="rivalries" title="RIVALRY">
     <div className="kombat-rd-page">
+      <div className="kombat-rd-sample-banner">SAMPLE DATA · UI PREVIEW ONLY · NOT LIVE MATCH RECORDS</div>
       <section className="kombat-rd-hero">
         <div className="kombat-rd-hero-top">
           <KombatTag tone="red" className="kombat-rd-status heated">HEATED</KombatTag>
