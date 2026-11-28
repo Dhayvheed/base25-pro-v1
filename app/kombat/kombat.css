@@ -91,3 +91,6 @@
 @media(min-width:521px){.kombat-character-shell{box-shadow:0 0 0 1px #2A2020}.character-arena-compare-bar{width:520px}}
 @media(max-width:380px){.character-arena-content{padding-left:12px;padding-right:12px}.character-arena-grid{gap:9px}.character-arena-name{font-size:19px}.character-arena-card-info{padding-left:7px;padding-right:7px}.character-arena-compare-bar{gap:7px;padding-left:10px;padding-right:10px}.character-arena-compare-bar>button{padding:0 12px}}
 @media(prefers-reduced-motion:reduce){.kombat-character-shell *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+.character-arena-card.kombat-card{margin:0;padding:0;border-radius:0;clip-path:none;background:#141010;border:1px solid #2A2020}
+.character-arena-card.kombat-card.is-selected{border-color:#E5372E;box-shadow:inset 0 0 0 2px #E5372E}
