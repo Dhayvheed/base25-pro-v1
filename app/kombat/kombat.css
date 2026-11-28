@@ -415,3 +415,11 @@
 .kombat-rivalry-empty b{display:block;margin-bottom:5px;color:#f4f1f0;font:900 17px "Barlow Condensed",sans-serif}
 .kombat-rivalry-empty p{margin:0}
 @media(max-width:380px){.kombat-rivalries-page{padding-left:12px;padding-right:12px}.kombat-rivalry-player>.kombat-fighter{width:43px;height:43px}.kombat-rivalry-score>strong{font-size:35px}.kombat-rivalry-player>b{font-size:17px}}
+
+
+.kombat-rivalry-card-actions button{min-height:40px;border:1px solid #544343;background:#1b1515;color:#f4f1f0;font:900 10px "Barlow Condensed",sans-serif;letter-spacing:1px;cursor:pointer}
+.kombat-rivalry-card-actions button.primary{border-color:#e5372e;background:#e5372e}
+.kombat-rivalry-meeting-list{margin-top:10px;border-top:1px solid #352929}
+.kombat-rivalry-meeting-list>div{display:grid;grid-template-columns:75px 1fr auto;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid #2c2222}
+.kombat-rivalry-meeting-list span,.kombat-rivalry-meeting-list small{color:#b8adad;font:7px "JetBrains Mono",monospace;letter-spacing:.6px}
+.kombat-rivalry-meeting-list b{font:600 10px Inter,Arial,sans-serif}
