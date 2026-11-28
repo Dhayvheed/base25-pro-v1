@@ -244,3 +244,54 @@
 .kombat-compare-footnote{margin:0;color:#A8A0A0;font:11px/1.5 Inter,Arial,sans-serif}
 .kombat-compare-state{padding:24px 14px;border:1px solid #403434;color:#C9C2C2;text-align:center;font:12px Inter,Arial,sans-serif}
 @media(max-width:380px){.kombat-compare-page{padding-left:12px;padding-right:12px}.kombat-compare-pickers{gap:24px}.kombat-compare-fighter{padding:10px 7px}.kombat-compare-fighter>.kombat-fighter{width:68px;height:68px}.kombat-compare-stat>div:first-child b{font-size:23px}}
+
+
+/* BASE25 KOMBAT · Match History */
+.kombat-history-page{max-width:520px;margin:0 auto;padding:16px 18px 112px;display:grid;gap:10px;color:#F4F1F0}
+.kombat-history-intro{padding:2px 0 0}
+.kombat-history-intro small{color:#FF5A4D;font:500 9px "JetBrains Mono",monospace;letter-spacing:1.35px}
+.kombat-history-intro h1{margin:6px 0 2px;font:italic 800 40px/.98 "Barlow Condensed",sans-serif;letter-spacing:-.4px}
+.kombat-history-intro h1 em{color:#E5372E;font-style:italic}
+.kombat-history-search{height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid #3A2C2C;background:#141010}
+.kombat-history-search svg{width:17px;height:17px;flex:none;fill:none;stroke:#A8A0A0;stroke-width:1.8;stroke-linecap:round}
+.kombat-history-search input{width:100%;height:42px;border:0;outline:0;background:transparent;color:#F4F1F0;font:13px Inter,Arial,sans-serif}
+.kombat-history-search input::placeholder{color:#A8A0A0}
+.kombat-history-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.kombat-history-filters button{height:38px;padding:0 4px;border:1px solid #514343;background:#141010;color:#C9CED3;font:500 9px "JetBrains Mono",monospace;letter-spacing:1px;cursor:pointer;clip-path:polygon(0 0,100% 0,100% 100%,7px 100%,0 calc(100% - 7px))}
+.kombat-history-filters button.active{border-color:#E5372E;background:#E5372E;color:#fff;font-weight:800}
+.kombat-history-list{border:1px solid #352828;background:linear-gradient(145deg,#171212,#100d0d);padding:0 0 2px;clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,0 100%)}
+.kombat-history-day{padding:0 12px}
+.kombat-history-day h2{margin:0;padding:12px 0 8px;border-bottom:1px solid #2A2020;color:#FF5A4D;font:500 9px "JetBrains Mono",monospace;letter-spacing:1.4px}
+.kombat-history-match{border-bottom:1px solid #302424}
+.kombat-history-match:last-child{border-bottom:0}
+.kombat-history-match-head{width:100%;min-height:69px;display:grid;grid-template-columns:34px minmax(0,1fr) auto 12px;grid-template-rows:auto auto;align-items:center;gap:2px 8px;padding:9px 0;background:transparent;border:0;color:inherit;text-align:left;cursor:pointer}
+.kombat-history-fighter-icon{grid-row:1/3;width:32px;height:32px;overflow:hidden;display:grid;place-items:center;background:#33280d;color:#F5D547;font:800 14px "Barlow Condensed",sans-serif}
+.kombat-history-fighter-icon .kombat-fighter{width:32px;height:32px}
+.kombat-history-fighter-icon .kombat-fighter>b{font-size:14px}
+.kombat-history-match-copy{min-width:0;grid-column:2;grid-row:1}
+.kombat-history-match-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 12px Inter,Arial,sans-serif}
+.kombat-history-match-copy strong i{color:#A8A0A0;font-style:normal;font-weight:400}
+.kombat-history-match-copy small{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#A8A0A0;font:7px "JetBrains Mono",monospace;letter-spacing:.8px}
+.kombat-history-score{grid-column:3;grid-row:1/3;align-self:center;font:800 23px/.9 "Barlow Condensed",sans-serif;white-space:nowrap}
+.kombat-history-chevron{grid-column:4;grid-row:1/3;align-self:center;color:#E5DDDD;font:26px/1 Arial,sans-serif}
+.kombat-history-badge{grid-column:2;grid-row:2;justify-self:start;margin-top:4px;padding:2px 6px;border:1px solid #F0443A;background:#D92D2D;color:white;font:800 7px/1 "JetBrains Mono",monospace;letter-spacing:.7px}
+.kombat-history-badge.casual{border-color:#716A6A;background:transparent;color:#B9B1B1}
+.kombat-history-edited{grid-column:3/5;grid-row:2;justify-self:end;color:#A8A0A0;font:700 7px "JetBrains Mono",monospace;letter-spacing:.7px}
+.kombat-history-match.expanded{border-bottom-color:#E5372E}
+.kombat-history-expanded{padding:2px 0 12px 0}
+.kombat-history-game{min-height:39px;display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:8px}
+.kombat-history-game small{color:#A8A0A0;font:8px "JetBrains Mono",monospace;letter-spacing:.8px}
+.kombat-history-game strong{font:600 11px Inter,Arial,sans-serif}
+.kombat-history-game b{font:800 16px "Barlow Condensed",sans-serif;white-space:nowrap}
+.kombat-history-no-games{margin:7px 0;color:#A8A0A0;font:10px/1.45 Inter,Arial,sans-serif}
+.kombat-history-elo{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #2A2020}
+.kombat-history-elo span{color:#A8A0A0;font:9px Inter,Arial,sans-serif}
+.kombat-history-elo b{font-family:"JetBrains Mono",monospace}
+.kombat-history-elo .positive{color:#F5D547}.kombat-history-elo .negative{color:#FF5A4D}
+.kombat-history-expanded>a{display:block;margin-top:11px;text-align:right;color:#FF5A4D;text-decoration:none;font:700 10px "JetBrains Mono",monospace}
+.kombat-history-load{justify-self:center;margin:8px 0 4px;border:0;background:transparent;color:#FF5A4D;font:700 12px Inter,Arial,sans-serif;cursor:pointer}
+.kombat-history-footnote{margin:3px 0 0;color:#A8A0A0;font:10px/1.5 Inter,Arial,sans-serif}
+.kombat-history-empty{padding:26px 15px;border:1px solid #3A2C2C;background:#141010;color:#C9C2C2;text-align:center;font:12px/1.5 Inter,Arial,sans-serif}
+.kombat-history-empty b{display:block;color:#F4F1F0;font-size:14px;margin-bottom:5px}
+.kombat-history-empty p{margin:0;color:#A8A0A0}
+@media(max-width:380px){.kombat-history-page{padding-left:12px;padding-right:12px}.kombat-history-day{padding-left:9px;padding-right:9px}.kombat-history-match-head{column-gap:6px}.kombat-history-match-copy strong{font-size:11px}.kombat-history-score{font-size:21px}.kombat-history-game{grid-template-columns:48px minmax(0,1fr) auto;gap:6px}}
