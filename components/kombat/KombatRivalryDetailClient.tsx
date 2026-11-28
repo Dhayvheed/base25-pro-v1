@@ -58,7 +58,6 @@ export default function KombatRivalryDetailClient() {
 
   const left = rivalry.leftPlayer;
   const right = rivalry.rightPlayer;
-  const latest = rivalry.meetingsNewestFirst[0];
   const leaderCaption = rivalry.status === "HEATED"
     ? "Too close to call. " + left.name + " leads by one meeting."
     : rivalry.status === "ONE-SIDED"
@@ -155,7 +154,7 @@ export default function KombatRivalryDetailClient() {
 
       <div className="kombat-rd-actions">
         <div><SecondaryButton onClick={() => window.location.assign("/kombat/players/" + left.id)}>{left.name}'s profile</SecondaryButton><SecondaryButton onClick={() => window.location.assign("/kombat/players/" + right.id)}>{right.name}'s profile</SecondaryButton></div>
-        <button className="kombat-rd-share" onClick={share}>SHARE RIVALRY</button>
+        <PrimaryButton className="kombat-rd-share" onClick={share}>SHARE RIVALRY</PrimaryButton>
         {shareMessage && <p role="status">{shareMessage}</p>}
       </div>
       <p className="kombat-rd-footnote">A rivalry counts ranked meetings only. Casual and removed matches are never included. Status is HEATED when the last 7 meetings are within one win.</p>
