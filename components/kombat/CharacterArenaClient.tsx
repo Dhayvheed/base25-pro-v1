@@ -76,8 +76,9 @@ export default function CharacterArenaClient() {
       <Link href={"/kombat/characters/"+f.slug} className="character-arena-card-link" aria-label={"View "+f.name+" details"}><FighterTile slug={f.slug} name={f.name} imageSrc={f.image_src}/>
        <div className="character-arena-card-info"><strong className="character-arena-name">{f.name}</strong><div className="character-arena-stats"><div><b>{f.performance.winRate===null?"—":Math.round(f.performance.winRate)+"%"}</b><small>WIN RATE</small></div><div className="character-arena-matches"><b>{f.performance.rankedMatches?f.performance.rankedMatches.toLocaleString("en-NG"):"—"}</b><small>MATCHES</small></div></div>
         <div className="character-arena-pick-label">PICKED {f.performance.pickRate===null?"—":Math.round(f.performance.pickRate)+"%"}</div><div className="character-arena-pick-track"><span style={{width:f.performance.pickRate===null||maxPickRate===0?"0%":(f.performance.pickRate/maxPickRate*100)+"%"}}/></div>
-       </div></Link>
+       </div>
       <KombatTag tone={f.performance.tier==="S"?"gold":f.performance.tier==="A"?"steel":f.performance.tier==="B"?"bronze":f.performance.tier==="C"?"grey":"new"} className="character-arena-tier">TIER {f.performance.tier}</KombatTag>
+      </Link>
       <label className="character-arena-select"><input type="checkbox" checked={selected.includes(f.slug)} onChange={e=>toggleSelected(f.slug,e.target.checked)} aria-label={"Select "+f.name+" for comparison"}/><span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3.2 3.2L13 4.5"/></svg></span></label>
      </KombatCard>)}</div>{filtered.length>shown.length&&<button className="character-arena-load-more" type="button" onClick={()=>setVisibleCount(v=>v+20)}>Load more fighters</button>}</>}
     <p className="character-arena-note">Tier comes from win rate and needs at least 10 ranked matches. Fighters below that show "NEW". The roster is editable, and hidden fighters keep their history.</p>
