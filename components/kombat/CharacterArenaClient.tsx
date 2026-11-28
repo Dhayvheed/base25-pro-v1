@@ -18,7 +18,7 @@ const sortFromUrl = (): SortKey => {
 };
 const sortOptions: Array<{ key: SortKey; label: string }> = [{key:"tier",label:"TIER"},{key:"win",label:"WIN RATE"},{key:"picked",label:"MOST PICKED"},{key:"az",label:"A–Z"}];
 const tierOrder: Record<string, number> = { S:0,A:1,B:2,C:3,NEW:4 };
-const featuredOrder = new Map(FEATURED_FIGHTER_ORDER.map((slug,index)=>[slug,index]));
+const featuredOrder = new Map<string, number>(FEATURED_FIGHTER_ORDER.map((slug,index): [string, number] => [slug,index]));
 
 export default function CharacterArenaClient() {
   const router=useRouter();
